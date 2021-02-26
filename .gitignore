@@ -1,3 +1,14 @@
+# Build
+build*/
+
+# Clangd
+.cache/
+
+# Meson wraps
+subprojects/packagecache/
+subprojects/cpr-*/
+
+
 # Prerequisites
 *.d
 
