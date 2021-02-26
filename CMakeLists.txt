@@ -19,6 +19,8 @@ include(FetchContent)
 
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/whoshuu/cpr.git GIT_TAG 1.5.2)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+set(BUILD_CPR_TESTS OFF CACHE BOOL "")
+add_compile_definitions(OPENSSL_NO_SSL3_METHOD)
 FetchContent_MakeAvailable(cpr)
 
 FetchContent_Declare(json GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git GIT_TAG v3.9.1)

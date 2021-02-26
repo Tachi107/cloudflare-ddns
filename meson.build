@@ -17,5 +17,6 @@ executable(
 		subproject('cpr').get_variable('cpr_dep'),
 		dependency('nlohmann_json'),
 		dependency('simdjson')
-	]
+	],
+	cpp_args: '-DOPENSSL_NO_SSL3_METHOD'
 )
