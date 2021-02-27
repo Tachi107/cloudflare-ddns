@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 	const std::string trace {cpr::Get(cpr::Url{"https://1.1.1.1/cdn-cgi/trace"}).text};
 	const std::size_t ipBegin {trace.find("ip=") + 3}; // + 3 because "ip=" is 3 chars
 	const std::size_t ipEnd {trace.find('\n', ipBegin)};
-	const std::string currentIp = trace.substr(ipBegin, ipEnd - ipBegin);  // Begin, length
+	const std::string_view currentIp {std::string_view{trace}.substr(ipBegin, ipEnd - ipBegin)};  // Begin, length
 
 	if (currentIp != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		std::cout << "New IP: " << (parser.parse(cpr::Patch(
