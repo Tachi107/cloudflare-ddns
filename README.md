@@ -17,3 +17,40 @@ cloudflare-ddns currently relies on fairly new versions of libcurl and simdjson.
 To build cloudflare-ddns you need to install `meson`, `cmake`, `libcurl4-openssl-dev`, `nlohmann-json3-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 11 and Ubuntu Hirsute.
 
 After having installed the dependencies, you can build the program with `meson setup build --buildtype=relese && meson compile -C build`
+
+## Systemd timer
+
+Here's an example of a systemd service + timer that checks and eventually updates one DNS record
+
+### `cloudflare-ddns.service`
+
+```ini
+[Unit]
+Description=Simple utility to dynamically change a DNS record
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/cloudflare-ddns <api_key> <zone_id> <dns_record>
+User=www-data
+Group=www-data
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### `cloudflare-ddns.timer`
+
+```ini
+[Unit]
+Description=Run cloudflare-ddns every hour
+
+[Timer]
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
+```
