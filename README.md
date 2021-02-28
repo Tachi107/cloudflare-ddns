@@ -14,7 +14,7 @@ cloudflare-ddns relies only on libcurl and simdjson. I recommend you to compile 
 
 ## Build
 
-To build cloudflare-ddns you'll need to install `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev` and `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Focal.
+To build cloudflare-ddns you'll need to install `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
 
 After having installed the dependencies, you can build the program with `meson setup build --buildtype=relese` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
 
