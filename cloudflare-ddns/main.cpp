@@ -1,7 +1,19 @@
 #include <cpr/cpr.h>
+#include <curl/curl.h>
 #include <string>
 #include <simdjson.h>
 #include <nlohmann/json.hpp>
+
+void libcurlSucks() {
+	curl_global_init(CURL_GLOBAL_SSL);
+
+	CURL* curlHandle {curl_easy_init()};
+	curl_easy_setopt(curlHandle, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(curlHandle, CURLOPT_NOSIGNAL, 1L);
+	curl_easy_setopt(curlHandle, CURLOPT_HTTPGET, 1L);
+
+	curl_global_cleanup();
+}
 
 int main(int argc, char* argv[]) {
 	if (argc != 4) {

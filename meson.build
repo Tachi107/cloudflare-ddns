@@ -14,7 +14,8 @@ executable(
 	'cloudflare-ddns',
 	sources: 'cloudflare-ddns/main.cpp',
 	dependencies: [
-		subproject('cpr').get_variable('cpr_dep'),
+		dependency('cpr', fallback: ['cpr', 'cpr_dep']),
+		dependency('libcurl'),
 		dependency('nlohmann_json'),
 		dependency('simdjson')
 	],
