@@ -20,7 +20,7 @@ jobs:
       run: meson setup build --buildtype=release
 
     - name: Build
-      run: meson compile -C build
+      run: ninja -C build
 
     - name: Test
       run: meson test -C build
