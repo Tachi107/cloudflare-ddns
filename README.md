@@ -31,6 +31,8 @@ After=network-online.target
 
 [Service]
 Type=oneshot
+# Sleep to avoid connection issues when running the script at boot
+ExecStartPre=/bin/sleep 20
 ExecStart=/opt/cloudflare-ddns <api_key> <zone_id> <dns_record>
 User=www-data
 Group=www-data

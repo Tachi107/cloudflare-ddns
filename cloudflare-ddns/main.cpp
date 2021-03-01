@@ -1,6 +1,7 @@
 #include <curl/curl.h>
 #include <string>
 #include <iostream>
+#include <future>
 #include <simdjson.h>
 
 /*
@@ -11,6 +12,44 @@
 std::size_t writeData(char* incomingBuffer, std::size_t size, std::size_t count, std::string* data) {
 	data->append(incomingBuffer, size * count);
 	return size * count;
+}
+
+std::string getLocalIp() {
+	// Creating the handle and the response buffer
+	CURL* localIpHandle {curl_easy_init()};
+	std::string localIpResponse;
+
+	// General curl options
+	curl_easy_setopt(localIpHandle, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(localIpHandle, CURLOPT_NOSIGNAL, 1L);
+	curl_easy_setopt(localIpHandle, CURLOPT_WRITEFUNCTION, writeData);
+	curl_easy_setopt(localIpHandle, CURLOPT_WRITEDATA, &localIpResponse);
+	curl_easy_setopt(localIpHandle, CURLOPT_TCP_FASTOPEN, 1L);
+	curl_easy_setopt(localIpHandle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+	curl_easy_setopt(localIpHandle, CURLOPT_DEFAULT_PROTOCOL, "https");
+	curl_easy_setopt(localIpHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
+	
+	// Setting up a GET request
+	curl_easy_setopt(localIpHandle, CURLOPT_HTTPGET, 1L);
+	curl_easy_setopt(localIpHandle, CURLOPT_URL, "https://1.1.1.1/cdn-cgi/trace");
+
+	// Performing the request
+	curl_easy_perform(localIpHandle);
+	
+	// Cleaning up the handle as I won't reuse it
+	curl_easy_cleanup(localIpHandle);
+
+	// Parsing the response
+	const std::size_t ipBegin {localIpResponse.find("ip=") + 3};  // + 3 because "ip=" is 3 chars
+	const std::size_t ipEnd {localIpResponse.find('\n', ipBegin)};
+	return localIpResponse.substr(ipBegin, ipEnd - ipBegin);
+}
+
+// NOT thread-safe, writes into a buffer and uses an handle both owned elsewhere
+void getDnsRecordResponse(CURL** curlHandle, std::string_view requestUri) {
+	curl_easy_setopt(*curlHandle, CURLOPT_HTTPGET, 1L);
+	curl_easy_setopt(*curlHandle, CURLOPT_URL, requestUri.data());
+	curl_easy_perform(*curlHandle);
 }
 
 int main(int argc, char* argv[]) {
@@ -24,31 +63,6 @@ int main(int argc, char* argv[]) {
 	
 	curl_global_init(CURL_GLOBAL_SSL);
 
-	std::string localIpResponse;
-	std::thread localIpThread {[&localIpResponse](){
-		CURL* localIpHandle {curl_easy_init()};
-		localIpResponse.reserve(150);
-
-		curl_easy_setopt(localIpHandle, CURLOPT_NOPROGRESS, 1L);
-		curl_easy_setopt(localIpHandle, CURLOPT_NOSIGNAL, 1L);
-		curl_easy_setopt(localIpHandle, CURLOPT_WRITEFUNCTION, writeData);
-		curl_easy_setopt(localIpHandle, CURLOPT_WRITEDATA, &localIpResponse);
-		curl_easy_setopt(localIpHandle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-		curl_easy_setopt(localIpHandle, CURLOPT_DEFAULT_PROTOCOL, "https");
-		curl_easy_setopt(localIpHandle, CURLOPT_HTTPGET, 1L);
-		curl_easy_setopt(localIpHandle, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
-		struct curl_slist* manualDohAddress {nullptr};
-		manualDohAddress = curl_slist_append(manualDohAddress, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
-		curl_easy_setopt(localIpHandle, CURLOPT_RESOLVE, manualDohAddress);
-		curl_easy_setopt(localIpHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-		curl_easy_setopt(localIpHandle, CURLOPT_TCP_FASTOPEN, 1L);
-		curl_easy_setopt(localIpHandle, CURLOPT_URL, "https://1.1.1.1/cdn-cgi/trace");
-		
-		curl_easy_perform(localIpHandle);
-		
-		curl_easy_cleanup(localIpHandle);
-	}};
-
 	CURL* curlHandle {curl_easy_init()};
 	std::string dnsResponse;
 	dnsResponse.reserve(600);	// Tipical size of largest response (GET to fetch the DNS IP)
@@ -57,33 +71,28 @@ int main(int argc, char* argv[]) {
 	curl_easy_setopt(curlHandle, CURLOPT_NOSIGNAL, 1L);
 	curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, writeData);
 	curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &dnsResponse);
+	curl_easy_setopt(curlHandle, CURLOPT_TCP_FASTOPEN, 1L);
 	curl_easy_setopt(curlHandle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curlHandle, CURLOPT_DEFAULT_PROTOCOL, "https");
-	curl_easy_setopt(curlHandle, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
 	struct curl_slist* manualDohAddress {nullptr};
 	manualDohAddress = curl_slist_append(manualDohAddress, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
 	curl_easy_setopt(curlHandle, CURLOPT_RESOLVE, manualDohAddress);
+	curl_easy_setopt(curlHandle, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
 	curl_easy_setopt(curlHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-	curl_easy_setopt(curlHandle, CURLOPT_TCP_FASTOPEN, 1L);
 	curl_easy_setopt(curlHandle, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	curl_easy_setopt(curlHandle, CURLOPT_XOAUTH2_BEARER, apiToken.data());
 	struct curl_slist* headers {nullptr};
 	headers = curl_slist_append(headers, "Content-Type: application/json");
 	curl_easy_setopt(curlHandle, CURLOPT_HTTPHEADER, headers);
 
-	curl_easy_setopt(curlHandle, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(curlHandle, CURLOPT_URL, std::string{"https://api.cloudflare.com/client/v4/zones/" + zoneId + "/dns_records?type=A&name=" + recordName}.data());
-	curl_easy_perform(curlHandle);
-
-	localIpThread.join();
-
-	const std::size_t ipBegin {localIpResponse.find("ip=") + 3};  // + 3 because "ip=" is 3 chars
-	const std::size_t ipEnd {localIpResponse.find('\n', ipBegin)};
-	const std::string localIp {localIpResponse.substr(ipBegin, ipEnd - ipBegin)};
-	localIpResponse.clear();
+	std::future<void> dnsResponseFuture {std::async(std::launch::async, getDnsRecordResponse, &curlHandle, std::string{"https://api.cloudflare.com/client/v4/zones/" + zoneId + "/dns_records?type=A,AAAA&name=" + recordName})};
+	std::future<std::string> localIpFuture {std::async(std::launch::async, getLocalIp)};
 
 	simdjson::dom::parser parser;
+	dnsResponseFuture.wait();
 	const simdjson::dom::element parsed {parser.parse(dnsResponse)};
+
+	std::string localIp {localIpFuture.get()};
 
 	if (localIp != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		dnsResponse.clear();
