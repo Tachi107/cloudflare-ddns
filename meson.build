@@ -15,7 +15,8 @@ executable(
 	sources: 'cloudflare-ddns/main.cpp',
 	dependencies: [
 		dependency('libcurl'),
-		dependency('simdjson')
+		dependency('simdjson'),
+		dependency('threads')
 	],
 	cpp_args: '-DOPENSSL_NO_SSL3_METHOD'
 )

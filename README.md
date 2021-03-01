@@ -18,6 +18,8 @@ To build cloudflare-ddns you'll need to install `meson`, `pkg-config`, `cmake`, 
 
 After having installed the dependencies, you can build the program with `meson setup build --buildtype=relese` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
 
+If your libcurl is older than version 7.64.1 (for example in Debian 10) you'll see a lot of connection logs related to DNS over HTTPS lookups; that's a [libcurl bug](https://github.com/curl/curl/issues/3660), and there's nothing I can do about it :/
+
 ## Systemd timer
 
 Here's an example of a systemd service + timer that checks and eventually updates one DNS record
