@@ -8,6 +8,11 @@ build*/
 subprojects/packagecache/
 subprojects/cpr-*/
 
+# Debian packages
+*.deb
+
+# Allocation tracking file
+cloudflare-ddns/new.hpp
 
 # Prerequisites
 *.d

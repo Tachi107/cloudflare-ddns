@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	const std::string_view apiToken {argv[1]};
 	const std::string zoneId {argv[2]};
 	const std::string recordName {argv[3]};
-	
+
 	curl_global_init(CURL_GLOBAL_SSL);
 
 	CURL* curlHandle {curl_easy_init()};
