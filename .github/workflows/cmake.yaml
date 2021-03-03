@@ -16,7 +16,9 @@ jobs:
         sudo apt-get -qq update && sudo apt-get -qq install --assume-yes cmake libssl-dev
 
     - name: Configure CMake
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      run: |
+        mv cloudflare-ddns/CMakeLists.txt ..
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
       run: cmake --build build
