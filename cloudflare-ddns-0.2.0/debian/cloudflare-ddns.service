@@ -1,0 +1,17 @@
+[Unit]
+Description=Dynamically change a DNS record using Cloudflare
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Sleep to avoid connection issues when running the script at boot
+ExecStartPre=/bin/sleep 20
+ExecStart=/usr/bin/cloudflare-ddns
+User=www-data
+Group=www-data
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
