@@ -1,0 +1,15 @@
+Source: cloudflare-ddns
+Section: web
+Priority: optional
+Maintainer: Andrea Pappacoda <andrea@pappacoda.it>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: https://github.com/Tachi107/cloudflare-ddns
+
+Package: cloudflare-ddns
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: dynamically change a DNS record using Cloudflare
+ This tool is a oneshot program: you run it, it updates the DNS record, and it terminates.
+ To make it run periodically you can use a systemd timer.
