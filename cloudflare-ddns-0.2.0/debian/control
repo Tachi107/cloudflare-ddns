@@ -11,5 +11,5 @@ Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: dynamically change a DNS record using Cloudflare
- This tool is a oneshot program: you run it, it updates the DNS record, and it terminates.
+ This is a oneshot tool: you run it, it updates the DNS record, and terminates.
  To make it run periodically you can use a systemd timer.
