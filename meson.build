@@ -3,6 +3,7 @@ project(
 	'cpp',
 	default_options: [
 		'cpp_std=c++17',
+		'buildtype=release',
 		'b_ndebug=if-release',
 		'b_lto=true'
 	],
@@ -18,5 +19,6 @@ executable(
 		dependency('simdjson'),
 		dependency('threads')
 	],
-	cpp_args: '-DOPENSSL_NO_SSL3_METHOD'
+	cpp_args: '-DOPENSSL_NO_SSL3_METHOD',
+	install: true
 )

@@ -17,7 +17,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-        mv cloudflare-ddns/CMakeLists.txt ..
+        mv cloudflare-ddns/CMakeLists.txt .
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
