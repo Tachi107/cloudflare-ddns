@@ -1,6 +1,6 @@
 path_classifiers:
-  generated:
-  - exclude: subprojects
+  library:
+  - subprojects
 extraction:
   cpp:
     prepare:
