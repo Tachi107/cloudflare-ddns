@@ -7,7 +7,7 @@ project(
 		'b_ndebug=if-release',
 		'b_lto=true'
 	],
-	version: '0.2.0',
+	version: '0.2.1',
 	license: 'AGPL-3.0-or-later'
 )
 
