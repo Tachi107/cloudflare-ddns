@@ -1,5 +1,8 @@
 # cloudflare-ddns
 
+[![Meson](https://github.com/Tachi107/cloudflare-ddns/actions/workflows/meson.yaml/badge.svg)](https://github.com/Tachi107/cloudflare-ddns/actions/workflows/meson.yaml)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Tachi107/cloudflare-ddns.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Tachi107/cloudflare-ddns/context:cpp)
+
 cloudflare-ddns is a tool that can be used to dynamically update a DNS record using Cloudflare's API.
 
 ## Usage
