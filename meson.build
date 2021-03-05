@@ -14,9 +14,13 @@ project(
 simdjson_dep = dependency('simdjson', required: false)
 if not simdjson_dep.found()
 	cmake = import('cmake')
-	simdjson_options = cmake.subproject_options()
-	simdjson_options.add_cmake_defines({'SIMDJSON_JUST_LIBRARY': true})
-	cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
+	if meson.version().version_compare('>=0.55.0')
+		simdjson_options = cmake.subproject_options()
+		simdjson_options.add_cmake_defines({'SIMDJSON_JUST_LIBRARY': true})
+		simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
+	else
+		simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
+	endif
 endif
 
 executable(
