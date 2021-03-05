@@ -1,3 +1,3 @@
 [submodule "cloudflare-ddns/subprojects/simdjson"]
-	path = cloudflare-ddns/subprojects/simdjson
+	path = subprojects/simdjson
 	url = https://github.com/simdjson/simdjson.git
