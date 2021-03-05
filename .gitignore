@@ -1,48 +1,5 @@
 # Build
-build*/
+build/
 
 # Clangd
 .cache/
-
-# Meson wraps
-subprojects/packagecache/
-subprojects/cpr-*/
-
-# Debian packages
-*.deb
-
-# Allocation tracking file
-cloudflare-ddns/new.hpp
-
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
