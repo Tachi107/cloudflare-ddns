@@ -1,16 +1,10 @@
 #!/usr/bin/make -f
-# You must remove unused comment lines for the released package.
 export DH_VERBOSE = 1
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export DEB_CFLAGS_MAINT_APPEND  = -O3
 export DEB_CXXFLAGS_MAINT_APPEND= -O3
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+# export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 export LC_ALL=C.UTF-8
-# meson setup --prefix=/usr --buildtype=plain builddir -Dc_args=... -Dcpp_args=... -Dc_link_args=... -Dcpp_link_args=...
-# dh_installsystemd
-
-override_dh_installsystemd:
-	dh_installsystemd --name=cloudflare-ddns
 
 %:
 	dh $@ --buildsystem=meson
