@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(cloudflare-ddns)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT ipo_result OUTPUT ipo_output)
@@ -16,7 +18,7 @@ find_package(Threads)
 
 include(FetchContent)
 
-FetchContent_Declare(curl GIT_REPOSITORY https://github.com/curl/curl.git GIT_TAG curl-7_75_0)
+FetchContent_Declare(curl GIT_REPOSITORY https://github.com/curl/curl.git GIT_TAG curl-7_75_0 GIT_SHALLOW TRUE)
 set(BUILD_CURL_EXE OFF CACHE BOOL "")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 set(CURL_LTO ON CACHE BOOL "")
@@ -31,6 +33,12 @@ set(SIMDJSON_JUST_LIBRARY ON CACHE INTERNAL "")
 set(SIMDJSON_BUILD_STATIC ON CACHE INTERNAL "")
 FetchContent_MakeAvailable(simdjson)
 
+FetchContent_Declare(yaml-cpp GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git GIT_TAG yaml-cpp-0.6.3 GIT_SHALLOW TRUE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "")
+set(YAML_CPP_INSTALL OFF CACHE BOOL "")
+FetchContent_MakeAvailable(yaml-cpp)
+
 add_executable(${PROJECT_NAME} cloudflare-ddns/main.cpp)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads simdjson libcurl)
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads simdjson libcurl yaml-cpp)

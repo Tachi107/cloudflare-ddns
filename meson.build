@@ -8,7 +8,8 @@ project(
 		'b_lto=true'
 	],
 	version: '0.2.1',
-	license: 'AGPL-3.0-or-later'
+	license: 'AGPL-3.0-or-later',
+	meson_version: '>=0.46.0'
 )
 
 simdjson_dep = dependency('simdjson', required: false)
@@ -29,8 +30,17 @@ executable(
 	dependencies: [
 		dependency('libcurl'),
 		simdjson_dep,
-		dependency('threads')
+		dependency('threads'),
+		dependency('yaml-cpp')
 	],
 	cpp_args: '-DOPENSSL_NO_SSL3_METHOD',
 	install: true
 )
+
+if host_machine.system() == 'linux' or host_machine.system() == 'openbsd'
+	install_data('config.yaml', install_dir: '/etc/cloudflare-ddns')
+elif host_machine.system() == 'freebsd'
+	install_data('config.yaml', install_dir: '/usr/local/etc/cloudflare-ddns')
+else
+	install_data('config.yaml')
+endif
