@@ -3,13 +3,26 @@
 #include <iostream>
 #include <future>
 #include <simdjson.h>
+#include <yaml-cpp/yaml.h>
 
 /*
  * Two handles for two theads.
  * One for cdn-cgi/trace and one for DNS IP
  */
 
-std::size_t writeData(char* incomingBuffer, std::size_t size, std::size_t count, std::string* data) {
+static constexpr const char* configPath {[]() {
+	#if (defined(__linux__) || defined(__unix__) || defined(__unix)) && !defined(__FreeBSD__)
+		return "/etc/cloudflare-ddns/config.yaml";
+	#elif defined(__FreeBSD__)
+		return "/usr/local/etc/cloudflare-ddns/config.yaml";
+	#elif defined(_WIN32)
+		return "Where should I store the config file?";
+	#else
+		return "Unknown";
+	#endif
+}()};
+
+std::size_t writeData(char* incomingBuffer, const std::size_t size, const std::size_t count, std::string* data) {
 	data->append(incomingBuffer, size * count);
 	return size * count;
 }
@@ -46,20 +59,61 @@ std::string getLocalIp() {
 }
 
 // NOT thread-safe, writes into a buffer and uses an handle both owned elsewhere
-void getDnsRecordResponse(CURL** curlHandle, std::string_view requestUri) {
+void getDnsRecordResponse(CURL** curlHandle, const std::string_view requestUri) {
 	curl_easy_setopt(*curlHandle, CURLOPT_HTTPGET, 1L);
 	curl_easy_setopt(*curlHandle, CURLOPT_URL, requestUri.data());
 	curl_easy_perform(*curlHandle);
 }
 
 int main(int argc, char* argv[]) {
-	if (argc != 4) {
-		std::cerr << "Usage: cloudflare-ddns <API token> <Zone ID> <DNS record name>\n";
+	std::string apiToken;
+	std::string zoneId;
+	std::string recordName;
+
+	if (argc == 1) {
+		try {
+			const YAML::Node config {YAML::LoadFile(configPath)};
+			apiToken = config["api-token"].as<std::string>();
+			zoneId = config["zone-id"].as<std::string>();
+			recordName = config["record-name"].as<std::string>();
+		}
+		catch (const YAML::BadFile&) {
+			std::cerr << "No config file found in " << configPath << '\n';
+			return EXIT_FAILURE;
+		}
+		catch (const YAML::Exception&) {
+			std::cerr << "Bad config file\n";
+			return EXIT_FAILURE;
+		}
+	}
+	else if (argc == 3) {
+		const std::string_view configPath {argv[2]};
+		try {
+			const YAML::Node config {YAML::LoadFile(configPath.data())};
+			apiToken = config["api-token"].as<std::string>();
+			zoneId = config["zone-id"].as<std::string>();
+			recordName = config["record-name"].as<std::string>();
+		}
+		catch (const YAML::BadFile&) {
+			std::cerr << "No config file found in " << configPath << '\n';
+			return EXIT_FAILURE;
+		}
+		catch (const YAML::Exception&) {
+			std::cerr << "Bad config file\n";
+			return EXIT_FAILURE;
+		}
+	}
+	else if (argc == 4) {
+		apiToken = argv[1];
+		zoneId = argv[2];
+		recordName = argv[3];
+	}
+	else {
+		std::cerr 
+			<< "Bad usage! You can run the program without arguments and load the config in" << configPath 
+			<< " or pass the API token, the Zone ID and the DNS record name as arguments\n";
 		return EXIT_FAILURE;
 	}
-	const std::string_view apiToken {argv[1]};
-	const std::string zoneId {argv[2]};
-	const std::string recordName {argv[3]};
 
 	curl_global_init(CURL_GLOBAL_SSL);
 

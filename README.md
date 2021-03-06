@@ -11,6 +11,8 @@ This tool is a oneshot program: you run it, it updates the DNS record, and it te
 
 To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens) and the Zone ID of the DNS that you want to update; you can get the latter in the Overview panel of your zone.
 
+Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a YAML configuration file, located in `/etc/cloudflare-ddns/config.yaml` on Linux systems; [here's the template](config.yaml). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
+
 ## Dependencies
 
 cloudflare-ddns relies only on libcurl and simdjson. I recommend you to compile the program yourself, but I also provide a statically linked executable for every release. It is not 100% self-contained but it should work in most cases.
