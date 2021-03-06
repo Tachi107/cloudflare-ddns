@@ -1,0 +1,5 @@
+cloudflare-ddns (0.2.1-1) UNRELEASED; urgency=low
+
+  * Initial release.
+
+ -- Andrea Pappacoda <andrea@pappacoda.it>  Sat, 06 Mar 2021 21:46:37 +0100
