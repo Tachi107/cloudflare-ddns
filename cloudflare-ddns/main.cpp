@@ -87,15 +87,15 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	else if (argc == 3) {
-		const std::string_view configPath {argv[2]};
+		const std::string_view customConfigPath {argv[2]};
 		try {
-			const YAML::Node config {YAML::LoadFile(configPath.data())};
+			const YAML::Node config {YAML::LoadFile(customConfigPath.data())};
 			apiToken = config["api-token"].as<std::string>();
 			zoneId = config["zone-id"].as<std::string>();
 			recordName = config["record-name"].as<std::string>();
 		}
 		catch (const YAML::BadFile&) {
-			std::cerr << "No config file found in " << configPath << '\n';
+			std::cerr << "No config file found in " << customConfigPath << '\n';
 			return EXIT_FAILURE;
 		}
 		catch (const YAML::Exception&) {
