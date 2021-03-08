@@ -9,6 +9,8 @@ on:
   schedule:
     - cron: '45 10 * * 5'
 
+paths-ignore: submodules
+
 jobs:
   analyze:
     name: Analyze
@@ -54,4 +56,3 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
-      paths-ignore: submodules
