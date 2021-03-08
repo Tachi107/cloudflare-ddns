@@ -9,8 +9,6 @@ on:
   schedule:
     - cron: '45 10 * * 5'
 
-paths-ignore: submodules
-
 jobs:
   analyze:
     name: Analyze
@@ -20,6 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'cpp' ]
+
+    paths-ignore: submodules
 
     steps:
     - name: Checkout repository
