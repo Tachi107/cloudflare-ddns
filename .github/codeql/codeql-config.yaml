@@ -1,1 +1,2 @@
-paths-ignore: submodules
+paths-ignore: 
+  - submodules
