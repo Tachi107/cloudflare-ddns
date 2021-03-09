@@ -47,9 +47,9 @@ jobs:
     #    uses a compiled language
     - name: Build
       run: |
-        sudo apt install ninja-build libsimdjson-dev
+        sudo apt-get -qq update && sudo apt-get -qq install ninja-build libsimdjson-dev libcurl4-openssl-dev libyaml-cpp-dev
         export PATH=$HOME/.local/bin:$PATH
-        pip3 install --user --ignore-installed meson
+        pip3 install -qqq --user --ignore-installed meson
         meson setup build --buildtype=release
         meson compile -C build
 
