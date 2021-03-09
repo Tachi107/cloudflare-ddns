@@ -9,7 +9,8 @@ on:
   schedule:
     - cron: '45 10 * * 5'
 
-paths-ignore: submodules
+paths-ignore:
+  - submodules
 
 jobs:
   analyze:
