@@ -2,11 +2,12 @@ name: Windows
 
 on: [push]
 
-#env:
-#  Path: "C:/Program Files/PowerShell/7;C:/Program Files/Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/Windows;C:/Windows/system32;"
+env:
+  Path: "C:/Program Files/Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
 
 jobs:
   windows-msvc:
+    name: Windows - MSVC
     runs-on: windows-latest
 
     steps:
@@ -16,9 +17,6 @@ jobs:
 
     - name: Install Meson
       run: |
-        Get-Command cmake | Select-Object -ExpandProperty Definition
-        Get-Command git | Select-Object -ExpandProperty Definition
-        Get-Command 7z | Select-Object -ExpandProperty Definition
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
 
@@ -38,6 +36,7 @@ jobs:
         path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns
 
   windows-clang-cl:
+    name: Windows - clang-cl
     runs-on: windows-latest
     env:
       CC: "C:/Program Files/LLVM/bin/clang.exe"
@@ -45,6 +44,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
 
     - name: Install Clang
       run: |
@@ -58,7 +59,6 @@ jobs:
 
     - name: Configure Meson
       run: |
-        $env:Path += ";C:/Program Files/Meson;$env:Path"
         meson setup build --buildtype=release
 
     - name: Build
