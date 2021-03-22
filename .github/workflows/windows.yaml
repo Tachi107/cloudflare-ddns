@@ -2,6 +2,9 @@ name: Windows
 
 on: [push]
 
+env:
+  Path: C:/Program Files/Meson
+
 jobs:
   windows-msvc:
     runs-on: windows-latest
@@ -11,9 +14,8 @@ jobs:
 
     - name: Install Meson
       run: |
-        curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
+        Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
-        $env:Path += ";C:/Program Files/Meson"
 
     - name: Configure Meson
       run: meson setup build --buildtype=release
@@ -41,14 +43,13 @@ jobs:
 
     - name: Install Clang
       run: |
-        curl --silent --location --output llvm.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe
+        Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe -OutFile llvm.exe
         7z x llvm.exe -y -o"C:/Program Files/LLVM"
 
     - name: Install Meson
       run: |
-        curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
+        Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
-        $env:Path += ";C:/Program Files/Meson"
 
     - name: Configure Meson
       run: meson setup build --buildtype=release
