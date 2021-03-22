@@ -3,7 +3,7 @@ name: Windows
 on: [push]
 
 env:
-  Path: C:/Program Files/Meson
+  Path: "C:/Program Files/Meson;$env:Path"
 
 jobs:
   windows-msvc:
@@ -44,7 +44,7 @@ jobs:
     - name: Install Clang
       run: |
         Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe -OutFile llvm.exe
-        7z x llvm.exe -y -o"C:/Program Files/LLVM"
+        Expand-Archive -Path llvm.exe -DestinationPath "C:/Program Files/LLVM" -Force
 
     - name: Install Meson
       run: |
