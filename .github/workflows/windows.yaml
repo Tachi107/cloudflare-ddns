@@ -15,13 +15,13 @@ jobs:
         msiexec /i meson.msi /passive /qn
 
     - name: Configure Meson
-      run: '"C:/Program Files/Meson/meson.exe" setup build --buildtype=release'
+      run: '& "C:/Program Files/Meson/meson.exe" setup build --buildtype=release'
 
     - name: Build
-      run: '"C:/Program Files/Meson/meson.exe" compile -C build'
+      run: '& "C:/Program Files/Meson/meson.exe" compile -C build'
 
     - name: Test
-      run: '"C:/Program Files/Meson/meson.exe" test -C build'
+      run: '& "C:/Program Files/Meson/meson.exe" test -C build'
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
@@ -49,13 +49,13 @@ jobs:
         msiexec /i meson.msi /passive /qn
 
     - name: Configure Meson
-      run: '"C:/Program Files/Meson/meson.exe" setup build --buildtype=release'
+      run: '& "C:/Program Files/Meson/meson.exe" setup build --buildtype=release'
 
     - name: Build
-      run: '"C:/Program Files/Meson/meson.exe" compile -C build'
+      run: '& "C:/Program Files/Meson/meson.exe" compile -C build'
 
     - name: Test
-      run: '"C:/Program Files/Meson/meson.exe" test -C build'
+      run: '& "C:/Program Files/Meson/meson.exe" test -C build'
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
