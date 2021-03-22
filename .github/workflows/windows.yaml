@@ -2,8 +2,8 @@ name: Windows
 
 on: [push]
 
-env:
-  Path: "C:/Program Files/Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
+# env:
+#   Path: "C:/Program Files/Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
 
 jobs:
   windows-msvc:
@@ -17,6 +17,7 @@ jobs:
 
     - name: Install Meson
       run: |
+        Get-Command cl | Select-Object -ExpandProperty Definition
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
 
