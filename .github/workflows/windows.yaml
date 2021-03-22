@@ -2,8 +2,8 @@ name: Windows
 
 on: [push]
 
-env:
-  Path: "C:/Program Files/Meson;$env:Path"
+#env:
+#  Path: "C:/Program Files/Meson;$env:Path"
 
 jobs:
   windows-msvc:
@@ -11,9 +11,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
 
     - name: Install Meson
       run: |
+        echo $env:Path
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
 
@@ -52,7 +55,9 @@ jobs:
         msiexec /i meson.msi /passive /qn
 
     - name: Configure Meson
-      run: meson setup build --buildtype=release
+      run: |
+        $env:Path += ";C:/Program Files/Meson;$env:Path"
+        meson setup build --buildtype=release
 
     - name: Build
       run: meson compile -C build
