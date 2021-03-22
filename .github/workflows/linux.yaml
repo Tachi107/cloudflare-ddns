@@ -27,6 +27,6 @@ jobs:
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
-      with: 
+      with:
         name: cloudflare-ddns-linux
         path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns

@@ -17,22 +17,25 @@ jobs:
 
     - name: Install Meson
       run: |
-        Get-Command cl | Select-Object -ExpandProperty Definition
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
 
     - name: Configure Meson
-      run: meson setup build --buildtype=release
+      run: |
+        $env:Path += ";C:/Program Files/Meson"
+        meson setup build --buildtype=release
 
     - name: Build
-      run: meson compile -C build
+      run: |
+        $env:Path += ";C:/Program Files/Meson"
+        meson compile -C build
 
     - name: Test
       run: meson test -C build
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
-      with: 
+      with:
         name: cloudflare-ddns-windows
         path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns
 
@@ -60,16 +63,21 @@ jobs:
 
     - name: Configure Meson
       run: |
+        $env:Path += ";C:/Program Files/Meson"
         meson setup build --buildtype=release
 
     - name: Build
-      run: meson compile -C build
+      run: |
+        $env:Path += ";C:/Program Files/Meson"
+        meson compile -C build
 
     - name: Test
-      run: meson test -C build
+      run: |
+        $env:Path += ";C:/Program Files/Meson"
+        meson test -C build
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
-      with: 
+      with:
         name: cloudflare-ddns-windows-clang
         path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns
