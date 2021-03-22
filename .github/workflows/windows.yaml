@@ -3,7 +3,7 @@ name: Windows
 on: [push]
 
 env:
-  Path: "C:\Program Files\Meson;C:/Program Files/LLVM/bin;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
+  Path: "C:/Program Files/Meson;C:/Program Files/LLVM/bin;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
 
 jobs:
   windows-msvc:
