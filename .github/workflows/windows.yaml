@@ -3,7 +3,7 @@ name: Windows
 on: [push]
 
 env:
-  Path: "C:/Program Files/Meson;C:/Program Files/LLVM/bin;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32;C:/Windows;C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit"
+  Path: "C:/Program Files/Meson;C:/Program Files/LLVM/bin;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32;"
 
 jobs:
   windows-msvc:
@@ -51,6 +51,9 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
+
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1.7.0
 
     - name: Install Clang
       run: |
