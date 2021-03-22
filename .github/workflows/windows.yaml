@@ -3,7 +3,7 @@ name: Windows
 on: [push]
 
 # env:
-#   Path: "C:/Program Files/Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
+#   Path: "C:\Program Files\Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
 
 jobs:
   windows-msvc:
@@ -15,6 +15,9 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
     - name: Install Meson
       run: |
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
@@ -22,12 +25,12 @@ jobs:
 
     - name: Configure Meson
       run: |
-        $env:Path += ";C:/Program Files/Meson"
+        $env:Path += ";C:\Program Files\Meson"
         meson setup build --buildtype=release
 
     - name: Build
       run: |
-        $env:Path += ";C:/Program Files/Meson"
+        $env:Path += ";C:\Program Files\Meson"
         meson compile -C build
 
     - name: Test
@@ -63,17 +66,17 @@ jobs:
 
     - name: Configure Meson
       run: |
-        $env:Path += ";C:/Program Files/Meson"
+        $env:Path += ";C:\Program Files\Meson;C:/Program Files/LLVM/bin"
         meson setup build --buildtype=release
 
     - name: Build
       run: |
-        $env:Path += ";C:/Program Files/Meson"
+        $env:Path += ";C:\Program Files\Meson;C:/Program Files/LLVM/bin"
         meson compile -C build
 
     - name: Test
       run: |
-        $env:Path += ";C:/Program Files/Meson"
+        $env:Path += ";C:\Program Files\Meson;C:/Program Files/LLVM/bin"
         meson test -C build
 
     - name: Store compiled program
