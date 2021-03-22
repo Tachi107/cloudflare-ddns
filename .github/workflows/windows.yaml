@@ -3,7 +3,7 @@ name: Windows
 on: [push]
 
 #env:
-#  Path: "C:/Program Files/Meson;$env:Path"
+#  Path: "C:/Program Files/PowerShell/7;C:/Program Files/Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/Windows;C:/Windows/system32;"
 
 jobs:
   windows-msvc:
@@ -16,7 +16,9 @@ jobs:
 
     - name: Install Meson
       run: |
-        echo $env:Path
+        Get-Command cmake | Select-Object -ExpandProperty Definition
+        Get-Command git | Select-Object -ExpandProperty Definition
+        Get-Command 7z | Select-Object -ExpandProperty Definition
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
 
@@ -47,7 +49,7 @@ jobs:
     - name: Install Clang
       run: |
         Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe -OutFile llvm.exe
-        Expand-Archive -Path llvm.exe -DestinationPath "C:/Program Files/LLVM" -Force
+        7z x llvm.exe -y -o"C:/Program Files/LLVM"
 
     - name: Install Meson
       run: |
