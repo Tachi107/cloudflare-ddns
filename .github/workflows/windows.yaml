@@ -12,7 +12,7 @@ jobs:
     - name: Install Meson
       run: |
         curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
-        msiexec /i meson.msi
+        msiexec /i meson.msi /passive /qn
 
     - name: Configure Meson
       run: meson setup build --buildtype=release
@@ -43,7 +43,7 @@ jobs:
     - name: Install Meson
       run: |
         curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
-        msiexec /i meson.msi
+        msiexec /i meson.msi /passive /qn
 
     - name: Configure Meson
       run: CC="C:/Program Files/LLVM/bin/clang.exe" CXX="C:/Program Files/LLVM/bin/clang++.exe" meson setup build --buildtype=release
