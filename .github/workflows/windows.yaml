@@ -13,15 +13,16 @@ jobs:
       run: |
         curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
         msiexec /i meson.msi /passive /qn
+        echo "C:/Program Files/Meson" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Configure Meson
-      run: '& "C:/Program Files/Meson/meson.exe" setup build --buildtype=release'
+      run: meson setup build --buildtype=release
 
     - name: Build
-      run: '& "C:/Program Files/Meson/meson.exe" compile -C build'
+      run: meson compile -C build
 
     - name: Test
-      run: '& "C:/Program Files/Meson/meson.exe" test -C build'
+      run: meson test -C build
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
@@ -47,15 +48,16 @@ jobs:
       run: |
         curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
         msiexec /i meson.msi /passive /qn
+        echo "C:/Program Files/Meson" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Configure Meson
-      run: '& "C:/Program Files/Meson/meson.exe" setup build --buildtype=release'
+      run: meson setup build --buildtype=release
 
     - name: Build
-      run: '& "C:/Program Files/Meson/meson.exe" compile -C build'
+      run: meson compile -C build
 
     - name: Test
-      run: '& "C:/Program Files/Meson/meson.exe" test -C build'
+      run: meson test -C build
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
