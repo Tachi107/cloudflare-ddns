@@ -1,3 +1,9 @@
 [submodule "cloudflare-ddns/subprojects/simdjson"]
 	path = subprojects/simdjson
 	url = https://github.com/simdjson/simdjson.git
+[submodule "subprojects/curl"]
+	path = subprojects/curl
+	url = https://github.com/curl/curl.git
+[submodule "subprojects/yaml-cpp"]
+	path = subprojects/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

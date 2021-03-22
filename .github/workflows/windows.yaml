@@ -1,0 +1,61 @@
+name: Windows
+
+on: [push]
+
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Meson
+      run: |
+        curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
+        msiexec /i meson.msi
+
+    - name: Configure Meson
+      run: meson setup build --buildtype=release
+
+    - name: Build
+      run: meson compile -C build
+
+    - name: Test
+      run: meson test -C build
+
+    - name: Store compiled program
+      uses: actions/upload-artifact@v2
+      with: 
+        name: cloudflare-ddns-windows
+        path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns
+
+  windows-clang-cl:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Clang
+      run: |
+        curl --silent --location --output llvm.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe
+        7z x llvm.exe -y -o"C:/Program Files/LLVM"
+
+    - name: Install Meson
+      run: |
+        curl --silent --location --output meson.msi https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi
+        msiexec /i meson.msi
+
+    - name: Configure Meson
+      run: CC="C:/Program Files/LLVM/bin/clang.exe" CXX="C:/Program Files/LLVM/bin/clang++.exe" meson setup build --buildtype=release
+
+    - name: Build
+      run: meson compile -C build
+
+    - name: Test
+      run: meson test -C build
+
+    - name: Store compiled program
+      uses: actions/upload-artifact@v2
+      with: 
+        name: cloudflare-ddns-windows-clang
+        path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns

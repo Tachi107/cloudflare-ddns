@@ -1,9 +1,9 @@
-name: Meson
+name: Linux
 
 on: [push]
 
 jobs:
-  build:
+  ubuntu:
     runs-on: ubuntu-20.04
 
     steps:
@@ -12,7 +12,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo rm /etc/apt/sources.list /etc/apt/sources.list.d/*
-        printf "Enabled: yes\nTypes: deb\nURIs: http://azure.archive.ubuntu.com/ubuntu/\nSuites: focal focal-updates focal-backports focal-security hirsute\nComponents: main universe multiverse restricted\n" | sudo tee /etc/apt/sources.list.d/system.sources
+        printf "Enabled: yes\nTypes: deb\nURIs: http://azure.archive.ubuntu.com/ubuntu/\nSuites: focal focal-updates focal-backports focal-security hirsute\nComponents: main universe\n" | sudo tee /etc/apt/sources.list.d/system.sources
         printf "APT::Default-Release \"focal\";\n" | sudo tee /etc/apt/apt.conf.d/00default-release
         sudo apt-get -qq update && sudo apt-get -qq install --assume-yes meson libcurl4-openssl-dev libsimdjson-dev/hirsute libyaml-cpp-dev
 
@@ -28,5 +28,5 @@ jobs:
     - name: Store compiled program
       uses: actions/upload-artifact@v2
       with: 
-        name: cloudflare-ddns-main
+        name: cloudflare-ddns-linux
         path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns

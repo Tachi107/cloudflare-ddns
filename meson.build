@@ -7,20 +7,72 @@ project(
 		'b_ndebug=if-release',
 		'b_lto=true'
 	],
-	version: '0.3.1',
+	version: '0.4.0',
 	license: 'AGPL-3.0-or-later',
-	meson_version: '>=0.46.0'
+	meson_version: '>=0.49.0'
 )
+
+compiler = meson.get_compiler('cpp')
+
+if compiler.get_id().contains('clang')
+	add_project_arguments(['-fuse-ld=lld', '-Wno-unused-command-line-argument'], language: 'cpp')
+	add_project_link_arguments('-fuse-ld=lld', language: 'cpp')
+endif
+
+cmake = import('cmake')
+
+libcurl_dep = dependency('libcurl', required: false)
+if not libcurl_dep.found()
+	if meson.version().version_compare('>=0.55.0')
+		libcurl_options = cmake.subproject_options()
+		libcurl_options.add_cmake_defines(
+			{'BUILD_SHARED_LIBS': false},
+			{'BUILD_CURL_EXE': false},
+			{'CURL_LTO': true},
+			{'HTTP_ONLY': true},
+			{'CURL_DISABLE_COOKIES': true},
+			{'CURL_DISABLE_VERBOSE_STRINGS': true},
+			{'ENABLE_UNIX_SOCKETS': false}
+		)
+		if compiler.get_argument_syntax() == 'gcc'
+			libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD')
+		elif compiler.get_argument_syntax() == 'msvc'
+			libcurl_options.append_compile_args('c', '/DOPENSSL_NO_SSL3_METHOD')
+		endif
+		libcurl_dep = cmake.subproject('curl', options: libcurl_options).dependency('libcurl')
+	else
+		libcurl_dep = cmake.subproject('curl').dependency('libcurl')
+	endif
+endif
 
 simdjson_dep = dependency('simdjson', required: false)
 if not simdjson_dep.found()
-	cmake = import('cmake')
 	if meson.version().version_compare('>=0.55.0')
 		simdjson_options = cmake.subproject_options()
-		simdjson_options.add_cmake_defines({'SIMDJSON_JUST_LIBRARY': true})
+		simdjson_options.add_cmake_defines(
+			{'BUILD_SHARED_LIBS': false},
+			{'SIMDJSON_JUST_LIBRARY': true},
+			{'SIMDJSON_BUILD_STATIC': true}
+		)
 		simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
 	else
 		simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
+	endif
+endif
+
+yaml_cpp_dep = dependency('yaml-cpp', required: false)
+if not yaml_cpp_dep.found()
+	if meson.version().version_compare('>=0.55.0')
+		yaml_cpp_options = cmake.subproject_options()
+		yaml_cpp_options.add_cmake_defines(
+			{'BUILD_SHARED_LIBS': false},
+			{'YAML_CPP_BUILD_TOOLS': false},
+			{'YAML_CPP_BUILD_TESTS': false},
+			{'YAML_CPP_INSTALL': false}
+		)
+		yaml_cpp_dep = cmake.subproject('yaml-cpp', options: yaml_cpp_options).dependency('yaml-cpp')
+	else
+		simdjson_dep = cmake.subproject('yaml-cpp').dependency('yaml-cpp')
 	endif
 endif
 
@@ -28,12 +80,11 @@ executable(
 	'cloudflare-ddns',
 	sources: 'cloudflare-ddns/main.cpp',
 	dependencies: [
-		dependency('libcurl'),
+		libcurl_dep,
 		simdjson_dep,
 		dependency('threads'),
-		dependency('yaml-cpp')
+		yaml_cpp_dep
 	],
-	cpp_args: '-DOPENSSL_NO_SSL3_METHOD',
 	install: true
 )
 
