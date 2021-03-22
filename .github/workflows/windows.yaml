@@ -2,8 +2,8 @@ name: Windows
 
 on: [push]
 
-# env:
-#   Path: "C:\Program Files\Meson;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
+env:
+  Path: "C:\Program Files\Meson;C:/Program Files/LLVM/bin;C:/Program Files/Git/bin;C:/Program Files/CMake/bin;C:/ProgramData/Chocolatey/bin;C:/Windows/system32"
 
 jobs:
   windows-msvc:
@@ -25,12 +25,10 @@ jobs:
 
     - name: Configure Meson
       run: |
-        $env:Path += ";C:\Program Files\Meson"
         meson setup build --buildtype=release
 
     - name: Build
       run: |
-        $env:Path += ";C:\Program Files\Meson"
         meson compile -C build
 
     - name: Test
@@ -46,8 +44,8 @@ jobs:
     name: Windows - clang-cl
     runs-on: windows-latest
     env:
-      CC: "C:/Program Files/LLVM/bin/clang.exe"
-      CXX: "C:/Program Files/LLVM/bin/clang++.exe"
+      CC: clang-cl
+      CXX: clang-cl
 
     steps:
     - uses: actions/checkout@v2
@@ -66,17 +64,14 @@ jobs:
 
     - name: Configure Meson
       run: |
-        $env:Path += ";C:\Program Files\Meson;C:/Program Files/LLVM/bin"
         meson setup build --buildtype=release
 
     - name: Build
       run: |
-        $env:Path += ";C:\Program Files\Meson;C:/Program Files/LLVM/bin"
         meson compile -C build
 
     - name: Test
       run: |
-        $env:Path += ";C:\Program Files\Meson;C:/Program Files/LLVM/bin"
         meson test -C build
 
     - name: Store compiled program
