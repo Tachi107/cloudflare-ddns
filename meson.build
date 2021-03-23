@@ -28,7 +28,7 @@ if not libcurl_dep.found()
 		libcurl_options.add_cmake_defines(
 			{'BUILD_SHARED_LIBS': false},
 			{'BUILD_CURL_EXE': false},
-			{'CURL_LTO': true},
+			#{'CURL_LTO': true},
 			{'HTTP_ONLY': true},
 			{'CURL_DISABLE_COOKIES': true},
 			{'CURL_DISABLE_VERBOSE_STRINGS': true},
