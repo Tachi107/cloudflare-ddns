@@ -40,12 +40,12 @@ jobs:
         name: cloudflare-ddns-windows
         path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns
 
-  windows-clang-cl:
-    name: Windows - clang-cl
+  windows-clang:
+    name: Windows - clang
     runs-on: windows-latest
     env:
-      CC: clang-cl
-      CXX: clang-cl
+      CC: clang
+      CXX: clang++
 
     steps:
     - uses: actions/checkout@v2
