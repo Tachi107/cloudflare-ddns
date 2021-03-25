@@ -2,8 +2,8 @@ name: Windows
 
 on: [push]
 
-env:
-  Path: "C:\\Program Files\\Meson;C:\\Program Files\\LLVM\\bin;C:\\Program Files\\Git\\bin;C:\\Program Files\\CMake\\bin;C:\\ProgramData\\Chocolatey\\bin;C:\\Windows\\system32;"
+#env:
+#  Path: "C:\\Program Files\\Meson;C:\\Program Files\\LLVM\\bin;C:\\Program Files\\Git\\bin;C:\\Program Files\\CMake\\bin;C:\\ProgramData\\Chocolatey\\bin;C:\\Windows\\system32;"
 
 jobs:
   windows-msvc:
@@ -22,6 +22,7 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
+        setx /M Path "$env:Path;C:\\Program Files\\Meson"
 
     - name: Configure Meson
       run: |
@@ -59,25 +60,24 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe -OutFile llvm.exe
         7z x llvm.exe -y -o"C:\\Program Files\\LLVM"
+        setx /M Path "$env:Path;C:\\Program Files\\LLVM\\bin"
 
     - name: Install Meson
       run: |
         Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
         msiexec /i meson.msi /passive /qn
+        setx /M Path "$env:Path;C:\\Program Files\\Meson"
 
     - name: Configure Meson
       run: |
-        $env:Path += ";C:\\Program Files\\Meson;C:\\Program Files\\LLVM\\bin"
         meson setup build --buildtype=release
 
     - name: Build
       run: |
-        $env:Path += ";C:\\Program Files\\Meson;C:\\Program Files\\LLVM\\bin"
         meson compile -C build
 
     - name: Test
       run: |
-        $env:Path += ";C:\\Program Files\\Meson;C:\\Program Files\\LLVM\\bin"
         meson test -C build
 
     - name: Store compiled program
