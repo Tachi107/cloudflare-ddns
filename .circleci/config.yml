@@ -4,9 +4,9 @@ orbs:
   win: circleci/windows@2.2.0
 
 commands:
-  install_pwsh:
-    steps:
-      - run: dotnet tool install --global PowerShell
+#  install_pwsh:
+#    steps:
+#      - run: dotnet tool install --global PowerShell
   install_clang:
     steps:
       - run: |
@@ -30,9 +30,9 @@ commands:
 jobs:
   build-msvc:
     executor: win/default
-    shell: pwsh
+    #shell: pwsh
     steps:
-      - install_pwsh
+      #- install_pwsh
       - install_meson
       - checkout
       - configure
@@ -40,12 +40,12 @@ jobs:
       - test
   build-clang:
     executor: win/default
-    shell: pwsh
+    #shell: pwsh
     environment:
-      - CC: clang
-      - CXX: clang++
+      CC: clang
+      CXX: clang++
     steps:
-      - install_pwsh
+      #- install_pwsh
       - install_clang
       - install_meson
       - checkout
