@@ -41,6 +41,9 @@ jobs:
   build-clang:
     executor: win/default
     shell: pwsh
+    environment:
+      - CC: clang
+      - CXX: clang++
     steps:
       - install_pwsh
       - install_clang
@@ -49,3 +52,11 @@ jobs:
       - configure
       - build
       - test
+
+workflows:
+  build-msvc:
+    jobs:
+      - build-msvc
+  build-clang:
+    jobs:
+      - build-clang
