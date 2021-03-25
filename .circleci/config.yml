@@ -1,0 +1,51 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
+
+commands:
+  install_pwsh:
+    steps:
+      - run: dotnet tool install --global PowerShell
+  install_clang:
+    steps:
+      - run: |
+          Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-11.1.0/LLVM-11.1.0-win64.exe -OutFile llvm.exe
+          7z x llvm.exe -y -o"C:\\Program Files\\LLVM"
+  install_meson:
+    steps:
+      - run: |
+          Invoke-WebRequest -Uri https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.1-64.msi -OutFile meson.msi
+          msiexec /i meson.msi /passive /qn
+  configure:
+    steps:
+      - run: meson setup build --buildtype=release
+  build:
+    steps:
+      - run: meson compile -C build
+  test:
+    steps:
+      - run: meson test -C build
+
+jobs:
+  build-msvc:
+    executor: win/default
+    shell: pwsh
+    steps:
+      - install_pwsh
+      - install_meson
+      - checkout
+      - configure
+      - build
+      - test
+  build-clang:
+    executor: win/default
+    shell: pwsh
+    steps:
+      - install_pwsh
+      - install_clang
+      - install_meson
+      - checkout
+      - configure
+      - build
+      - test
