@@ -32,9 +32,9 @@ jobs:
     executor: win/default
     #shell: pwsh
     steps:
+      - checkout
       #- install_pwsh
       - install_meson
-      - checkout
       - configure
       - build
       - test
@@ -45,10 +45,10 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
+      - checkout
       #- install_pwsh
       - install_clang
       - install_meson
-      - checkout
       - configure
       - build
       - test
