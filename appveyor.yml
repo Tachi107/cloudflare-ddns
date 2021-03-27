@@ -29,7 +29,7 @@ install:
 
 build_script:
   - cmd: echo Building on %arch% with %compiler%
-  - cmd: meson setup build --buildtype=release --default_library=static -Db_vscrt=static_from_buildtype
+  - cmd: meson setup build --buildtype=release --default-library=static -Db_vscrt=static_from_buildtype
   - cmd: meson compile -C build
 
 test_script:
