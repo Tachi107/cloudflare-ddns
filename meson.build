@@ -27,9 +27,10 @@ if not libcurl_dep.found()
 		libcurl_options = cmake.subproject_options()
 		libcurl_options.add_cmake_defines(
 			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
+			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
 			{'BUILD_CURL_EXE': false},
-			#{'CURL_LTO': true},
+			{'CURL_LTO': true},
 			{'HTTP_ONLY': true},
 			{'CURL_DISABLE_COOKIES': true},
 			{'CURL_DISABLE_VERBOSE_STRINGS': true},
@@ -52,6 +53,7 @@ if not simdjson_dep.found()
 		simdjson_options = cmake.subproject_options()
 		simdjson_options.add_cmake_defines(
 			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
+			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
 			{'SIMDJSON_JUST_LIBRARY': true},
 			{'SIMDJSON_BUILD_STATIC': true}
@@ -68,6 +70,7 @@ if not yaml_cpp_dep.found()
 		yaml_cpp_options = cmake.subproject_options()
 		yaml_cpp_options.add_cmake_defines(
 			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
+			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
 			{'YAML_CPP_BUILD_TOOLS': false},
 			{'YAML_CPP_BUILD_TESTS': false},
