@@ -86,7 +86,8 @@ executable(
 		libcurl_dep,
 		simdjson_dep,
 		dependency('threads'),
-		yaml_cpp_dep
+		yaml_cpp_dep,
+		compiler.find_library('ws2_32', required: false)
 	],
 	install: true
 )
