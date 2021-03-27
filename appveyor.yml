@@ -1,0 +1,36 @@
+image: Visual Studio 2019
+
+environment:
+  matrix:
+    - arch: x86
+      compiler: msvc2017
+    - arch: x64
+      compiler: msvc2017
+    - arch: x86
+      compiler: msvc2019
+    - arch: x64
+      compiler: msvc2019
+
+platform:
+  - x64
+
+install:
+  # Set paths to dependencies (based on architecture)
+  - cmd: if %arch%==x86 (set PYTHON_ROOT=C:\Python39) else (set PYTHON_ROOT=C:\Python39-x64)
+  # Print out dependency paths
+  - cmd: echo Using Python at %PYTHON_ROOT%
+  # Add necessary paths to PATH variable
+  - cmd: set PATH=%cd%;%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
+  # Install meson and ninja
+  - cmd: pip install ninja meson
+  # Set up the build environment
+  - cmd: if %compiler%==msvc2017 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
+  - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
+
+build_script:
+  - cmd: echo Building on %arch% with %compiler%
+  - cmd: meson setup build --buildtype=release --default_library=static -Db_vscrt=static_from_buildtype
+  - cmd: meson compile -C build
+
+test_script:
+  - cmd: meson test -C build
