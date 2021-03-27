@@ -39,7 +39,7 @@ if not libcurl_dep.found()
 		if compiler.get_argument_syntax() == 'gcc'
 			libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD')
 		elif compiler.get_argument_syntax() == 'msvc'
-			libcurl_options.append_compile_args('c', '/DOPENSSL_NO_SSL3_METHOD')
+			libcurl_options.append_compile_args('c', '/DOPENSSL_NO_SSL3_METHOD /MT')
 		endif
 		libcurl_dep = cmake.subproject('curl', options: libcurl_options).dependency('libcurl')
 	else
@@ -58,6 +58,10 @@ if not simdjson_dep.found()
 			{'SIMDJSON_JUST_LIBRARY': true},
 			{'SIMDJSON_BUILD_STATIC': true}
 		)
+		if compiler.get_argument_syntax() == 'msvc'
+			simdjson_options.append_compile_args('c', '/MT')
+			simdjson_options.append_compile_args('cpp', '/MT')
+		endif
 		simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
 	else
 		simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
@@ -76,6 +80,10 @@ if not yaml_cpp_dep.found()
 			{'YAML_CPP_BUILD_TESTS': false},
 			{'YAML_CPP_INSTALL': false}
 		)
+		if compiler.get_argument_syntax() == 'msvc'
+			yaml_cpp_options.append_compile_args('c', '/MT')
+			yaml_cpp_options.append_compile_args('cpp', '/MT')
+		endif
 		yaml_cpp_dep = cmake.subproject('yaml-cpp', options: yaml_cpp_options).dependency('yaml-cpp')
 	else
 		simdjson_dep = cmake.subproject('yaml-cpp').dependency('yaml-cpp')
