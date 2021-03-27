@@ -29,6 +29,8 @@ if not libcurl_dep.found()
 			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
 			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
+			{'CURL_STATIC_CRT': false},
+			{'CURL_TARGET_WINDOWS_VERSION': '0x0601'} # Win 7
 			{'BUILD_CURL_EXE': false},
 			{'CURL_LTO': true},
 			{'HTTP_ONLY': true},
@@ -36,6 +38,11 @@ if not libcurl_dep.found()
 			{'CURL_DISABLE_VERBOSE_STRINGS': true},
 			{'ENABLE_UNIX_SOCKETS': false}
 		)
+		#if host_machine.system() == 'windows'
+		#	libcurl_options.add_cmake_defines(
+		#		{'CMAKE_USE_SCHANNEL': true}
+		#	)
+		#endif
 		if compiler.get_argument_syntax() == 'gcc'
 			libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD -DCURL_STATICLIB')
 		elif compiler.get_argument_syntax() == 'msvc'
@@ -56,7 +63,9 @@ if not simdjson_dep.found()
 			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
 			{'SIMDJSON_JUST_LIBRARY': true},
-			{'SIMDJSON_BUILD_STATIC': true}
+			{'SIMDJSON_BUILD_STATIC': true},
+			{'SIMDJSON_WINDOWS_DLL': false},
+			{'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false}
 		)
 		#if compiler.get_argument_syntax() == 'msvc'
 		#	simdjson_options.append_compile_args('c', '/MT')
