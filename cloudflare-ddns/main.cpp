@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include <future>
-#ifdef(_WIN32)
+#ifdef _WIN32
 	#undef fopen
 #endif
 #include <simdjson.h>
