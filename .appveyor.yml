@@ -31,3 +31,7 @@ build_script:
 
 test_script:
   - cmd: meson test -C build
+
+artifacts:
+  - path: build\cloudflare-ddns.exe
+    name: cloudflare-ddns-x64
