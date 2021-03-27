@@ -29,8 +29,8 @@ if not libcurl_dep.found()
 			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
 			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
-			{'CURL_STATIC_CRT': false},
-			{'CURL_TARGET_WINDOWS_VERSION': '0x0601'}, # Win 7
+			{'CURL_STATIC_CRT': true},
+			{'CURL_TARGET_WINDOWS_VERSION': '0x0A00'}, # Win 10
 			{'BUILD_CURL_EXE': false},
 			{'CURL_LTO': true},
 			{'HTTP_ONLY': true},
