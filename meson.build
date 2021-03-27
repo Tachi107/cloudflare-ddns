@@ -30,7 +30,7 @@ if not libcurl_dep.found()
 			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
 			{'CURL_STATIC_CRT': false},
-			{'CURL_TARGET_WINDOWS_VERSION': '0x0601'} # Win 7
+			{'CURL_TARGET_WINDOWS_VERSION': '0x0601'}, # Win 7
 			{'BUILD_CURL_EXE': false},
 			{'CURL_LTO': true},
 			{'HTTP_ONLY': true},
