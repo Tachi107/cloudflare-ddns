@@ -38,11 +38,11 @@ if not libcurl_dep.found()
 			{'CURL_DISABLE_VERBOSE_STRINGS': true},
 			{'ENABLE_UNIX_SOCKETS': false}
 		)
-		#if host_machine.system() == 'windows'
-		#	libcurl_options.add_cmake_defines(
-		#		{'CMAKE_USE_SCHANNEL': true}
-		#	)
-		#endif
+		if host_machine.system() == 'windows'
+			libcurl_options.add_cmake_defines(
+				{'CMAKE_USE_SCHANNEL': true}
+			)
+		endif
 		if compiler.get_argument_syntax() == 'gcc'
 			libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD -DCURL_STATICLIB')
 		elif compiler.get_argument_syntax() == 'msvc'
