@@ -19,6 +19,8 @@ if compiler.get_id().contains('clang')
 	add_project_link_arguments('-fuse-ld=lld', language: 'cpp')
 endif
 
+windows_dep = []
+
 cmake = import('cmake')
 
 libcurl_dep = dependency('libcurl', required: false)
@@ -42,6 +44,8 @@ if not libcurl_dep.found()
 			libcurl_options.add_cmake_defines(
 				{'CMAKE_USE_SCHANNEL': true}
 			)
+			windows_dep += compiler.find_library('crypt32')
+			windows_dep += compiler.find_library('ws2_32')
 		endif
 		if compiler.get_argument_syntax() == 'gcc'
 			libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD -DCURL_STATICLIB')
@@ -104,7 +108,7 @@ executable(
 		simdjson_dep,
 		dependency('threads'),
 		yaml_cpp_dep,
-		compiler.find_library('ws2_32', required: false)
+		windows_dep
 	],
 	install: true
 )
