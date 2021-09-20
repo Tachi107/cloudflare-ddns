@@ -101,7 +101,7 @@ endif
 
 executable(
 	'cloudflare-ddns',
-	sources: 'cloudflare-ddns/main.cpp',
+	sources: 'src/main.cpp',
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
@@ -112,6 +112,6 @@ executable(
 	install: true
 )
 
-subdir('cloudflare-ddns')
+subdir('src')
 
 install_data('config.yaml', install_dir: get_option('sysconfdir'))

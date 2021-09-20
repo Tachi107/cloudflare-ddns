@@ -7,7 +7,7 @@
 #endif
 #include <simdjson.h>
 #include <yaml-cpp/yaml.h>
-#include <cloudflare-ddns/config_path.hpp>
+#include <src/config_path.hpp>
 
 /*
  * Two handles for two theads.
