@@ -7,23 +7,12 @@
 #endif
 #include <simdjson.h>
 #include <yaml-cpp/yaml.h>
+#include <cloudflare-ddns/config_path.hpp>
 
 /*
  * Two handles for two theads.
  * One for cdn-cgi/trace and one for DNS IP
  */
-
-static constexpr const char* configPath {[]() {
-	#if (defined(__linux__) || defined(__unix__) || defined(__unix)) && !defined(__FreeBSD__)
-		return "/etc/cloudflare-ddns/config.yaml";
-	#elif defined(__FreeBSD__)
-		return "/usr/local/etc/cloudflare-ddns/config.yaml";
-	#elif defined(_WIN32)
-		return "Where should I store the config file?";
-	#else
-		return "Unknown";
-	#endif
-}()};
 
 std::size_t writeData(char* incomingBuffer, const std::size_t size, const std::size_t count, std::string* data) {
 	data->append(incomingBuffer, size * count);

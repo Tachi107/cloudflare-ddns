@@ -112,4 +112,6 @@ executable(
 	install: true
 )
 
+subdir('cloudflare-ddns')
+
 install_data('config.yaml', install_dir: get_option('sysconfdir'))
