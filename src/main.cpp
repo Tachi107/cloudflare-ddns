@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
 			zoneId = config["zone-id"].value_exact<std::string>().value();
 			recordName = config["record-name"].value_exact<std::string>().value();
 		}
-		catch (const toml::parse_error&) {
-			std::cerr << "Error parsing " << configFile << '\n';
+		catch (const toml::parse_error& err) {
+			std::cerr << "Error parsing " << configFile << ":\n\t" << err.description() << '\n';
 			return EXIT_FAILURE;
 		}
 		catch (const std::bad_optional_access&) {
