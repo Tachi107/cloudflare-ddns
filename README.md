@@ -1,8 +1,15 @@
+<!--
+SPDX-FileCopyrightText: 2021 Andrea Pappacoda
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # cloudflare-ddns
 
 [![Linux](https://github.com/Tachi107/cloudflare-ddns/actions/workflows/linux.yaml/badge.svg)](https://github.com/Tachi107/cloudflare-ddns/actions/workflows/linux.yaml)
 [![Windows](https://ci.appveyor.com/api/projects/status/xe5wo63pxht8pd6n?svg=true)](https://ci.appveyor.com/project/Tachi107/cloudflare-ddns)
 [![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/Tachi107/cloudflare-ddns.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Tachi107/cloudflare-ddns/context:cpp)
+[![REUSE status](https://api.reuse.software/badge/github.com/Tachi107/cloudflare-ddns)](https://api.reuse.software/info/github.com/Tachi107/cloudflare-ddns)
 
 cloudflare-ddns is a tool that can be used to dynamically update a DNS record using Cloudflare's API.
 

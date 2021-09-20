@@ -1,11 +1,11 @@
+# SPDX-FileCopyrightText: 2017 Jussi Pakkanen
+#
+# SPDX-License-Identifier: CC0-1.0
+
 image: Visual Studio 2019
 
 environment:
   matrix:
-#    - arch: x86
-#      compiler: msvc2017
-#    - arch: x64
-#      compiler: msvc2017
     - arch: x86
       compiler: msvc2019
     - arch: x64
@@ -22,7 +22,6 @@ install:
   # Install meson and ninja
   - cmd: pip install --quiet ninja meson
   # Set up the build environment
-#  - cmd: if %compiler%==msvc2017 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
   - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
 
 build_script:
