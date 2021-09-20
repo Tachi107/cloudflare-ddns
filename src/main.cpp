@@ -8,11 +8,11 @@
 #include <string>
 #include <iostream>
 #include <future>
-#ifdef _WIN32
+#if defined(_WIN32) and defined(fopen)
 	#undef fopen
 #endif
 #include <simdjson.h>
-#include <yaml-cpp/yaml.h>
+#include <toml++/toml.h>
 #include <src/config_path.hpp>
 
 /*
@@ -68,35 +68,19 @@ int main(int argc, char* argv[]) {
 	std::string zoneId;
 	std::string recordName;
 
-	if (argc == 1) {
+	if (argc == 1 || argc == 3) {
+		const std::string_view configFile {argc == 1 ? configPath : std::string_view{argv[2]}};
 		try {
-			const YAML::Node config {YAML::LoadFile(configPath)};
-			apiToken = config["api-token"].as<std::string>();
-			zoneId = config["zone-id"].as<std::string>();
-			recordName = config["record-name"].as<std::string>();
+			const auto config = toml::parse_file(configFile);
+			apiToken = config["api-token"].value_exact<std::string>().value();
+			zoneId = config["zone-id"].value_exact<std::string>().value();
+			recordName = config["record-name"].value_exact<std::string>().value();
 		}
-		catch (const YAML::BadFile&) {
-			std::cerr << "No config file found in " << configPath << '\n';
+		catch (const toml::parse_error&) {
+			std::cerr << "Error parsing " << configFile << '\n';
 			return EXIT_FAILURE;
 		}
-		catch (const YAML::Exception&) {
-			std::cerr << "Bad config file\n";
-			return EXIT_FAILURE;
-		}
-	}
-	else if (argc == 3) {
-		const std::string_view customConfigPath {argv[2]};
-		try {
-			const YAML::Node config {YAML::LoadFile(customConfigPath.data())};
-			apiToken = config["api-token"].as<std::string>();
-			zoneId = config["zone-id"].as<std::string>();
-			recordName = config["record-name"].as<std::string>();
-		}
-		catch (const YAML::BadFile&) {
-			std::cerr << "No config file found in " << customConfigPath << '\n';
-			return EXIT_FAILURE;
-		}
-		catch (const YAML::Exception&) {
+		catch (const std::bad_optional_access&) {
 			std::cerr << "Bad config file\n";
 			return EXIT_FAILURE;
 		}
@@ -113,7 +97,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	curl_global_init(CURL_GLOBAL_SSL);
+	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	CURL* curlHandle {curl_easy_init()};
 	std::string dnsResponse;

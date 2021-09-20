@@ -8,6 +8,6 @@
 [submodule "subprojects/curl"]
 	path = subprojects/curl
 	url = https://github.com/curl/curl.git
-[submodule "subprojects/yaml-cpp"]
-	path = subprojects/yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "subprojects/tomlplusplus"]
+	path = subprojects/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

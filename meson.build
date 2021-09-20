@@ -19,7 +19,7 @@ project(
 compiler = meson.get_compiler('cpp')
 
 if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
-	error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to ld.lld')
+	error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
 endif
 
 windows_dep = []
@@ -82,25 +82,7 @@ if not simdjson_dep.found()
 	endif
 endif
 
-yaml_cpp_dep = dependency('yaml-cpp', required: false)
-if not yaml_cpp_dep.found()
-	if meson.version().version_compare('>=0.55.0')
-		yaml_cpp_options = cmake.subproject_options()
-		yaml_cpp_options.add_cmake_defines(
-			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
-			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
-			{'BUILD_SHARED_LIBS': false},
-			{'YAML_MSVC_SHARED_RT': false},
-			{'YAML_CPP_BUILD_TOOLS': false},
-			{'YAML_CPP_BUILD_TESTS': false},
-			{'YAML_CPP_INSTALL': false}
-		)
-		yaml_cpp_options.set_install(false)
-		yaml_cpp_dep = cmake.subproject('yaml-cpp', options: yaml_cpp_options).dependency('yaml-cpp')
-	else
-		simdjson_dep = cmake.subproject('yaml-cpp').dependency('yaml-cpp')
-	endif
-endif
+tomlplusplus_dep = dependency('tomlplusplus', fallback: ['tomlplusplus', 'tomlplusplus_dep'], default_options: ['default_library=static'])
 
 executable(
 	'cloudflare-ddns',
@@ -109,7 +91,7 @@ executable(
 		libcurl_dep,
 		simdjson_dep,
 		dependency('threads'),
-		yaml_cpp_dep,
+		tomlplusplus_dep,
 		windows_dep
 	],
 	install: true
@@ -117,4 +99,4 @@ executable(
 
 subdir('src')
 
-install_data('config.yaml', install_dir: get_option('sysconfdir'))
+install_data('config.toml', install_dir: get_option('sysconfdir'))
