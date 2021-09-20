@@ -13,12 +13,11 @@ extraction:
       - libsimdjson-dev
       - curl
     after_prepare:
-    - curl --silent --location --remote-name https://github.com/mesonbuild/meson/releases/download/0.57.1/meson-0.57.1.tar.gz
-    - tar xf meson-0.57.1.tar.gz
-    - alias meson=./meson-0.57.1/meson.py
+    - curl --silent --location --remote-name https://github.com/mesonbuild/meson/releases/download/0.59.1/meson-0.59.1.tar.gz
+    - tar xf meson-0.59.1.tar.gz
     configure:
       command:
-      - ./meson-0.57.1/meson.py setup build --buildtype=release
+      - ./meson-0.59.1/meson.py setup build --buildtype=release
     index:
       build_command:
-      - ./meson-0.57.1/meson.py compile -C build
+      - ./meson-0.59.1/meson.py compile -C build
