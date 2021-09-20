@@ -9,14 +9,13 @@ project(
 	],
 	version: '0.4.0',
 	license: 'AGPL-3.0-or-later',
-	meson_version: '>=0.49.0'
+	meson_version: '>=0.53.0'
 )
 
 compiler = meson.get_compiler('cpp')
 
-if compiler.get_id().contains('clang')
-	add_project_arguments(['-fuse-ld=lld', '-Wno-unused-command-line-argument'], language: 'cpp')
-	add_project_link_arguments('-fuse-ld=lld', language: 'cpp')
+if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
+	error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to ld.lld')
 endif
 
 windows_dep = []
