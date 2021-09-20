@@ -31,8 +31,6 @@ if not libcurl_dep.found()
 			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
 			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
 			{'BUILD_SHARED_LIBS': false},
-			{'CURL_STATIC_CRT': true},
-			{'CURL_TARGET_WINDOWS_VERSION': '0x0A00'}, # Win 10
 			{'BUILD_CURL_EXE': false},
 			{'CURL_LTO': true},
 			{'HTTP_ONLY': true},
@@ -42,11 +40,14 @@ if not libcurl_dep.found()
 		)
 		if host_machine.system() == 'windows'
 			libcurl_options.add_cmake_defines(
-				{'CMAKE_USE_SCHANNEL': true}
+				{'CURL_STATIC_CRT': true},
+				{'CMAKE_USE_SCHANNEL': true},
+				{'CURL_TARGET_WINDOWS_VERSION': '0x0A00'} # Win 10
 			)
 			windows_dep += compiler.find_library('crypt32')
 			windows_dep += compiler.find_library('ws2_32')
 		endif
+		libcurl_options.set_install(false)
 		libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD', '-DCURL_STATICLIB')
 		libcurl_dep = cmake.subproject('curl', options: libcurl_options).dependency('libcurl')
 	else
@@ -67,6 +68,7 @@ if not simdjson_dep.found()
 			{'SIMDJSON_WINDOWS_DLL': false},
 			{'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false}
 		)
+		simdjson_options.set_install(false)
 		if compiler.get_argument_syntax() == 'msvc'
 			simdjson_options.append_compile_args('c', '/MT')
 			simdjson_options.append_compile_args('cpp', '/MT')
@@ -90,6 +92,7 @@ if not yaml_cpp_dep.found()
 			{'YAML_CPP_BUILD_TESTS': false},
 			{'YAML_CPP_INSTALL': false}
 		)
+		yaml_cpp_options.set_install(false)
 		yaml_cpp_dep = cmake.subproject('yaml-cpp', options: yaml_cpp_options).dependency('yaml-cpp')
 	else
 		simdjson_dep = cmake.subproject('yaml-cpp').dependency('yaml-cpp')
