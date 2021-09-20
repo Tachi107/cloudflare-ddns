@@ -47,11 +47,7 @@ if not libcurl_dep.found()
 			windows_dep += compiler.find_library('crypt32')
 			windows_dep += compiler.find_library('ws2_32')
 		endif
-		if compiler.get_argument_syntax() == 'gcc'
-			libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD -DCURL_STATICLIB')
-		elif compiler.get_argument_syntax() == 'msvc'
-			libcurl_options.append_compile_args('c', '/DOPENSSL_NO_SSL3_METHOD /CURL_STATICLIB')
-		endif
+		libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD', '-DCURL_STATICLIB')
 		libcurl_dep = cmake.subproject('curl', options: libcurl_options).dependency('libcurl')
 	else
 		libcurl_dep = cmake.subproject('curl').dependency('libcurl')
@@ -113,10 +109,4 @@ executable(
 	install: true
 )
 
-if host_machine.system() == 'linux' or host_machine.system() == 'openbsd'
-	install_data('config.yaml', install_dir: '/etc/cloudflare-ddns')
-elif host_machine.system() == 'freebsd'
-	install_data('config.yaml', install_dir: '/usr/local/etc/cloudflare-ddns')
-else
-	install_data('config.yaml')
-endif
+install_data('config.yaml', install_dir: get_option('sysconfdir'))
