@@ -22,7 +22,7 @@ if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
 	error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
 endif
 
-windows_dep = []
+windows_deps = []
 
 cmake = import('cmake')
 
@@ -47,8 +47,8 @@ if not libcurl_dep.found()
 				{'CMAKE_USE_SCHANNEL': true},
 				{'CURL_TARGET_WINDOWS_VERSION': '0x0A00'} # Win 10
 			)
-			windows_dep += compiler.find_library('crypt32')
-			windows_dep += compiler.find_library('ws2_32')
+			windows_deps += compiler.find_library('crypt32')
+			windows_deps += compiler.find_library('ws2_32')
 		endif
 		libcurl_options.set_install(false)
 		libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD', '-DCURL_STATICLIB')
@@ -82,17 +82,15 @@ if not simdjson_dep.found()
 	endif
 endif
 
-tomlplusplus_dep = dependency('tomlplusplus', fallback: ['tomlplusplus', 'tomlplusplus_dep'], default_options: ['default_library=static'])
-
 executable(
 	'cloudflare-ddns',
 	sources: 'src/main.cpp',
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
+		dependency('tomlplusplus', fallback: ['tomlplusplus', 'tomlplusplus_dep'], default_options: ['default_library=static']),
 		dependency('threads'),
-		tomlplusplus_dep,
-		windows_dep
+		windows_deps
 	],
 	install: true
 )
