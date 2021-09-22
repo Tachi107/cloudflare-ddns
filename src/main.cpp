@@ -77,11 +77,11 @@ int main(int argc, char* argv[]) {
 			record_name = config["record_name"].value_exact<std::string>().value();
 		}
 		catch (const toml::parse_error& err) {
-			std::cerr << "Error parsing " << configFile << ":\n\t" << err.description() << '\n';
+			std::cerr << "Error parsing " << err.source() << ":\n\t" << err.description() << '\n';
 			return EXIT_FAILURE;
 		}
-		catch (const std::bad_optional_access&) {
-			std::cerr << "Bad config file\n";
+		catch (const std::bad_optional_access& err) {
+			std::cerr << "Config is missing some required values\n";
 			return EXIT_FAILURE;
 		}
 	}
