@@ -5,12 +5,12 @@
  */
 
 #include <curl/curl.h>
-#if defined(_WIN32) and defined(fopen)
-	#undef fopen
-#endif
 #include <string>
 #include <iostream>
 #include <future>
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
 #include <simdjson.h>
 #include <toml++/toml.h>
 #include <src/config_path.hpp>
