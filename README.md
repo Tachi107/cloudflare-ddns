@@ -23,13 +23,13 @@ Once you got the executable you can use it in two ways: you can pass the API Tok
 
 ## Dependencies
 
-cloudflare-ddns relies only on libcurl and simdjson. I recommend you to compile the program yourself, but I also provide a statically linked executable for every release. It is not 100% self-contained but it should work in most cases.
+cloudflare-ddns relies on libcurl, simdjson and tomlplusplus. I recommend you to compile the program yourself, but I also provide a statically linked executable for every release. It is not 100% self-contained but it should work in most cases.
 
 ## Build
 
 To build cloudflare-ddns you'll need to install `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
 
-After having installed the dependencies, you can build the program with `meson setup build --buildtype=relese` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
+After having installed the dependencies, you can build the program with `meson setup build` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
 
 If your libcurl is older than version 7.64.1 (for example in Debian 10) you'll see a lot of connection logs related to DNS over HTTPS lookups; that's a [libcurl bug](https://github.com/curl/curl/issues/3660), and there's nothing I can do about it :/
 
