@@ -29,23 +29,23 @@ if not libcurl_dep.found()
 	endif
 	if meson.version().version_compare('>=0.55.0')
 		libcurl_options = cmake.subproject_options()
-		libcurl_options.add_cmake_defines(
-			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
-			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
-			{'BUILD_SHARED_LIBS': false},
-			{'BUILD_CURL_EXE': false},
-			{'CURL_LTO': true},
-			{'HTTP_ONLY': true},
-			{'CURL_DISABLE_COOKIES': true},
-			{'CURL_DISABLE_VERBOSE_STRINGS': true},
-			{'ENABLE_UNIX_SOCKETS': false}
-		)
+		libcurl_options.add_cmake_defines({
+			'CMAKE_BUILD_TYPE': get_option('buildtype'),
+			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
+			'BUILD_SHARED_LIBS': false,
+			'BUILD_CURL_EXE': false,
+			'CURL_LTO': true,
+			'HTTP_ONLY': true,
+			'CURL_DISABLE_COOKIES': true,
+			'CURL_DISABLE_VERBOSE_STRINGS': true,
+			'ENABLE_UNIX_SOCKETS': false
+		})
 		if host_machine.system() == 'windows'
-			libcurl_options.add_cmake_defines(
-				{'CURL_STATIC_CRT': true},
-				{'CMAKE_USE_SCHANNEL': true},
-				{'CURL_TARGET_WINDOWS_VERSION': '0x0A00'} # Win 10
-			)
+			libcurl_options.add_cmake_defines({
+				'CURL_STATIC_CRT': true,
+				'CMAKE_USE_SCHANNEL': true,
+				'CURL_TARGET_WINDOWS_VERSION': '0x0A00' # Win 10
+			})
 			windows_deps += compiler.find_library('crypt32')
 			windows_deps += compiler.find_library('ws2_32')
 		endif
@@ -64,15 +64,13 @@ if not simdjson_dep.found()
 	endif
 	if meson.version().version_compare('>=0.55.0')
 		simdjson_options = cmake.subproject_options()
-		simdjson_options.add_cmake_defines(
-			{'CMAKE_BUILD_TYPE': get_option('buildtype')},
-			{'MSVC_RUNTIME_LIBRARY': 'MultiThreaded'},
-			{'BUILD_SHARED_LIBS': false},
-			{'SIMDJSON_JUST_LIBRARY': true},
-			{'SIMDJSON_BUILD_STATIC': true},
-			{'SIMDJSON_WINDOWS_DLL': false},
-			{'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false}
-		)
+		simdjson_options.add_cmake_defines({
+			'CMAKE_BUILD_TYPE': get_option('buildtype'),
+			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
+			'BUILD_SHARED_LIBS': false,
+			'SIMDJSON_WINDOWS_DLL': false,
+			'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false
+		})
 		simdjson_options.set_install(false)
 		if compiler.get_argument_syntax() == 'msvc'
 			simdjson_options.append_compile_args('c', '/MT')
@@ -86,7 +84,7 @@ endif
 
 executable(
 	'cloudflare-ddns',
-	sources: 'src/main.cpp',
+	'src'/'main.cpp',
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
@@ -99,4 +97,4 @@ executable(
 
 subdir('src')
 
-install_data('config.toml', install_dir: get_option('sysconfdir'))
+install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
