@@ -82,23 +82,56 @@ if not simdjson_dep.found()
 	endif
 endif
 
+tomlplusplus_dep = dependency(
+	'tomlplusplus',
+	fallback: ['tomlplusplus', 'tomlplusplus_dep'],
+	default_options: ['default_library=static']
+)
+
+extra_args = []
+default_library = get_option('default_library')
+if default_library == 'shared' or default_library == 'both'
+	extra_args += '-DTACHI_BUILD_SHARED'
+endif
+
 subdir('src')
 
 if get_option('tests')
 	subdir('tests')
 endif
 
+libcloudflare_ddns = library(
+	'cloudflare-ddns',
+	'lib'/'cloudflare-ddns.cpp',
+	cpp_args: extra_args,
+	dependencies: [
+		libcurl_dep,
+		simdjson_dep,
+		tomlplusplus_dep,
+		windows_deps
+	],
+	gnu_symbol_visibility: 'hidden',
+	include_directories: 'include',
+	install: true,
+	version: meson.project_version()
+)
+
+cloudflare_ddns_dep = declare_dependency(link_with: libcloudflare_ddns, version: meson.project_version())
+
 executable(
 	'cloudflare-ddns',
 	'src'/'main.cpp',
 	dependencies: [
+		cloudflare_ddns_dep,
 		libcurl_dep,
 		simdjson_dep,
-		dependency('tomlplusplus', fallback: ['tomlplusplus', 'tomlplusplus_dep'], default_options: ['default_library=static']),
+		tomlplusplus_dep,
 		dependency('threads'),
 		windows_deps
 	],
-	install: true
+	gnu_symbol_visibility: 'hidden',
+	include_directories: 'include',
+	install: true,
 )
 
 install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')

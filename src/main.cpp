@@ -20,49 +20,6 @@
  * One for cdn-cgi/trace and one for DNS IP
  */
 
-std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
-	data->append(incoming_buffer, size * count);
-	return size * count;
-}
-
-std::string get_local_ip() {
-	// Creating the handle and the response buffer
-	CURL* local_ip_handle {curl_easy_init()};
-	std::string local_ip_response;
-
-	// General curl options
-	curl_easy_setopt(local_ip_handle, CURLOPT_NOPROGRESS, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_NOSIGNAL, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_WRITEFUNCTION, write_data);
-	curl_easy_setopt(local_ip_handle, CURLOPT_WRITEDATA, &local_ip_response);
-	curl_easy_setopt(local_ip_handle, CURLOPT_TCP_FASTOPEN, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-	curl_easy_setopt(local_ip_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
-	curl_easy_setopt(local_ip_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-
-	// Setting up a GET request
-	curl_easy_setopt(local_ip_handle, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_URL, "https://1.1.1.1/cdn-cgi/trace");
-
-	// Performing the request
-	curl_easy_perform(local_ip_handle);
-
-	// Cleaning up the handle as I won't reuse it
-	curl_easy_cleanup(local_ip_handle);
-
-	// Parsing the response
-	const std::size_t ip_begin {local_ip_response.find("ip=") + 3};  // + 3 because "ip=" is 3 chars
-	const std::size_t ip_end {local_ip_response.find('\n', ip_begin)};
-	return local_ip_response.substr(ip_begin, ip_end - ip_begin);
-}
-
-// NOT thread-safe, writes into a buffer and uses an handle both owned elsewhere
-void get_dns_record_response(CURL** curl_handle, const std::string_view request_uri) {
-	curl_easy_setopt(*curl_handle, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(*curl_handle, CURLOPT_URL, request_uri.data());
-	curl_easy_perform(*curl_handle);
-}
-
 int main(int argc, char* argv[]) {
 	std::string api_token;
 	std::string zone_id;
@@ -120,8 +77,8 @@ int main(int argc, char* argv[]) {
 	struct curl_slist* headers {nullptr};
 	headers = curl_slist_append(headers, "Content-Type: application/json");
 	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
-
-	std::future<void> dns_response_future {std::async(std::launch::async, get_dns_record_response, &curl_handle, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name})};
+	                                                                   // get_dns_record_response
+	std::future<void> dns_response_future {std::async(std::launch::async, get_request, &curl_handle, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name})};
 	std::future<std::string> local_ip_future {std::async(std::launch::async, get_local_ip)};
 
 	simdjson::dom::parser parser;
