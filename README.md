@@ -56,7 +56,7 @@ ProtectSystem=strict
 ProtectHome=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 ```
 
 ### `cloudflare-ddns.timer`

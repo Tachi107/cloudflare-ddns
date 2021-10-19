@@ -82,6 +82,12 @@ if not simdjson_dep.found()
 	endif
 endif
 
+subdir('src')
+
+if get_option('tests')
+	subdir('tests')
+endif
+
 executable(
 	'cloudflare-ddns',
 	'src'/'main.cpp',
@@ -94,7 +100,5 @@ executable(
 	],
 	install: true
 )
-
-subdir('src')
 
 install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')

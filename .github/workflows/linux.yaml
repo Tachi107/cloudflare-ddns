@@ -21,7 +21,7 @@ jobs:
         sudo apt-get -qq update && sudo apt-get -qq install meson libcurl4-openssl-dev libsimdjson-dev/hirsute
 
     - name: Configure Meson
-      run: meson setup build --buildtype=release
+      run: meson setup build -Dtests=true -Dtest_api_token="$API_TOKEN" -Dtest_zone_id="$ZONE_ID" -Dtest_record_name="$RECORD_NAME"
 
     - name: Build
       run: ninja -C build

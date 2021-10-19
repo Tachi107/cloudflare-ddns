@@ -11,3 +11,6 @@
 [submodule "subprojects/tomlplusplus"]
 	path = subprojects/tomlplusplus
 	url = https://github.com/marzer/tomlplusplus.git
+[submodule "subprojects/ut"]
+	path = subprojects/ut
+	url = https://github.com/boost-ext/ut.git

@@ -39,14 +39,14 @@ std::string get_local_ip() {
 	curl_easy_setopt(local_ip_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(local_ip_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
 	curl_easy_setopt(local_ip_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-	
+
 	// Setting up a GET request
 	curl_easy_setopt(local_ip_handle, CURLOPT_HTTPGET, 1L);
 	curl_easy_setopt(local_ip_handle, CURLOPT_URL, "https://1.1.1.1/cdn-cgi/trace");
 
 	// Performing the request
 	curl_easy_perform(local_ip_handle);
-	
+
 	// Cleaning up the handle as I won't reuse it
 	curl_easy_cleanup(local_ip_handle);
 
