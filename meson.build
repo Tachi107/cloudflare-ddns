@@ -131,7 +131,7 @@ executable(
 	],
 	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
-	install: true,
+	install: true
 )
 
 install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')

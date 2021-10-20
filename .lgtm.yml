@@ -17,7 +17,7 @@ extraction:
     - tar xf meson-0.59.1.tar.gz
     configure:
       command:
-      - ./meson-0.59.1/meson.py setup build --buildtype=release
+      - ./meson-0.59.1/meson.py setup build
     index:
       build_command:
       - ./meson-0.59.1/meson.py compile -C build

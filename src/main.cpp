@@ -13,6 +13,7 @@
 #endif
 #include <simdjson.h>
 #include <toml++/toml.h>
+#include <tachi/cloudflare-ddns.hpp>
 #include <src/config_path.hpp>
 
 /*
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
 
 	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, tachi::priv::write_data);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &dns_response);
 	curl_easy_setopt(curl_handle, CURLOPT_TCP_FASTOPEN, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
@@ -77,9 +78,19 @@ int main(int argc, char* argv[]) {
 	struct curl_slist* headers {nullptr};
 	headers = curl_slist_append(headers, "Content-Type: application/json");
 	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
-	                                                                   // get_dns_record_response
-	std::future<void> dns_response_future {std::async(std::launch::async, get_request, &curl_handle, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name})};
-	std::future<std::string> local_ip_future {std::async(std::launch::async, get_local_ip)};
+	std::future<void> dns_response_future {
+		std::async(
+			std::launch::async,
+			[](CURL** curl_handle, const std::string_view request_uri) {
+				curl_easy_setopt(*curl_handle, CURLOPT_HTTPGET, 1L);
+				curl_easy_setopt(*curl_handle, CURLOPT_URL, request_uri.data());
+				curl_easy_perform(*curl_handle);
+			},
+			&curl_handle,
+			std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name}
+		)
+	};
+	std::future<std::string> local_ip_future {std::async(std::launch::async, tachi::get_local_ip)};
 
 	simdjson::dom::parser parser;
 	dns_response_future.wait();

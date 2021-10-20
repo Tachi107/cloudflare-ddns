@@ -33,18 +33,31 @@
 	#endif
 #endif
 
+
+/*
+ * There are two kinds of functions; the one that is self contained, thread
+ * safe, that create and use their own cURL handle, and the other one that
+ * borrows mutably a cURL handle, a more efficient approach but that is not
+ * thread safe. They require that the handle is already properly
+ * initialized as they use curl_easy_setopt just to set up the request type
+ * and URL.
+ *
+ * The user of the library is responsable for calling curl_global_init.
+ */
+
 namespace tachi {
 
 TACHI_PUB std::string get_local_ip();
 
+TACHI_PUB std::string get_record_ip_raw(std::string_view api_token, std::string_view zone_id, std::string_view record_name);
 
 namespace priv {
 
-// È usata una volta sola, potrei usare una lambda
-// NOT thread-safe, writes into a buffer and uses an handle both owned elsewhere
-TACHI_PRIV void get_request(CURL** curl_handle, std::string_view request_uri);
-
 TACHI_PRIV std::size_t write_data(char* incoming_buffer, std::size_t size, std::size_t count, std::string* data);
+
+TACHI_PRIV void curl_handle_setup(CURL** handle, const std::string& response_buffer) noexcept;
+
+TACHI_PRIV void curl_doh_setup(CURL** handle) noexcept;
 
 } // namespace priv
 
