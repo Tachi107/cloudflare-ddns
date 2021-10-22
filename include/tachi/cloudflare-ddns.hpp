@@ -19,6 +19,10 @@
 #include <string>
 #include <utility>
 #include <curl/curl.h>
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
 
 #if defined _WIN32 || defined __CYGWIN__
 	#ifdef TACHI_BUILD_SHARED
