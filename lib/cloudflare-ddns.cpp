@@ -10,6 +10,12 @@
 #endif
 
 #include <tachi/cloudflare-ddns.hpp>
+
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
+
 #include <string_view>
 #include <simdjson.h>
 
