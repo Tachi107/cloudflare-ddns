@@ -22,7 +22,7 @@ std::size_t write_data(char* incoming_buffer, const std::size_t size, const std:
 	return size * count;
 }
 
-int main(int argc, char* argv[]) {
+int main(const int argc, const char* const argv[]) {
 	std::string api_token;
 	std::string zone_id;
 	std::string record_name;
