@@ -100,6 +100,29 @@ TACHI_PUB std::string get_record_raw(const std::string& api_token, const std::st
  */
 TACHI_PUB void get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name, CURL** curl);
 
+/**
+ * Update the IP address of a given A/AAAA DNS record
+ *
+ * This function sends a PATCH request to Cloudflare's API and sets the IP
+ * address of a given A/AAAA record to the one passed as argument to the fn.
+ * It manages its own cURL handle under the hood, and returns the IP that
+ * Cloudflare received and set, if successfull, parsed using simdjson. This
+ * function is thread safe, but it creates and destroys a cURL handle by
+ * itself, which may be slow. If you want faster performance by reusing the
+ * same handle you can look into update_record_raw().
+ */
+TACHI_PUB std::string update_record(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip);
+
+/**
+ * Update the IP address of a given A/AAAA DNS record
+ * This function sends a PATCH request to Cloudflare's API and sets the IP
+ * address of a given A/AAAA record to the one passed as argument to the fn.
+ * You must pass in your own cURL handle, which allows for better
+ * performance but has greater complexity. If you don't particurarly care
+ * about performance you can use the simpler update_record() function.
+ */
+TACHI_PUB void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip, CURL** curl);
+
 namespace priv {
 
 TACHI_PRIV std::size_t write_data(char* incoming_buffer, std::size_t size, std::size_t count, std::string* data);
@@ -111,6 +134,8 @@ TACHI_PRIV void curl_doh_setup(CURL** curl) noexcept;
 TACHI_PRIV void curl_auth_setup(CURL** curl, const char* api_token) noexcept;
 
 TACHI_PRIV void curl_get_setup(CURL** curl, const char* url) noexcept;
+
+TACHI_PRIV void curl_patch_setup(CURL** curl, const char* url, const char* body) noexcept;
 
 } // namespace priv
 

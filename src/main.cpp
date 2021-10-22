@@ -94,11 +94,13 @@ int main(int argc, char* argv[]) {
 
 	if (local_ip != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		dns_response.clear();
-		curl_easy_setopt(curl_handle, CURLOPT_URL, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records/" + std::string{static_cast<std::string_view>((*parsed["result"].begin())["id"])}}.c_str());
-		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "PATCH");
-		std::string request {R"({"content": ")" + local_ip + "\"}"};
-		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, request.c_str());
-		curl_easy_perform(curl_handle);
+		tachi::update_record_raw(
+			api_token,
+			zone_id,
+			std::string{static_cast<std::string_view>((*parsed["result"].begin())["id"])},
+			local_ip,
+			&curl_handle
+		);
 		std::cout << "New IP: " << parser.parse(dns_response)["result"]["content"] << '\n';
 	}
 	else {
