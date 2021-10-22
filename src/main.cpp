@@ -4,12 +4,22 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
+
 #include <string>
 #include <iostream>
 #include <future>
 #include <simdjson.h>
 #include <toml++/toml.h>
 #include <tachi/cloudflare-ddns.hpp>
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
+
 #include <src/config_path.hpp>
 
 /*

@@ -16,6 +16,10 @@
  */
 
 #pragma once
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
 #include <curl/curl.h>
 #include <string>
 #include <utility>

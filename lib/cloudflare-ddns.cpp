@@ -4,9 +4,19 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
+
 #include <tachi/cloudflare-ddns.hpp>
 #include <string_view>
 #include <simdjson.h>
+
+// curl.h redefines fopen on Windows, causing issues.
+#if defined(_WIN32) and defined(fopen)
+	#undef fopen
+#endif
 
 namespace tachi {
 
