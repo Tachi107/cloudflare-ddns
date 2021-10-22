@@ -16,17 +16,8 @@
  */
 
 #pragma once
-// curl.h redefines fopen on Windows, causing issues.
-#if defined(_WIN32) and defined(fopen)
-	#undef fopen
-#endif
-#include <curl/curl.h>
 #include <string>
 #include <utility>
-// curl.h redefines fopen on Windows, causing issues.
-#if defined(_WIN32) and defined(fopen)
-	#undef fopen
-#endif
 
 #if defined _WIN32 || defined __CYGWIN__
 	#ifdef TACHI_BUILD_SHARED
@@ -106,7 +97,7 @@ TACHI_PUB std::string get_record_raw(const std::string& api_token, const std::st
  * get_record(), but you'll have to consult Cloudflare's API reference and
  * you'll also need to parse the result yourself.
  */
-TACHI_PUB void get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name, CURL** curl);
+TACHI_PUB void get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name, void** curl);
 
 /**
  * Update the IP address of a given A/AAAA DNS record
@@ -129,21 +120,21 @@ TACHI_PUB std::string update_record(const std::string &api_token, const std::str
  * performance but has greater complexity. If you don't particurarly care
  * about performance you can use the simpler update_record() function.
  */
-TACHI_PUB void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip, CURL** curl);
+TACHI_PUB void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip, void** curl);
 
 namespace priv {
 
 TACHI_PRIV std::size_t write_data(char* incoming_buffer, std::size_t size, std::size_t count, std::string* data);
 
-TACHI_PRIV void curl_handle_setup(CURL** curl, const std::string& response_buffer) noexcept;
+TACHI_PRIV void curl_handle_setup(void** curl, const std::string& response_buffer) noexcept;
 
-TACHI_PRIV void curl_doh_setup(CURL** curl) noexcept;
+TACHI_PRIV void curl_doh_setup(void** curl) noexcept;
 
-TACHI_PRIV void curl_auth_setup(CURL** curl, const char* api_token) noexcept;
+TACHI_PRIV void curl_auth_setup(void** curl, const char* api_token) noexcept;
 
-TACHI_PRIV void curl_get_setup(CURL** curl, const char* url) noexcept;
+TACHI_PRIV void curl_get_setup(void** curl, const char* url) noexcept;
 
-TACHI_PRIV void curl_patch_setup(CURL** curl, const char* url, const char* body) noexcept;
+TACHI_PRIV void curl_patch_setup(void** curl, const char* url, const char* body) noexcept;
 
 } // namespace priv
 
