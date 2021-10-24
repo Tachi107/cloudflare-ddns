@@ -20,17 +20,19 @@
 #include <utility>
 
 #if defined _WIN32 || defined __CYGWIN__
-	#ifdef TACHI_BUILD_SHARED
+// This check is currently useless
+	#ifdef TACHI_BUILD_LIBRARY
 		#ifdef __GNUC__
 			#define TACHI_PUB __attribute__ ((dllexport))
 		#else
 			#define TACHI_PUB __declspec(dllexport)
 		#endif
 	#else
+		// These should be dllimport, but it causes linking issues
 		#ifdef __GNUC__
-			#define TACHI_PUB __attribute__ ((dllimport))
+			#define TACHI_PUB __attribute__ ((dllexport))
 		#else
-			#define TACHI_PUB __declspec(dllimport)
+			#define TACHI_PUB __declspec(dllexport)
 		#endif
 	#endif
 	#define TACHI_PRIV

@@ -89,12 +89,6 @@ tomlplusplus_dep = dependency(
 	default_options: ['default_library=static']
 )
 
-extra_args = []
-default_library = get_option('default_library')
-if default_library == 'shared' or default_library == 'both'
-	extra_args += '-DTACHI_BUILD_SHARED'
-endif
-
 config_path_hpp = ''
 subdir('src')
 
@@ -105,7 +99,7 @@ endif
 libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
-	cpp_args: extra_args,
+	cpp_args: '-DTACHI_BUILD_LIBRARY',
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
