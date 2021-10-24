@@ -8,11 +8,13 @@
 #include <string>
 #include <iostream>
 #include <future>
+// curl.h redefines fopen on Windows, causing issues.
 #if defined(_WIN32) and defined(fopen)
 	#undef fopen
 #endif
 #include <simdjson.h>
 #include <toml++/toml.h>
+#include <tachi/cloudflare-ddns.hpp>
 #include <src/config_path.hpp>
 
 /*
@@ -25,45 +27,7 @@ std::size_t write_data(char* incoming_buffer, const std::size_t size, const std:
 	return size * count;
 }
 
-std::string get_local_ip() {
-	// Creating the handle and the response buffer
-	CURL* local_ip_handle {curl_easy_init()};
-	std::string local_ip_response;
-
-	// General curl options
-	curl_easy_setopt(local_ip_handle, CURLOPT_NOPROGRESS, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_NOSIGNAL, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_WRITEFUNCTION, write_data);
-	curl_easy_setopt(local_ip_handle, CURLOPT_WRITEDATA, &local_ip_response);
-	curl_easy_setopt(local_ip_handle, CURLOPT_TCP_FASTOPEN, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-	curl_easy_setopt(local_ip_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
-	curl_easy_setopt(local_ip_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-
-	// Setting up a GET request
-	curl_easy_setopt(local_ip_handle, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(local_ip_handle, CURLOPT_URL, "https://1.1.1.1/cdn-cgi/trace");
-
-	// Performing the request
-	curl_easy_perform(local_ip_handle);
-
-	// Cleaning up the handle as I won't reuse it
-	curl_easy_cleanup(local_ip_handle);
-
-	// Parsing the response
-	const std::size_t ip_begin {local_ip_response.find("ip=") + 3};  // + 3 because "ip=" is 3 chars
-	const std::size_t ip_end {local_ip_response.find('\n', ip_begin)};
-	return local_ip_response.substr(ip_begin, ip_end - ip_begin);
-}
-
-// NOT thread-safe, writes into a buffer and uses an handle both owned elsewhere
-void get_dns_record_response(CURL** curl_handle, const std::string_view request_uri) {
-	curl_easy_setopt(*curl_handle, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(*curl_handle, CURLOPT_URL, request_uri.data());
-	curl_easy_perform(*curl_handle);
-}
-
-int main(int argc, char* argv[]) {
+int main(const int argc, const char* const argv[]) {
 	std::string api_token;
 	std::string zone_id;
 	std::string record_name;
@@ -110,19 +74,18 @@ int main(int argc, char* argv[]) {
 	curl_easy_setopt(curl_handle, CURLOPT_TCP_FASTOPEN, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
-	struct curl_slist* manual_doh_address {nullptr};
-	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
-	curl_easy_setopt(curl_handle, CURLOPT_RESOLVE, manual_doh_address);
-	curl_easy_setopt(curl_handle, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
-	curl_easy_setopt(curl_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-	curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
-	curl_easy_setopt(curl_handle, CURLOPT_XOAUTH2_BEARER, api_token.data());
-	struct curl_slist* headers {nullptr};
-	headers = curl_slist_append(headers, "Content-Type: application/json");
-	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
 
-	std::future<void> dns_response_future {std::async(std::launch::async, get_dns_record_response, &curl_handle, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name})};
-	std::future<std::string> local_ip_future {std::async(std::launch::async, get_local_ip)};
+	std::future<void> dns_response_future {std::async(
+		std::launch::async,
+		// Need to cast to disambiguate the overloaded function
+		static_cast<void(*)(const std::string&, const std::string&, const std::string&, CURL**)>(&tachi::get_record_raw),
+		api_token, zone_id, record_name, &curl_handle
+	)};
+
+	std::future<std::string> local_ip_future {std::async(
+		std::launch::async,
+		tachi::get_local_ip
+	)};
 
 	simdjson::dom::parser parser;
 	dns_response_future.wait();
@@ -132,12 +95,13 @@ int main(int argc, char* argv[]) {
 
 	if (local_ip != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		dns_response.clear();
-		curl_easy_setopt(curl_handle, CURLOPT_URL, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records/" + std::string{static_cast<std::string_view>((*parsed["result"].begin())["id"])}}.c_str());
-		// curl_easy_setopt(curl_handle, CURLOPT_NOBODY, 0L);
-		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "PATCH");
-		std::string request {R"({"content": ")" + local_ip + "\"}"};
-		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, request.c_str());
-		curl_easy_perform(curl_handle);
+		tachi::update_record_raw(
+			api_token,
+			zone_id,
+			std::string{static_cast<std::string_view>((*parsed["result"].begin())["id"])},
+			local_ip,
+			&curl_handle
+		);
 		std::cout << "New IP: " << parser.parse(dns_response)["result"]["content"] << '\n';
 	}
 	else {
