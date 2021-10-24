@@ -4,14 +4,16 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include <curl/curl.h>
 #include <tachi/cloudflare-ddns.hpp>
-#include <string_view>
 // curl.h redefines fopen on Windows, causing issues.
-#if defined(_WIN32) and defined(fopen)
-	#undef fopen
+#if fopen == curlx_win32_fopen
+namespace std {
+	const auto& curlx_win32_fopen = fopen;
+}
 #endif
+#include <string_view>
 #include <simdjson.h>
+#include <curl/curl.h>
 
 namespace tachi {
 
@@ -96,7 +98,7 @@ std::string update_record(const std::string &api_token, const std::string &zone_
 	};
 }
 
-void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string &new_ip, CURL **curl) {
+void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string &new_ip, CURL** curl) {
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token.c_str());
 	priv::curl_patch_setup(

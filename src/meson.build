@@ -8,7 +8,7 @@ if get_option('prefix') == '/usr'
 	sysconfdir = get_option('sysconfdir')
 endif
 
-configure_file(
+config_path_hpp = configure_file(
 	input: 'config_path.hpp.in',
 	output: 'config_path.hpp',
 	configuration: {'sysconfdir': sysconfdir}

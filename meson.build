@@ -8,6 +8,7 @@ project(
 	default_options: [
 		'cpp_std=c++17',
 		'buildtype=release',
+		'warning_level=3',
 		'b_ndebug=if-release',
 		'b_lto=true'
 	],
@@ -94,6 +95,7 @@ if default_library == 'shared' or default_library == 'both'
 	extra_args += '-DTACHI_BUILD_SHARED'
 endif
 
+config_path_hpp = ''
 subdir('src')
 
 if get_option('tests')
@@ -131,7 +133,8 @@ executable(
 	],
 	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
-	install: true
+	install: true,
+	sources: config_path_hpp
 )
 
 install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
