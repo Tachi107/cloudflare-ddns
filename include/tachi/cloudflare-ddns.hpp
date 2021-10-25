@@ -126,6 +126,8 @@ TACHI_PUB void update_record_raw(const std::string &api_token, const std::string
 
 namespace priv {
 
+extern "C" {
+
 TACHI_PRIV std::size_t write_data(char* incoming_buffer, std::size_t size, std::size_t count, std::string* data);
 
 TACHI_PRIV void curl_handle_setup(void** curl, const std::string& response_buffer) noexcept;
@@ -137,6 +139,8 @@ TACHI_PRIV void curl_auth_setup(void** curl, const char* api_token) noexcept;
 TACHI_PRIV void curl_get_setup(void** curl, const char* url) noexcept;
 
 TACHI_PRIV void curl_patch_setup(void** curl, const char* url, const char* body) noexcept;
+
+} // extern "C"
 
 } // namespace priv
 

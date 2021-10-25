@@ -112,6 +112,8 @@ void update_record_raw(const std::string &api_token, const std::string &zone_id,
 
 namespace priv {
 
+extern "C" {
+
 std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
 	data->append(incoming_buffer, size * count);
 	return size * count;
@@ -154,6 +156,8 @@ void curl_patch_setup(CURL** curl, const char* const url, const char* const body
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
 }
+
+} // extern "C"
 
 } // namespace priv
 
