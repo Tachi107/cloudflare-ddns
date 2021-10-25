@@ -32,7 +32,7 @@ if not libcurl_dep.found()
 		libcurl_options = cmake.subproject_options()
 		libcurl_options.add_cmake_defines({
 			'CMAKE_BUILD_TYPE': get_option('buildtype'),
-			'CMAKE_POSITION_INDEPENDENT_CODE': true,
+			'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
 			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 			'BUILD_SHARED_LIBS': false,
 			'BUILD_CURL_EXE': false,
@@ -68,7 +68,7 @@ if not simdjson_dep.found()
 		simdjson_options = cmake.subproject_options()
 		simdjson_options.add_cmake_defines({
 			'CMAKE_BUILD_TYPE': get_option('buildtype'),
-			'CMAKE_POSITION_INDEPENDENT_CODE': true,
+			'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
 			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 			'BUILD_SHARED_LIBS': false,
 			'SIMDJSON_WINDOWS_DLL': false,
