@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-configure_file(
+credentials_hpp = configure_file(
 	input: 'credentials.hpp.in',
 	output: 'credentials.hpp',
 	configuration: {
@@ -14,11 +14,26 @@ configure_file(
 
 boost_ut_dep = dependency('boost.ut', fallback: ['ut', 'boostut_dep'])
 
+# Enable C++20 for tests (required by ut)
+test_args = []
+if compiler.get_argument_syntax() == 'gcc'
+	test_args += '-std=c++20'
+elif compiler.get_argument_syntax() == 'msvc'
+	test_args += '/std:c++20'
+endif
+
 test(
 	'main',
 	executable(
 		'test_main',
 		'test_main.cpp',
-		dependencies: boost_ut_dep
+		cpp_args: test_args,
+		dependencies: [
+			boost_ut_dep,
+			cloudflare_ddns_dep,
+			libcurl_dep
+		],
+		gnu_symbol_visibility: 'hidden',
+		sources: credentials_hpp
 	)
 )

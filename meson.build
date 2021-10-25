@@ -94,10 +94,6 @@ tomlplusplus_dep = dependency(
 config_path_hpp = ''
 subdir('src')
 
-if get_option('tests')
-	subdir('tests')
-endif
-
 libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
@@ -114,7 +110,11 @@ libcloudflare_ddns = library(
 	version: meson.project_version()
 )
 
-cloudflare_ddns_dep = declare_dependency(link_with: libcloudflare_ddns, version: meson.project_version())
+cloudflare_ddns_dep = declare_dependency(
+	include_directories: 'include',
+	link_with: libcloudflare_ddns,
+	version: meson.project_version()
+)
 
 executable(
 	'cloudflare-ddns',
@@ -128,9 +128,12 @@ executable(
 		windows_deps
 	],
 	gnu_symbol_visibility: 'hidden',
-	include_directories: 'include',
 	install: true,
 	sources: config_path_hpp
 )
+
+if get_option('tests')
+	subdir('tests')
+endif
 
 install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
