@@ -25,7 +25,7 @@ install:
   - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
 
 build_script:
-  - cmd: meson setup build --buildtype=release --default-library=static -Db_vscrt=static_from_buildtype
+  - cmd: meson setup build --buildtype=release --default-library=static -Db_vscrt=static_from_buildtype -Dtests=true
   - cmd: meson compile -C build
 
 test_script:

@@ -15,7 +15,7 @@ credentials_hpp = configure_file(
 boost_ut_dep = dependency('boost.ut', fallback: ['ut', 'boostut_dep'])
 
 # Enable C++20 for tests (required by ut)
-test_args = compiler.get_supported_arguments('-std=c++20', '-std=c++2a', '/std=c++20')[0]
+test_args = compiler.get_supported_arguments('-std=c++20', '-std=c++2a', '/std:c++20')[0]
 
 test(
 	'main',
