@@ -20,11 +20,16 @@ int main() {
 	"get_record"_test = [] {
 		#if TACHI_HAS_GETADDRINFO
 		addrinfo* dns_response {nullptr};
+
 		int error {
 			getaddrinfo(test_record_name.data(), nullptr, nullptr, &dns_response)
 		};
-		assert(error == 0);
+		if (error != 0) {
+			std::cerr << "getaddrinfo: " << gai_strerror(error);
+			std::exit(EXIT_FAILURE);
+		}
 
+		// TODO(tachi): handle IPv6
 		std::string address {
 			inet_ntoa(reinterpret_cast<sockaddr_in*>(dns_response->ai_addr)->sin_addr)
 		};
