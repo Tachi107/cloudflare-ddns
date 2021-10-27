@@ -4,12 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include <boost/ut.hpp>
-#include <string>
-#include <tachi/cloudflare-ddns.hpp>
+#include "common.hpp"
 #include <curl/curl.h>
-
-using namespace boost::ut;
 
 extern "C" {
 std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
@@ -45,6 +41,5 @@ int main() {
 		expect(eq(tachi::get_local_ip(), response));
 		curl_easy_cleanup(curl);
 	};
-
 	curl_global_cleanup();
 }

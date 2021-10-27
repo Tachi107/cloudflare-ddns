@@ -15,20 +15,31 @@ credentials_hpp = configure_file(
 boost_ut_dep = dependency('boost.ut', fallback: ['ut', 'boostut_dep'])
 
 # Enable C++20 for tests (required by ut)
-test_args = compiler.get_supported_arguments('-std=c++20', '-std=c++2a', '/std:c++20')[0]
+test_args = [compiler.get_supported_arguments('-std=c++20', '-std=c++2a', '/std:c++20')[0]]
 
-test(
-	'main',
-	executable(
-		'test_main',
-		'test_main.cpp',
-		cpp_args: test_args,
-		dependencies: [
-			boost_ut_dep,
-			cloudflare_ddns_dep,
-			libcurl_dep
-		],
-		gnu_symbol_visibility: 'hidden',
-		sources: credentials_hpp
+if compiler.has_function('getaddrinfo', prefix: '#include <netdb.h>')
+	test_args += '-DTACHI_HAS_GETADDRINFO'
+endif
+
+tests = [
+	'get_record',
+	'local_ip'
+]
+
+foreach test : tests
+	test(
+		test,
+		executable(
+			test,
+			test + '.cpp',
+			cpp_args: test_args,
+			dependencies: [
+				boost_ut_dep,
+				cloudflare_ddns_dep,
+				libcurl_dep
+			],
+			gnu_symbol_visibility: 'hidden',
+			sources: credentials_hpp
+		)
 	)
-)
+endforeach
