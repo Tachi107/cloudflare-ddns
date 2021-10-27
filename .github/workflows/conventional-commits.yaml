@@ -6,6 +6,10 @@ name: conventional-commits
 
 on: pull_request
 
+defaults:
+  run:
+    shell: sh
+
 jobs:
   commitlint:
     runs-on: ubuntu-latest

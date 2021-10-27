@@ -21,7 +21,7 @@ int main() {
 		#if TACHI_HAS_GETADDRINFO
 		addrinfo* dns_response {nullptr};
 
-		int error {
+		const int error {
 			getaddrinfo(test_record_name.data(), nullptr, nullptr, &dns_response)
 		};
 		if (error != 0) {
@@ -29,8 +29,8 @@ int main() {
 			std::exit(EXIT_FAILURE);
 		}
 
-		// TODO(tachi): handle IPv6
-		std::string address {
+		// TODO(tachi): handle IPv6, maybe with inet_ntop()?
+		const std::string address {
 			inet_ntoa(reinterpret_cast<sockaddr_in*>(dns_response->ai_addr)->sin_addr)
 		};
 

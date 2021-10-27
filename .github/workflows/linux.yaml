@@ -6,6 +6,10 @@ name: Linux
 
 on: [push]
 
+defaults:
+  run:
+    shell: sh
+
 jobs:
   ubuntu:
     runs-on: ubuntu-20.04

@@ -6,6 +6,10 @@ name: REUSE Compliance Check
 
 on: [push, pull_request]
 
+defaults:
+  run:
+    shell: sh
+
 jobs:
   test:
     runs-on: ubuntu-latest
