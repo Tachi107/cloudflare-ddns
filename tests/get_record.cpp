@@ -16,7 +16,7 @@ int main() {
 		/**
 	 * Get the current IP of an A record and compare if against the
 	 * return value of tachi::get_record()
-	 */ 
+	 */
 	"get_record"_test = [] {
 		#if TACHI_HAS_GETADDRINFO
 		addrinfo* dns_response {nullptr};
@@ -29,9 +29,15 @@ int main() {
 			std::exit(EXIT_FAILURE);
 		}
 
-		// TODO(tachi): handle IPv6, maybe with inet_ntop()?
+		std::array<char, INET6_ADDRSTRLEN> address_buf;
 		const std::string address {
-			inet_ntoa(reinterpret_cast<sockaddr_in*>(dns_response->ai_addr)->sin_addr)
+			inet_ntop(
+				dns_response->ai_addr->sa_family,
+				// I don't know why I have to add +2, I just know that
+				// the first two chars in sa_data are empty
+				dns_response->ai_addr->sa_data + 2,
+				address_buf.data(), address_buf.size()
+			)
 		};
 
 		freeaddrinfo(dns_response);
