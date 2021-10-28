@@ -16,6 +16,7 @@ boost_ut_dep = dependency('boost.ut', fallback: ['ut', 'boostut_dep'])
 
 # Enable C++20 for tests (required by ut)
 test_args = [compiler.get_supported_arguments('-std=c++20', '-std=c++2a', '/std:c++20')[0]]
+test_deps = []
 
 if compiler.has_function('getaddrinfo')
 	test_args += '-DTACHI_HAS_GETADDRINFO'
@@ -31,6 +32,10 @@ endif
 
 if compiler.has_header('ws2tcpip.h')
 	test_args += '-DTACHI_HAS_WS2TCPIP_H'
+	test_deps += compiler.find_library('Ws2_32')
+	if compiler.has_function('getaddrinfo', prefix: '#include <ws2tcpip.h>', dependencies: test_deps)
+		test_args += '-DTACHI_HAS_GETADDRINFO'
+	endif
 endif
 
 tests = [
