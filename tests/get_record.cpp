@@ -6,8 +6,15 @@
 
 #include "common.hpp"
 #ifdef TACHI_HAS_GETADDRINFO
-	#include <netdb.h>
-	#include <arpa/inet.h>
+	#ifdef TACHI_HAS_NETDB_H
+		#include <netdb.h>
+	#endif
+	#ifdef TACHI_HAS_ARPA_INET_H
+		#include <arpa/inet.h>
+	#endif
+	#ifdef TACHI_HAS_WS2TCPIP_H
+		#include <ws2tcpip.h>
+	#endif
 #else
 	#error "Test not implemented on this platform"
 #endif
