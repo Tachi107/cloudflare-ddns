@@ -79,15 +79,8 @@ std::string update_record(const std::string &api_token, const std::string &zone_
 	std::string response;
 
 	priv::curl_handle_setup(&curl, response);
-	priv::curl_doh_setup(&curl);
-	priv::curl_auth_setup(&curl, api_token.c_str());
-	priv::curl_patch_setup(
-		&curl,
-		std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records/" + record_id}.c_str(),
-		std::string{R"({"content": ")" + new_ip + "\"}"}.c_str()
-	);
 
-	curl_easy_perform(curl);
+	update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
 
 	curl_easy_cleanup(curl);
 
