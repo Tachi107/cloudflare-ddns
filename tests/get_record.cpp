@@ -26,6 +26,11 @@ int main() {
 	 */
 	"get_record"_test = [] {
 		#if TACHI_HAS_GETADDRINFO
+		#if TACHI_HAS_WS2TCPIP_H
+			WSADATA wsaData;
+			// Manually setting the version to 2.2 instead of using MAKEWORD
+			WSAStartup(0b00000010'00000010, &wsaData);
+		#endif
 		addrinfo* dns_response {nullptr};
 
 		const int error {
