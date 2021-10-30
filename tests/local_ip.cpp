@@ -8,7 +8,7 @@
 #include <curl/curl.h>
 
 extern "C" {
-std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
+std::size_t write_data_test(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
 	data->append(incoming_buffer, size * count);
 	return size * count;
 }
@@ -19,7 +19,7 @@ CURL* get_test_curl(std::string& response_buffer) {
 	curl_easy_setopt(
 		curl,
 		CURLOPT_WRITEFUNCTION,
-		write_data
+		write_data_test
 	);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_buffer);
 	return curl;
