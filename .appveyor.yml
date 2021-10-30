@@ -29,7 +29,7 @@ build_script:
   - cmd: meson compile -C build
 
 test_script:
-  - cmd: meson test -C build
+  - cmd: meson test -C build --verbose
 
 artifacts:
   - path: build\cloudflare-ddns.exe
