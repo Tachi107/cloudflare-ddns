@@ -40,7 +40,8 @@ endif
 
 tests = [
 	'get_record',
-	'local_ip'
+	'local_ip',
+	'update_record'
 ]
 
 foreach test : tests
