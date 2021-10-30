@@ -31,7 +31,7 @@ install:
   - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
 
 build_script:
-  - cmd: meson setup build --default-library=static -Db_vscrt=static_from_buildtype -Dtests=true -Dtest_api_token=$Env:api_token -Dtest_zone_id=$Env:zone_id -Dtest_record_name=$Env:record_name
+  - cmd: meson setup build --default-library=static -Db_vscrt=static_from_buildtype -Dtests=true -Dtest_api_token=%api_token% -Dtest_zone_id=%zone_id% -Dtest_record_name=%record_name%
   - cmd: meson compile -C build
 
 test_script:
