@@ -19,21 +19,34 @@
 #include <string>
 #include <utility>
 
+/**
+ * When dealing with the shared library on Windows, a few things need
+ * to happen, depending on the situation. When building the shared lib,
+ * all public symbols need to be marked with dllexport, and when using
+ * that shared library users need to import that symbols, and this is
+ * accomplished by marking them with dllimport. So, TACHI_SHARED_LIB
+ * needs to always be present when dealing with shared libraries,
+ * while TACHI_BUILDING_DLL is only needed when building it.
+ *
+ * Thanks https://github.com/myd7349/Ongoing-Study/blob/master/cpp/CMake/libfoo_v2/include/libfoo/foo.h
+ */
 #if defined _WIN32 || defined __CYGWIN__
-// This check is currently useless
-	#ifdef TACHI_BUILD_LIBRARY
-		#ifdef __GNUC__
-			#define TACHI_PUB __attribute__ ((dllexport))
+	#ifdef TACHI_SHARED_LIB
+		#ifdef TACHI_BUILDING_DLL
+			#ifdef __GNUC__
+				#define TACHI_PUB __attribute__ ((dllexport))
+			#else
+				#define TACHI_PUB __declspec(dllexport)
+			#endif
 		#else
-			#define TACHI_PUB __declspec(dllexport)
+			#ifdef __GNUC__
+				#define TACHI_PUB __attribute__ ((dllimport))
+			#else
+				#define TACHI_PUB __declspec(dllimport)
+			#endif
 		#endif
 	#else
-		// These should be dllimport, but it causes linking issues
-		#ifdef __GNUC__
-			#define TACHI_PUB __attribute__ ((dllexport))
-		#else
-			#define TACHI_PUB __declspec(dllexport)
-		#endif
+		#define TACHI_PUB
 	#endif
 	#define TACHI_PRIV
 #else

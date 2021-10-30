@@ -94,10 +94,17 @@ tomlplusplus_dep = dependency(
 config_path_hpp = ''
 subdir('src')
 
+extra_args = []
+
+default_library = get_option('default_library')
+if default_library == 'shared' or default_library == 'both'
+	extra_args += '-DTACHI_SHARED_LIB'
+endif
+
 libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
-	cpp_args: '-DTACHI_BUILD_LIBRARY',
+	cpp_args: [extra_args, '-DTACHI_BUILDING_DLL'],
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
@@ -111,6 +118,7 @@ libcloudflare_ddns = library(
 )
 
 cloudflare_ddns_dep = declare_dependency(
+	compile_args: extra_args,
 	include_directories: 'include',
 	link_with: libcloudflare_ddns,
 	version: meson.project_version()
@@ -137,3 +145,10 @@ if get_option('tests')
 endif
 
 install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
+
+import('pkgconfig').generate(
+	libcloudflare_ddns,
+	description: 'Simple utility to dynamically change a DNS record using Cloudflare',
+	extra_cflags: extra_args,
+	url: 'https://github.com/Tachi107/cloudflare-ddns'
+)
