@@ -8,9 +8,9 @@
 
 int main() {
 	"update_record"_test = [] {
-		auto local_ip {tachi::get_local_ip()};
+		const auto local_ip {tachi::get_local_ip()};
 
-		auto[record_ip, record_id] {
+		const auto[record_ip, record_id] {
 			tachi::get_record(
 				std::string{test_api_token},
 				std::string{test_zone_id},
@@ -18,7 +18,7 @@ int main() {
 			)
 		};
 
-		auto new_ip {
+		const auto new_ip {
 			tachi::update_record(
 				std::string{test_api_token},
 				std::string{test_zone_id},

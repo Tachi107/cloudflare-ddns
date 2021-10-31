@@ -94,10 +94,13 @@ std::string update_record(const std::string &api_token, const std::string &zone_
 void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string &new_ip, CURL** curl) {
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token.c_str());
+
+	// This request buffer needs to be valid when calling curl_easy_perform()
+	std::string request {R"({"content": ")" + new_ip + "\"}"};
 	priv::curl_patch_setup(
 		curl,
 		std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records/" + record_id}.c_str(),
-		std::string{R"({"content": ")" + new_ip + "\"}"}.c_str()
+		request.c_str()
 	);
 
 	curl_easy_perform(*curl);
@@ -120,7 +123,7 @@ void curl_handle_setup(CURL** curl, const std::string& response_buffer) noexcept
 	curl_easy_setopt(*curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(*curl, CURLOPT_DEFAULT_PROTOCOL, "https");
 	curl_easy_setopt(*curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-	curl_easy_setopt(*curl, CURLOPT_WRITEFUNCTION, priv::write_data);
+	curl_easy_setopt(*curl, CURLOPT_WRITEFUNCTION, write_data);
 	curl_easy_setopt(*curl, CURLOPT_WRITEDATA, &response_buffer);
 }
 
