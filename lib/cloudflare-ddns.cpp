@@ -17,6 +17,57 @@ namespace std {
 
 namespace tachi {
 
+namespace priv {
+
+extern "C" {
+
+static std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
+	data->append(incoming_buffer, size * count);
+	return size * count;
+}
+
+static void curl_handle_setup(CURL** curl, const std::string& response_buffer) noexcept {
+	// General curl options
+	curl_easy_setopt(*curl, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(*curl, CURLOPT_NOSIGNAL, 1L);
+	curl_easy_setopt(*curl, CURLOPT_TCP_FASTOPEN, 1L);
+	curl_easy_setopt(*curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+	curl_easy_setopt(*curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+	curl_easy_setopt(*curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
+	curl_easy_setopt(*curl, CURLOPT_WRITEFUNCTION, write_data);
+	curl_easy_setopt(*curl, CURLOPT_WRITEDATA, &response_buffer);
+}
+
+static void curl_doh_setup(CURL** curl) noexcept {
+	struct curl_slist* manual_doh_address {nullptr};
+	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
+	curl_easy_setopt(*curl, CURLOPT_RESOLVE, manual_doh_address);
+	curl_easy_setopt(*curl, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
+}
+
+static void curl_auth_setup(CURL** curl, const char* const api_token) noexcept {
+	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
+	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
+	struct curl_slist* headers {nullptr};
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, headers);
+}
+
+static void curl_get_setup(CURL** curl, const char* const url) noexcept {
+	curl_easy_setopt(*curl, CURLOPT_HTTPGET, 1L);
+	curl_easy_setopt(*curl, CURLOPT_URL, url);
+}
+
+static void curl_patch_setup(CURL** curl, const char* const url, const char* const body) noexcept {
+	curl_easy_setopt(*curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+	curl_easy_setopt(*curl, CURLOPT_URL, url);
+	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
+}
+
+} // extern "C"
+
+} // namespace priv
+
 std::string get_local_ip() {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
@@ -105,56 +156,5 @@ void update_record_raw(const std::string &api_token, const std::string &zone_id,
 
 	curl_easy_perform(*curl);
 }
-
-namespace priv {
-
-extern "C" {
-
-std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
-	data->append(incoming_buffer, size * count);
-	return size * count;
-}
-
-void curl_handle_setup(CURL** curl, const std::string& response_buffer) noexcept {
-	// General curl options
-	curl_easy_setopt(*curl, CURLOPT_NOPROGRESS, 1L);
-	curl_easy_setopt(*curl, CURLOPT_NOSIGNAL, 1L);
-	curl_easy_setopt(*curl, CURLOPT_TCP_FASTOPEN, 1L);
-	curl_easy_setopt(*curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-	curl_easy_setopt(*curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-	curl_easy_setopt(*curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
-	curl_easy_setopt(*curl, CURLOPT_WRITEFUNCTION, write_data);
-	curl_easy_setopt(*curl, CURLOPT_WRITEDATA, &response_buffer);
-}
-
-void curl_doh_setup(CURL** curl) noexcept {
-	struct curl_slist* manual_doh_address {nullptr};
-	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
-	curl_easy_setopt(*curl, CURLOPT_RESOLVE, manual_doh_address);
-	curl_easy_setopt(*curl, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
-}
-
-void curl_auth_setup(CURL** curl, const char* const api_token) noexcept {
-	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
-	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
-	struct curl_slist* headers {nullptr};
-	headers = curl_slist_append(headers, "Content-Type: application/json");
-	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, headers);
-}
-
-void curl_get_setup(CURL** curl, const char* const url) noexcept {
-	curl_easy_setopt(*curl, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(*curl, CURLOPT_URL, url);
-}
-
-void curl_patch_setup(CURL** curl, const char* const url, const char* const body) noexcept {
-	curl_easy_setopt(*curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-	curl_easy_setopt(*curl, CURLOPT_URL, url);
-	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
-}
-
-} // extern "C"
-
-} // namespace priv
 
 } // namespace tachi
