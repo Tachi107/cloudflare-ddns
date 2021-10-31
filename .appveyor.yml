@@ -26,7 +26,7 @@ install:
   # Add necessary paths to PATH variable
   - cmd: set PATH=%cd%;%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
   # Install meson and ninja
-  - cmd: pip install --quiet ninja meson==0.59.3
+  - cmd: pip install --quiet ninja meson==0.59.4
   # Set up the build environment
   - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
 
