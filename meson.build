@@ -6,11 +6,12 @@ project(
 	'cloudflare-ddns',
 	'cpp',
 	default_options: [
-		'cpp_std=c++17',
 		'buildtype=release',
+		'cpp_std=c++17',
 		'warning_level=3',
+		'b_lto=true',
 		'b_ndebug=if-release',
-		'b_lto=true'
+		'cpp_rtti=false'
 	],
 	version: '0.4.0',
 	license: 'AGPL-3.0-or-later',
