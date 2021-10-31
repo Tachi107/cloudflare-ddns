@@ -11,11 +11,11 @@ environment:
     - arch: x64
       compiler: msvc2019
   api_token:
-    secure: FYndh51cRZ1KxFHtQhii7eDzx0OYeW0dHT82bl972BZD1bFFN6P11+lbqig6G+1e
+    secure: ED4kqXSHe32rlVYnkZdP4mWu+/UHWp0/DmKiQvhvzavp4vtbzcSHiYp/HEtEK3VL
   zone_id:
-    secure: flt5oxYUyOPQFy0k6V7WamNY7M+FPN6Yqdpoq6+IJffKiFQzN+tZdqKkjFTKzbzC
+    secure: ds1KfFqFjuCHJg7jdGVwFON4Ys0z029hkqyUE6h7J/1+tECQzLTxHkGBpl4S30Ud
   record_name:
-    secure: 7JMS5OhFLPMgdlRoE8LgPJ64MTaZQkIASB2FOX9cCc8+pcGaxaCgFHGzGp/765jq
+    secure: IiQA4wuz76kwEqZ+K+bB7v/obAtUJnt7xvdebkPMvrz76VsxGvrYGDTZQYBzq3xs
 
 platform:
   - x64
