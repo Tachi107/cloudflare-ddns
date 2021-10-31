@@ -84,23 +84,9 @@ TACHI_PUB std::string get_local_ip();
  * the HTTP GET request it has to create and manage its own cURL handle
  * internally, and this hurts a bit in terms of performance. If you prefer
  * to control your own cURL handles to get better performance you can use
- * the get_record_raw() version that takes borrows mutably a cURL handle,
- * but you'll have to parse the result yourself.
+ * get_record_raw(), but you'll have to parse the result yourself.
  */
 TACHI_PUB std::pair<const std::string, const std::string> get_record(const std::string& api_token, const std::string& zone_id, const std::string& record_name);
-
-/**
- * Query the API for the status of a given A/AAAA DNS record
- *
- * This function queries Cloudflare's API to retreive the status of a given
- * A or AAAA record, returning the raw JSON response. This allows greater
- * flexibility compared to get_record(), but you'll have to consult
- * Cloudflare's API reference and you'll also need to parse the result
- * yourself. This isn't any faster than get_record(), so if you're looking
- * for a way to improve performance you may want to use the get_record_raw
- * version that takes a cURL handle as an argument.
- */
-TACHI_PUB std::string get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name);
 
 /**
  * Query the API for the status of a given A/AAAA DNS record

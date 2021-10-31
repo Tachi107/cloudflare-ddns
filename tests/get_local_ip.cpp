@@ -17,7 +17,7 @@ std::size_t write_data_test(char* incoming_buffer, const std::size_t size, const
 int main() {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
-	"local_ip"_test = [] {
+	"get_local_ip"_test = [] {
 		std::string response;
 		CURL* curl {curl_easy_init()};
 

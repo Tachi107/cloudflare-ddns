@@ -89,32 +89,23 @@ std::string get_local_ip() {
 }
 
 std::pair<const std::string, const std::string> get_record(const std::string& api_token, const std::string& zone_id, const std::string& record_name) {
-	const std::string record_raw {get_record_raw(api_token, zone_id, record_name)};
+	CURL* curl {curl_easy_init()};
+	std::string response;
+
+	priv::curl_handle_setup(&curl, response);
+
+	get_record_raw(api_token, zone_id, record_name, &curl);
+
+	curl_easy_cleanup(curl);
+
 	simdjson::dom::parser parser;
 
-	const simdjson::dom::element parsed {parser.parse(record_raw)};
+	const simdjson::dom::element parsed {parser.parse(response)};
 
 	const std::string_view record_ip {(*parsed["result"].begin())["content"]};
 	const std::string_view record_id {(*parsed["result"].begin())["id"]};
 
 	return std::make_pair(std::string{record_ip}, std::string{record_id});
-}
-
-std::string get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name) {
-	// Creating the handle and the response buffer
-	CURL* curl {curl_easy_init()};
-	std::string response;
-
-	priv::curl_handle_setup(&curl, response);
-	priv::curl_doh_setup(&curl);
-	priv::curl_auth_setup(&curl, api_token.c_str());
-	priv::curl_get_setup(&curl, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name}.c_str());
-
-	curl_easy_perform(curl);
-
-	curl_easy_cleanup(curl);
-
-	return response;
 }
 
 void get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name, CURL** curl) {

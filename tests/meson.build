@@ -39,8 +39,8 @@ if compiler.has_header('ws2tcpip.h')
 endif
 
 tests = [
+	'get_local_ip',
 	'get_record',
-	'local_ip',
 	'update_record'
 ]
 

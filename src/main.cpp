@@ -77,8 +77,7 @@ int main(const int argc, const char* const argv[]) {
 
 	std::future<void> dns_response_future {std::async(
 		std::launch::async,
-		// Need to cast to disambiguate the overloaded function
-		static_cast<void(*)(const std::string&, const std::string&, const std::string&, CURL**)>(&tachi::get_record_raw),
+		tachi::get_record_raw,
 		api_token, zone_id, record_name, &curl_handle
 	)};
 
