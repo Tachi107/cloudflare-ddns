@@ -7,4 +7,4 @@
 #pragma once
 #include <string_view>
 
-static constexpr std::string_view config_path {"@sysconfdir@/config.toml"};
+static constexpr std::string_view config_path {"@sysconfdir@/cloudflare-ddns/config.toml"};
