@@ -18,7 +18,9 @@ test_args = []
 test_deps = []
 test_opts = ['b_ndebug=false']
 
-if meson.version().version_compare('>=0.57.0')
+if compiler.get_argument_syntax() == 'msvc'
+	test_opts += 'cpp_std=c++latest'
+elif meson.version().version_compare('>=0.57.0')
 	test_opts += 'cpp_std=c++20'
 else
 	test_opts += 'cpp_std=c++2a'
