@@ -16,6 +16,13 @@ boost_ut_dep = dependency('boost.ut', fallback: ['ut', 'boostut_dep'])
 
 test_args = []
 test_deps = []
+test_opts = ['b_ndebug=false']
+
+if meson.version().version_compare('>=0.57.0')
+	test_opts += 'cpp_std=c++20'
+else
+	test_opts += 'cpp_std=c++2a'
+endif
 
 if compiler.has_function('getaddrinfo')
 	test_args += '-DTACHI_HAS_GETADDRINFO'
@@ -56,7 +63,7 @@ foreach test : tests
 				libcurl_dep
 			],
 			gnu_symbol_visibility: 'hidden',
-			override_options: ['cpp_std=c++20', 'b_ndebug=false'],
+			override_options: test_opts,
 			sources: credentials_hpp
 		)
 	)
