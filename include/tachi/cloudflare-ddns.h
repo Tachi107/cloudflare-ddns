@@ -15,9 +15,12 @@
  * The user of the library is responsable for calling curl_global_init.
  */
 
+// Seguire http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2086.htm#:~:text=Additional%20Principle%20for%20C2x
+// ovvero prima size, poi pointer.
+
 #pragma once
-#include <string>
-#include <utility>
+#include <stddef.h>
+#include <errno.h>
 
 /**
  * When dealing with the shared library on Windows, a few things need
@@ -59,7 +62,9 @@
 	#endif
 #endif
 
-namespace tachi {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Get the public IP address of the machine
@@ -71,7 +76,7 @@ namespace tachi {
  * containing the IP address in dot-decimal notation. It uses Cloudflare
  * to determine the public address, querying https://1.1.1.1/cdn-cgi/trace
  */
-TACHI_PUB std::string get_local_ip();
+TACHI_PUB int tachi_get_local_ip(size_t ip_size, char* ip);
 
 /**
  * Get the current IP address of a given A/AAAA DNS record
@@ -86,7 +91,7 @@ TACHI_PUB std::string get_local_ip();
  * to control your own cURL handles to get better performance you can use
  * get_record_raw(), but you'll have to parse the result yourself.
  */
-TACHI_PUB std::pair<const std::string, const std::string> get_record(const std::string& api_token, const std::string& zone_id, const std::string& record_name);
+TACHI_PUB int tachi_get_record(const char* api_token, const char* zone_id, const char* record_name, size_t record_ip_size, char* record_ip, size_t record_id_size, char* record_id);
 
 /**
  * Query the API for the status of a given A/AAAA DNS record
@@ -98,7 +103,7 @@ TACHI_PUB std::pair<const std::string, const std::string> get_record(const std::
  * get_record(), but you'll have to consult Cloudflare's API reference and
  * you'll also need to parse the result yourself.
  */
-TACHI_PUB void get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name, void** curl);
+TACHI_PUB void tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl, size_t record_raw_size, char* record_raw);
 
 /**
  * Update the IP address of a given A/AAAA DNS record
@@ -111,7 +116,7 @@ TACHI_PUB void get_record_raw(const std::string& api_token, const std::string& z
  * itself, which may be slow. If you want faster performance by reusing the
  * same handle you can look into update_record_raw().
  */
-TACHI_PUB std::string update_record(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip);
+TACHI_PUB int tachi_update_record(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, size_t record_ip_size, char* record_ip);
 
 /**
  * Update the IP address of a given A/AAAA DNS record
@@ -121,6 +126,8 @@ TACHI_PUB std::string update_record(const std::string &api_token, const std::str
  * performance but has greater complexity. If you don't particurarly care
  * about performance you can use the simpler update_record() function.
  */
-TACHI_PUB void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip, void** curl);
+TACHI_PUB void tachi_update_record_raw(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, void** curl);
 
-} // namespace tachi
+#ifdef __cplusplus
+}
+#endif
