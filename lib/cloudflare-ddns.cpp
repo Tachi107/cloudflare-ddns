@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include <tachi/cloudflare-ddns.hpp>
+#include <tachi/cloudflare-ddns.h>
 // curl.h redefines fopen on Windows, causing issues.
-#if fopen == curlx_win32_fopen
+#if defined(fopen) && (fopen == curlx_win32_fopen)
 namespace std {
 	const auto& curlx_win32_fopen = fopen;
 }
 #endif
+#include <string>
 #include <string_view>
-#include <simdjson.h>
+#include <cstring>
+// #include <simdjson.h>
 #include <curl/curl.h>
 
-namespace tachi {
+extern "C" {
 
 namespace priv {
-
-extern "C" {
 
 static std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
 	data->append(incoming_buffer, size * count);
@@ -64,17 +64,16 @@ static void curl_patch_setup(CURL** curl, const char* const url, const char* con
 	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
 }
 
-} // extern "C"
-
 } // namespace priv
 
-std::string get_local_ip() {
+int tachi_get_local_ip(size_t ip_size, char* ip) {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
 	std::string response;
 
 	priv::curl_handle_setup(&curl, response);
-	priv::curl_get_setup(&curl, "https://1.1.1.1/cdn-cgi/trace");
+	priv::curl_doh_setup(&curl);
+	priv::curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
 
 	// Performing the request
 	curl_easy_perform(curl);
@@ -83,18 +82,30 @@ std::string get_local_ip() {
 	curl_easy_cleanup(curl);
 
 	// Parsing the response
-	const std::size_t ip_begin {response.find("ip=") + 3};  // + 3 because "ip=" is 3 chars
+	const std::size_t ip_begin {response.find("ip=") + 3U};  // + 3 because "ip=" is 3 chars
 	const std::size_t ip_end {response.find('\n', ip_begin)};
-	return response.substr(ip_begin, ip_end - ip_begin);
+	const std::size_t ip_length {ip_end - ip_begin};
+
+	if (ip_length >= ip_size) {
+		return 2;
+	}
+
+	// Copying the ip in the caller's buffer
+	// Using memcpy because I don't need to copy the whole response
+	std::memcpy(ip, response.c_str() + ip_begin, ip_length);
+	ip[ip_length] = '\0';
+
+	return 0;
 }
 
-std::pair<const std::string, const std::string> get_record(const std::string& api_token, const std::string& zone_id, const std::string& record_name) {
+
+int tachi_get_record(const char* api_token, const char* zone_id, const char* record_name, size_t record_ip_size, char* record_ip, size_t record_id_size, char* record_id) {
 	CURL* curl {curl_easy_init()};
 	std::string response;
 
 	priv::curl_handle_setup(&curl, response);
 
-	get_record_raw(api_token, zone_id, record_name, &curl);
+	tachi_get_record_raw(api_token, zone_id, record_name, &curl);
 
 	curl_easy_cleanup(curl);
 
@@ -102,19 +113,52 @@ std::pair<const std::string, const std::string> get_record(const std::string& ap
 
 	const simdjson::dom::element parsed {parser.parse(response)};
 
-	const std::string_view record_ip {(*parsed["result"].begin())["content"]};
-	const std::string_view record_id {(*parsed["result"].begin())["id"]};
+	std::string_view record_ip_sv;
+	if ((*parsed["result"].begin())["content"].get(record_ip_sv) != simdjson::SUCCESS) {
+		return 1;
+	}
 
-	return std::make_pair(std::string{record_ip}, std::string{record_id});
+	std::string_view record_id_sv;
+	if ((*parsed["result"].begin())["id"].get(record_id_sv) != simdjson::SUCCESS) {
+		return 1;
+	}
+
+	if (record_ip_sv.size() >= record_ip_size || record_id_sv.size() >= record_id_size) {
+		return 2;
+	}
+
+	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.size());
+	record_ip[record_ip_sv.size()] = '\0';
+
+	std::memcpy(record_id, record_id_sv.data(), record_id_sv.size());
+	record_id[record_id_sv.size()] = '\0';
+
+	return 0;
 }
 
-void get_record_raw(const std::string& api_token, const std::string& zone_id, const std::string& record_name, CURL** curl) {
+int tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl) {
 	priv::curl_doh_setup(curl);
-	priv::curl_auth_setup(curl, api_token.c_str());
+	priv::curl_auth_setup(curl, api_token);
+
+	// -1 because sizeof also counts '\0'
+	const std::size_t request_url_length {
+		sizeof "https://api.cloudflare.com/client/v4/zones/" - 1U + 
+		std::strlen(zone_id) +
+		sizeof "/dns_records?type=A,AAAA&name=" - 1U +
+		std::strlen(record_name)
+	};
+
+	// +1 because of '\0'
+	char* request_url {new char[request_url_length + 1]};
+
+	// TODO(tachi): concatenate strings
+
 	priv::curl_get_setup(curl, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name}.c_str());
 
 	curl_easy_perform(*curl);
+	delete[] request_url;
 }
+/*
 
 std::string update_record(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip) {
 	CURL* curl {curl_easy_init()};
@@ -147,5 +191,5 @@ void update_record_raw(const std::string &api_token, const std::string &zone_id,
 
 	curl_easy_perform(*curl);
 }
-
-} // namespace tachi
+*/
+} // extern "C"

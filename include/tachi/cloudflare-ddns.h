@@ -20,7 +20,6 @@
 
 #pragma once
 #include <stddef.h>
-#include <errno.h>
 
 /**
  * When dealing with the shared library on Windows, a few things need
@@ -103,7 +102,7 @@ TACHI_PUB int tachi_get_record(const char* api_token, const char* zone_id, const
  * get_record(), but you'll have to consult Cloudflare's API reference and
  * you'll also need to parse the result yourself.
  */
-TACHI_PUB void tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl, size_t record_raw_size, char* record_raw);
+TACHI_PUB int tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl);
 
 /**
  * Update the IP address of a given A/AAAA DNS record
@@ -126,7 +125,7 @@ TACHI_PUB int tachi_update_record(const char* api_token, const char* zone_id, co
  * performance but has greater complexity. If you don't particurarly care
  * about performance you can use the simpler update_record() function.
  */
-TACHI_PUB void tachi_update_record_raw(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, void** curl);
+TACHI_PUB int tachi_update_record_raw(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, void** curl);
 
 #ifdef __cplusplus
 }
