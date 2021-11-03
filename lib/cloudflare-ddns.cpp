@@ -152,6 +152,7 @@ int tachi_get_record_raw(const char* api_token, const char* zone_id, const char*
 	char* request_url {new char[request_url_length + 1]};
 
 	// TODO(tachi): concatenate strings
+	// see https://developers.redhat.com/blog/2019/08/12/efficient-string-copying-and-concatenation-in-c
 
 	priv::curl_get_setup(curl, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name}.c_str());
 
