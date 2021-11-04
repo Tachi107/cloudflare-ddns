@@ -17,6 +17,8 @@ namespace std {
 #include <simdjson.h>
 #include <curl/curl.h>
 
+static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
+
 extern "C" {
 
 namespace priv {
@@ -66,7 +68,7 @@ static void curl_patch_setup(CURL** curl, const char* const url, const char* con
 
 } // namespace priv
 
-int tachi_get_local_ip(size_t ip_size, char* ip) {
+int tachi_get_local_ip(size_t ip_size, char* ip) noexcept {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
 	std::string response;
@@ -76,7 +78,9 @@ int tachi_get_local_ip(size_t ip_size, char* ip) {
 	priv::curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
 
 	// Performing the request
-	curl_easy_perform(curl);
+	if (curl_easy_perform(curl) != 0) {
+		return 1;
+	}
 
 	// Cleaning up the handle as I won't reuse it
 	curl_easy_cleanup(curl);
@@ -99,7 +103,7 @@ int tachi_get_local_ip(size_t ip_size, char* ip) {
 }
 
 
-int tachi_get_record(const char* api_token, const char* zone_id, const char* record_name, size_t record_ip_size, char* record_ip, size_t record_id_size, char* record_id) {
+int tachi_get_record(const char* api_token, const char* zone_id, const char* record_name, size_t record_ip_size, char* record_ip, size_t record_id_size, char* record_id) noexcept {
 	CURL* curl {curl_easy_init()};
 	std::string response;
 
@@ -111,36 +115,43 @@ int tachi_get_record(const char* api_token, const char* zone_id, const char* rec
 
 	simdjson::dom::parser parser;
 
-	const simdjson::dom::element parsed {parser.parse(response)};
+	simdjson::dom::element parsed;
+	if (parser.parse(response).get(parsed) != simdjson::SUCCESS) {
+		return 1;
+	}
+
+	simdjson::dom::element result;
+	if ((*parsed["result"].begin()).get(result) != simdjson::SUCCESS) {
+		return 1;
+	}
 
 	std::string_view record_ip_sv;
-	if ((*parsed["result"].begin())["content"].get(record_ip_sv) != simdjson::SUCCESS) {
+	if (result["content"].get(record_ip_sv) != simdjson::SUCCESS) {
 		return 1;
 	}
 
 	std::string_view record_id_sv;
-	if ((*parsed["result"].begin())["id"].get(record_id_sv) != simdjson::SUCCESS) {
+	if (result["id"].get(record_id_sv) != simdjson::SUCCESS) {
 		return 1;
 	}
 
-	if (record_ip_sv.size() >= record_ip_size || record_id_sv.size() >= record_id_size) {
+	if (record_ip_sv.length() >= record_ip_size || record_id_sv.length() >= record_id_size) {
 		return 2;
 	}
 
-	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.size());
-	record_ip[record_ip_sv.size()] = '\0';
+	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.length());
+	record_ip[record_ip_sv.length()] = '\0';
 
-	std::memcpy(record_id, record_id_sv.data(), record_id_sv.size());
-	record_id[record_id_sv.size()] = '\0';
+	std::memcpy(record_id, record_id_sv.data(), record_id_sv.length());
+	record_id[record_id_sv.length()] = '\0';
 
 	return 0;
 }
 
-int tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl) {
+int tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl) noexcept {
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token);
 
-	constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
 	constexpr std::string_view dns_records_url {"/dns_records?type=A,AAAA&name="};
 
 	// Could use string_view instead of c_str + size. Should investigate performance
@@ -148,9 +159,9 @@ int tachi_get_record_raw(const char* api_token, const char* zone_id, const char*
 	const std::size_t record_name_length {std::strlen(record_name)};
 	// -1 because sizeof also counts '\0'
 	const std::size_t request_url_length {
-		base_url.size() +
+		base_url.length() +
 		zone_id_length +
-		dns_records_url.size() +
+		dns_records_url.length() +
 		record_name_length
 	};
 
@@ -158,52 +169,115 @@ int tachi_get_record_raw(const char* api_token, const char* zone_id, const char*
 	char* request_url {new char[request_url_length + 1]};
 
 	// Concatenate strings
-	std::memcpy(request_url, base_url.data(), base_url.size());
-	std::memcpy(request_url + base_url.size(), zone_id, zone_id_length);
-	std::memcpy(request_url + base_url.size() + zone_id_length, dns_records_url.data(), dns_records_url.size());
-	std::memcpy(request_url + base_url.size() + zone_id_length + dns_records_url.size(), record_name, record_name_length);
+	std::memcpy(request_url, base_url.data(), base_url.length());
+	std::memcpy(request_url + base_url.length(), zone_id, zone_id_length);
+	std::memcpy(request_url + base_url.length() + zone_id_length, dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + zone_id_length + dns_records_url.length(), record_name, record_name_length);
 	request_url[request_url_length] = '\0';
 
 	priv::curl_get_setup(curl, request_url);
 
-	curl_easy_perform(*curl);
+	// Can't return immediatly on error since I have to free request_url
+	int error {curl_easy_perform(*curl)};
 
 	delete[] request_url;
 
-	return 0;
+	return error;
 }
-/*
 
-std::string update_record(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string& new_ip) {
+int tachi_update_record(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, size_t record_ip_size, char* record_ip) noexcept {
 	CURL* curl {curl_easy_init()};
 	std::string response;
 
 	priv::curl_handle_setup(&curl, response);
 
-	update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
+	tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
 
 	curl_easy_cleanup(curl);
 
 	simdjson::dom::parser parser;
 
-	return std::string{static_cast<std::string_view>(
-		parser.parse(response)["result"]["content"])
-	};
+	simdjson::dom::element parsed;
+	if (parser.parse(response).get(parsed) != simdjson::SUCCESS) {
+		return 1;
+	}
+
+	simdjson::dom::element result;
+	if (parsed["result"].get(result) != simdjson::SUCCESS) {
+		return 1;
+	}
+
+	std::string_view record_ip_sv;
+	if (result["content"].get(record_ip_sv) != simdjson::SUCCESS) {
+		return 1;
+	}
+
+	if (record_ip_sv.length() >= record_ip_size) {
+		return 2;
+	}
+
+	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.length());
+	record_ip[record_ip_sv.length()] = '\0';
+
+	return 0;
 }
 
-void update_record_raw(const std::string &api_token, const std::string &zone_id, const std::string &record_id, const std::string &new_ip, CURL** curl) {
+int tachi_update_record_raw(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, void** curl) noexcept {
 	priv::curl_doh_setup(curl);
-	priv::curl_auth_setup(curl, api_token.c_str());
+	priv::curl_auth_setup(curl, api_token);
+
+	const std::string_view zone_id_sv {zone_id};
+	const std::string_view record_id_sv {record_id};
+	constexpr std::string_view dns_records_url {"/dns_records/"};
+
+	const std::size_t request_url_length {
+		base_url.length() +
+		zone_id_sv.length() +
+		dns_records_url.length() +
+		record_id_sv.length()
+	};
+
+	// +1 because of '\0', allocating because the size is not known at compile time
+	char* request_url {new char[request_url_length + 1]};
+
+	// Concatenate the strings to make the request url
+	std::memcpy(request_url, base_url.data(), base_url.length());
+	std::memcpy(request_url + base_url.length(), zone_id_sv.data(), zone_id_sv.length());
+	std::memcpy(request_url + base_url.length() + zone_id_sv.length(), dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + zone_id_sv.length() + dns_records_url.length(), record_id_sv.data(), record_id_sv.length());
+	request_url[request_url_length] = '\0';
+
+	constexpr std::string_view request_body_start {R"({"content": ")"};
+	const     std::string_view new_ip_sv {new_ip};
+	constexpr std::string_view request_body_end {"\"}"};
+
+	const std::size_t request_body_length {
+		request_body_start.length() +
+		new_ip_sv.length() +
+		request_body_end.length()
+	};
 
 	// This request buffer needs to be valid when calling curl_easy_perform()
-	std::string request {R"({"content": ")" + new_ip + "\"}"};
+	char* request_body {new char[request_body_length + 1]};
+
+	// Concatenate the strings to make the request body
+	std::memcpy(request_body, request_body_start.data(), request_body_start.length());
+	std::memcpy(request_body + request_body_start.length(), new_ip_sv.data(), new_ip_sv.length());
+	std::memcpy(request_body + request_body_start.length() + new_ip_sv.length(), request_body_end.data(), request_body_end.length());
+	request_body[request_body_length] = '\0';
+
 	priv::curl_patch_setup(
 		curl,
-		std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records/" + record_id}.c_str(),
-		request.c_str()
+		request_url,
+		request_body
 	);
 
-	curl_easy_perform(*curl);
+	int error {curl_easy_perform(*curl)};
+
+	delete[] request_url;
+	delete[] request_body;
+
+	return error;
 }
-*/
+
 } // extern "C"

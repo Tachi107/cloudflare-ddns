@@ -13,10 +13,10 @@
  * and URL.
  *
  * The user of the library is responsable for calling curl_global_init.
+ *
+ * I'm following the C23 conventions for function parameter order, see
+ * https://wg14.link/n2086
  */
-
-// Seguire http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2086.htm#:~:text=Additional%20Principle%20for%20C2x
-// ovvero prima size, poi pointer.
 
 #pragma once
 #include <stddef.h>
@@ -62,6 +62,12 @@
 #endif
 
 #ifdef __cplusplus
+	#define TACHI_NOEXCEPT noexcept
+#else
+	#define TACHI_NOEXCEPT
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -75,7 +81,9 @@ extern "C" {
  * containing the IP address in dot-decimal notation. It uses Cloudflare
  * to determine the public address, querying https://1.1.1.1/cdn-cgi/trace
  */
-TACHI_PUB int tachi_get_local_ip(size_t ip_size, char* ip);
+TACHI_PUB int tachi_get_local_ip(
+	size_t ip_size, char* ip
+) TACHI_NOEXCEPT;
 
 /**
  * Get the current IP address of a given A/AAAA DNS record
@@ -90,7 +98,13 @@ TACHI_PUB int tachi_get_local_ip(size_t ip_size, char* ip);
  * to control your own cURL handles to get better performance you can use
  * get_record_raw(), but you'll have to parse the result yourself.
  */
-TACHI_PUB int tachi_get_record(const char* api_token, const char* zone_id, const char* record_name, size_t record_ip_size, char* record_ip, size_t record_id_size, char* record_id);
+TACHI_PUB int tachi_get_record(
+	const char* api_token,
+	const char* zone_id,
+	const char* record_name,
+	size_t record_ip_size, char* record_ip,
+	size_t record_id_size, char* record_id
+) TACHI_NOEXCEPT;
 
 /**
  * Query the API for the status of a given A/AAAA DNS record
@@ -102,7 +116,12 @@ TACHI_PUB int tachi_get_record(const char* api_token, const char* zone_id, const
  * get_record(), but you'll have to consult Cloudflare's API reference and
  * you'll also need to parse the result yourself.
  */
-TACHI_PUB int tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl);
+TACHI_PUB int tachi_get_record_raw(
+	const char* api_token,
+	const char* zone_id,
+	const char* record_name,
+	void** curl
+) TACHI_NOEXCEPT;
 
 /**
  * Update the IP address of a given A/AAAA DNS record
@@ -115,7 +134,13 @@ TACHI_PUB int tachi_get_record_raw(const char* api_token, const char* zone_id, c
  * itself, which may be slow. If you want faster performance by reusing the
  * same handle you can look into update_record_raw().
  */
-TACHI_PUB int tachi_update_record(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, size_t record_ip_size, char* record_ip);
+TACHI_PUB int tachi_update_record(
+	const char* api_token,
+	const char* zone_id,
+	const char* record_id,
+	const char* new_ip,
+	size_t record_ip_size, char* record_ip
+) TACHI_NOEXCEPT;
 
 /**
  * Update the IP address of a given A/AAAA DNS record
@@ -125,7 +150,13 @@ TACHI_PUB int tachi_update_record(const char* api_token, const char* zone_id, co
  * performance but has greater complexity. If you don't particurarly care
  * about performance you can use the simpler update_record() function.
  */
-TACHI_PUB int tachi_update_record_raw(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, void** curl);
+TACHI_PUB int tachi_update_record_raw(
+	const char* api_token,
+	const char* zone_id,
+	const char* record_id,
+	const char* new_ip,
+	void** curl
+) TACHI_NOEXCEPT;
 
 #ifdef __cplusplus
 }
