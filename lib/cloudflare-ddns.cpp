@@ -14,7 +14,7 @@ namespace std {
 #include <string>
 #include <string_view>
 #include <cstring>
-// #include <simdjson.h>
+#include <simdjson.h>
 #include <curl/curl.h>
 
 extern "C" {
@@ -140,24 +140,37 @@ int tachi_get_record_raw(const char* api_token, const char* zone_id, const char*
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token);
 
+	constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
+	constexpr std::string_view dns_records_url {"/dns_records?type=A,AAAA&name="};
+
+	// Could use string_view instead of c_str + size. Should investigate performance
+	const std::size_t zone_id_length {std::strlen(zone_id)};
+	const std::size_t record_name_length {std::strlen(record_name)};
 	// -1 because sizeof also counts '\0'
 	const std::size_t request_url_length {
-		sizeof "https://api.cloudflare.com/client/v4/zones/" - 1U + 
-		std::strlen(zone_id) +
-		sizeof "/dns_records?type=A,AAAA&name=" - 1U +
-		std::strlen(record_name)
+		base_url.size() +
+		zone_id_length +
+		dns_records_url.size() +
+		record_name_length
 	};
 
-	// +1 because of '\0'
+	// +1 because of '\0', allocating because the size is not known at compile time
 	char* request_url {new char[request_url_length + 1]};
 
-	// TODO(tachi): concatenate strings
-	// see https://developers.redhat.com/blog/2019/08/12/efficient-string-copying-and-concatenation-in-c
+	// Concatenate strings
+	std::memcpy(request_url, base_url.data(), base_url.size());
+	std::memcpy(request_url + base_url.size(), zone_id, zone_id_length);
+	std::memcpy(request_url + base_url.size() + zone_id_length, dns_records_url.data(), dns_records_url.size());
+	std::memcpy(request_url + base_url.size() + zone_id_length + dns_records_url.size(), record_name, record_name_length);
+	request_url[request_url_length] = '\0';
 
-	priv::curl_get_setup(curl, std::string{"https://api.cloudflare.com/client/v4/zones/" + zone_id + "/dns_records?type=A,AAAA&name=" + record_name}.c_str());
+	priv::curl_get_setup(curl, request_url);
 
 	curl_easy_perform(*curl);
+
 	delete[] request_url;
+
+	return 0;
 }
 /*
 
