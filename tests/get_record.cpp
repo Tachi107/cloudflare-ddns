@@ -9,9 +9,6 @@
 	#ifdef TACHI_HAS_NETDB_H
 		#include <netdb.h>
 	#endif
-	#ifdef TACHI_HAS_ARPA_INET_H
-		#include <arpa/inet.h>
-	#endif
 	#ifdef TACHI_HAS_WS2TCPIP_H
 		#include <ws2tcpip.h>
 	#endif
@@ -41,27 +38,32 @@ int main() {
 			std::exit(EXIT_FAILURE);
 		}
 
-		std::array<char, INET6_ADDRSTRLEN> address_buf;
-		const std::string address {
-			inet_ntop(
-				dns_response->ai_addr->sa_family,
-				// I don't know why I have to add +2, I just know that
-				// the first two chars in sa_data are empty
-				dns_response->ai_addr->sa_data + 2,
-				address_buf.data(), address_buf.size()
-			)
-		};
+		std::array<char, INET6_ADDRSTRLEN> address;
+		inet_ntop(
+			dns_response->ai_addr->sa_family,
+			// I don't know why I have to add +2, I just know that
+			// the first two chars in sa_data are empty
+			dns_response->ai_addr->sa_data + 2,
+			address.data(), address.size()
+		);
 
 		freeaddrinfo(dns_response);
 		#endif
 
+		std::array<char, INET6_ADDRSTRLEN> record_ip;
+		std::array<char, 100> record_id;
+
+		tachi_get_record(
+			test_api_token.data(),
+			test_zone_id.data(),
+			test_record_name.data(),
+			record_ip.size(), record_ip.data(),
+			record_id.size(), record_id.data()
+		);
+
 		expect(eq(
-			address,
-			tachi::get_record(
-				std::string{test_api_token},
-				std::string{test_zone_id},
-				std::string{test_record_name}
-			).first
+			std::string_view{address.data()},
+			std::string_view{record_ip.data()}
 		));
 	};
 }

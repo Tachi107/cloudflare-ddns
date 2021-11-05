@@ -23,12 +23,20 @@ extern "C" {
 
 namespace priv {
 
-static std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
+static std::size_t write_data(
+	char* TACHI_RESTRICT incoming_buffer,
+	const std::size_t size,
+	const std::size_t count,
+	std::string* TACHI_RESTRICT data)
+{
 	data->append(incoming_buffer, size * count);
 	return size * count;
 }
 
-static void curl_handle_setup(CURL** curl, const std::string& response_buffer) noexcept {
+static void curl_handle_setup(
+	CURL** TACHI_RESTRICT curl,
+	const std::string& response_buffer
+) TACHI_NOEXCEPT {
 	// General curl options
 	curl_easy_setopt(*curl, CURLOPT_NOPROGRESS, 1L);
 	curl_easy_setopt(*curl, CURLOPT_NOSIGNAL, 1L);
@@ -40,14 +48,14 @@ static void curl_handle_setup(CURL** curl, const std::string& response_buffer) n
 	curl_easy_setopt(*curl, CURLOPT_WRITEDATA, &response_buffer);
 }
 
-static void curl_doh_setup(CURL** curl) noexcept {
+static void curl_doh_setup(CURL** TACHI_RESTRICT curl) TACHI_NOEXCEPT {
 	struct curl_slist* manual_doh_address {nullptr};
 	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, manual_doh_address);
 	curl_easy_setopt(*curl, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
 }
 
-static void curl_auth_setup(CURL** curl, const char* const api_token) noexcept {
+static void curl_auth_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const api_token) TACHI_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
 	struct curl_slist* headers {nullptr};
@@ -55,12 +63,12 @@ static void curl_auth_setup(CURL** curl, const char* const api_token) noexcept {
 	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, headers);
 }
 
-static void curl_get_setup(CURL** curl, const char* const url) noexcept {
+static void curl_get_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const url) TACHI_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPGET, 1L);
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 }
 
-static void curl_patch_setup(CURL** curl, const char* const url, const char* const body) noexcept {
+static void curl_patch_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const url, const char* TACHI_RESTRICT const body) TACHI_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_CUSTOMREQUEST, "PATCH");
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
@@ -68,7 +76,10 @@ static void curl_patch_setup(CURL** curl, const char* const url, const char* con
 
 } // namespace priv
 
-int tachi_get_local_ip(size_t ip_size, char* ip) noexcept {
+int tachi_get_local_ip(
+	size_t ip_size,
+	char* TACHI_RESTRICT ip
+) TACHI_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
 	std::string response;
@@ -103,7 +114,13 @@ int tachi_get_local_ip(size_t ip_size, char* ip) noexcept {
 }
 
 
-int tachi_get_record(const char* api_token, const char* zone_id, const char* record_name, size_t record_ip_size, char* record_ip, size_t record_id_size, char* record_id) noexcept {
+int tachi_get_record(
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_name,
+	size_t record_ip_size, char* TACHI_RESTRICT record_ip,
+	size_t record_id_size, char* TACHI_RESTRICT record_id
+) TACHI_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
 	std::string response;
 
@@ -148,7 +165,12 @@ int tachi_get_record(const char* api_token, const char* zone_id, const char* rec
 	return 0;
 }
 
-int tachi_get_record_raw(const char* api_token, const char* zone_id, const char* record_name, void** curl) noexcept {
+int tachi_get_record_raw(
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_name,
+	void**      TACHI_RESTRICT curl
+) TACHI_NOEXCEPT {
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token);
 
@@ -185,7 +207,13 @@ int tachi_get_record_raw(const char* api_token, const char* zone_id, const char*
 	return error;
 }
 
-int tachi_update_record(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, size_t record_ip_size, char* record_ip) noexcept {
+int tachi_update_record(
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_id,
+	const char* TACHI_RESTRICT new_ip,
+	size_t record_ip_size, char* TACHI_RESTRICT record_ip
+) TACHI_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
 	std::string response;
 
@@ -222,7 +250,13 @@ int tachi_update_record(const char* api_token, const char* zone_id, const char* 
 	return 0;
 }
 
-int tachi_update_record_raw(const char* api_token, const char* zone_id, const char* record_id, const char* new_ip, void** curl) noexcept {
+int tachi_update_record_raw(
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_id,
+	const char* TACHI_RESTRICT new_ip,
+	void**      TACHI_RESTRICT curl
+) TACHI_NOEXCEPT {
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token);
 

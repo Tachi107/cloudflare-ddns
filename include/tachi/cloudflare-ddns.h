@@ -61,10 +61,22 @@
 	#endif
 #endif
 
-#ifdef __cplusplus
-	#define TACHI_NOEXCEPT noexcept
+#if defined(__cplusplus)
+	#if __cplusplus >= 201103L
+		#define TACHI_NOEXCEPT noexcept
+	#else
+		#define TACHI_NOEXCEPT throw()
+	#endif
 #else
 	#define TACHI_NOEXCEPT
+#endif
+
+#if __STDC_VERSION__ >= 199901L
+	#define TACHI_RESTRICT   restrict
+#elif defined(__GNUC__)
+	#define TACHI_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+	#define TACHI_RESTRICT __restrict
 #endif
 
 #ifdef __cplusplus
@@ -82,7 +94,7 @@ extern "C" {
  * to determine the public address, querying https://1.1.1.1/cdn-cgi/trace
  */
 TACHI_PUB int tachi_get_local_ip(
-	size_t ip_size, char* ip
+	size_t ip_size, char* TACHI_RESTRICT ip
 ) TACHI_NOEXCEPT;
 
 /**
@@ -99,11 +111,11 @@ TACHI_PUB int tachi_get_local_ip(
  * get_record_raw(), but you'll have to parse the result yourself.
  */
 TACHI_PUB int tachi_get_record(
-	const char* api_token,
-	const char* zone_id,
-	const char* record_name,
-	size_t record_ip_size, char* record_ip,
-	size_t record_id_size, char* record_id
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_name,
+	size_t record_ip_size, char* TACHI_RESTRICT record_ip,
+	size_t record_id_size, char* TACHI_RESTRICT record_id
 ) TACHI_NOEXCEPT;
 
 /**
@@ -117,10 +129,10 @@ TACHI_PUB int tachi_get_record(
  * you'll also need to parse the result yourself.
  */
 TACHI_PUB int tachi_get_record_raw(
-	const char* api_token,
-	const char* zone_id,
-	const char* record_name,
-	void** curl
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_name,
+	void**      TACHI_RESTRICT curl
 ) TACHI_NOEXCEPT;
 
 /**
@@ -135,11 +147,11 @@ TACHI_PUB int tachi_get_record_raw(
  * same handle you can look into update_record_raw().
  */
 TACHI_PUB int tachi_update_record(
-	const char* api_token,
-	const char* zone_id,
-	const char* record_id,
-	const char* new_ip,
-	size_t record_ip_size, char* record_ip
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_id,
+	const char* TACHI_RESTRICT new_ip,
+	size_t record_ip_size, char* TACHI_RESTRICT record_ip
 ) TACHI_NOEXCEPT;
 
 /**
@@ -151,11 +163,11 @@ TACHI_PUB int tachi_update_record(
  * about performance you can use the simpler update_record() function.
  */
 TACHI_PUB int tachi_update_record_raw(
-	const char* api_token,
-	const char* zone_id,
-	const char* record_id,
-	const char* new_ip,
-	void** curl
+	const char* TACHI_RESTRICT api_token,
+	const char* TACHI_RESTRICT zone_id,
+	const char* TACHI_RESTRICT record_id,
+	const char* TACHI_RESTRICT new_ip,
+	void**      TACHI_RESTRICT curl
 ) TACHI_NOEXCEPT;
 
 #ifdef __cplusplus
