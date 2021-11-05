@@ -17,7 +17,31 @@ namespace std {
 #include <simdjson.h>
 #include <curl/curl.h>
 
-static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
+/*
+ * By reading Cloudflare's docs, I can see what is the maximum allowed
+ * length of every parameter. With this knowledge, I can statically
+ * figure out how much memory I need to make my requests, and I can
+ * thus avoid dynamic memory allocations when creating the request URLs
+ *
+ * Ok, questo va bene per determinare la dimensione massima del buffer,
+ * ma mi serve anche la dimensione effettiva, dato che devo inserire il
+ * carattere terminatore e anche dire a memcpy il numero esatto di byte
+ * che deve copiare. Per quanto riguarda la lunghezza di zone_id e
+ * record_id non devo fare nulla di particolare, in quanto quella è sia
+ * la lunghezza massima che la lunghezza effettiva (almeno, spero). Le
+ * cose però cambiano quando si parla di record_name_length e
+ * ip_address_length, perché la loro lunghezza effettiva è solitamente
+ * minore rispetto a quella massima. Devo anche ricordarmi di fare dei
+ * controlli per assicurarmi che la lunghezza del record_name e dell'ip
+ * address inserito dall'utente siano minori di quelle massime, perché
+ * altrimenti rischierei di incorrere in alcuni buffer overflow.
+ */
+
+constexpr std::string_view base_url          {"https://api.cloudflare.com/client/v4/zones/"};
+constexpr std::size_t zone_id_length         {32U};
+constexpr std::size_t record_id_length       {32U};
+constexpr std::size_t record_name_max_length {255U};
+constexpr std::size_t ip_address_max_length  {46U};
 
 extern "C" {
 
@@ -113,7 +137,6 @@ int tachi_get_local_ip(
 	return 0;
 }
 
-
 int tachi_get_record(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
@@ -179,15 +202,25 @@ int tachi_get_record_raw(
 	const char* TACHI_RESTRICT record_name,
 	void**      TACHI_RESTRICT curl
 ) TACHI_NOEXCEPT {
+	const std::size_t record_name_length {std::strlen(record_name)};
+
+	// The length of API IDs should always be 32
+	if (std::strlen(zone_id) != zone_id_length || record_name_length > record_name_max_length) {
+		return 2;
+	}
+
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token);
 
 	constexpr std::string_view dns_records_url {"/dns_records?type=A,AAAA&name="};
 
-	// Could use string_view instead of c_str + size. Should investigate performance
-	const std::size_t zone_id_length {std::strlen(zone_id)};
-	const std::size_t record_name_length {std::strlen(record_name)};
-	// -1 because sizeof also counts '\0'
+	constexpr std::size_t request_url_capacity {
+		base_url.length() +
+		zone_id_length +
+		dns_records_url.length() +
+		record_name_max_length
+	};
+
 	const std::size_t request_url_length {
 		base_url.length() +
 		zone_id_length +
@@ -195,8 +228,8 @@ int tachi_get_record_raw(
 		record_name_length
 	};
 
-	// +1 because of '\0', allocating because the size is not known at compile time
-	char* request_url {new char[request_url_length + 1]};
+	// +1 because of '\0'
+	char request_url[request_url_capacity + 1U];
 
 	// Concatenate strings
 	std::memcpy(request_url, base_url.data(), base_url.length());
@@ -207,12 +240,7 @@ int tachi_get_record_raw(
 
 	priv::curl_get_setup(curl, request_url);
 
-	// Can't return immediatly on error since I have to free request_url
-	int error {curl_easy_perform(*curl)};
-
-	delete[] request_url;
-
-	return error;
+	return curl_easy_perform(*curl);
 }
 
 int tachi_update_record(
@@ -265,47 +293,57 @@ int tachi_update_record_raw(
 	const char* TACHI_RESTRICT new_ip,
 	void**      TACHI_RESTRICT curl
 ) TACHI_NOEXCEPT {
+	const std::size_t new_ip_length {std::strlen(new_ip)};
+
+	// The length of API IDs should always be 32
+	if (std::strlen(zone_id) != zone_id_length || std::strlen(record_id) != record_id_length || new_ip_length > ip_address_max_length) {
+		return 2;
+	}
+
 	priv::curl_doh_setup(curl);
 	priv::curl_auth_setup(curl, api_token);
 
-	const std::string_view zone_id_sv {zone_id};
-	const std::string_view record_id_sv {record_id};
 	constexpr std::string_view dns_records_url {"/dns_records/"};
 
-	const std::size_t request_url_length {
+	constexpr std::size_t request_url_length {
 		base_url.length() +
-		zone_id_sv.length() +
+		zone_id_length +
 		dns_records_url.length() +
-		record_id_sv.length()
+		record_id_length
 	};
 
-	// +1 because of '\0', allocating because the size is not known at compile time
-	char* request_url {new char[request_url_length + 1]};
+	// +1 because of '\0'
+	char request_url[request_url_length + 1U];
 
 	// Concatenate the strings to make the request url
 	std::memcpy(request_url, base_url.data(), base_url.length());
-	std::memcpy(request_url + base_url.length(), zone_id_sv.data(), zone_id_sv.length());
-	std::memcpy(request_url + base_url.length() + zone_id_sv.length(), dns_records_url.data(), dns_records_url.length());
-	std::memcpy(request_url + base_url.length() + zone_id_sv.length() + dns_records_url.length(), record_id_sv.data(), record_id_sv.length());
+	std::memcpy(request_url + base_url.length(), zone_id, zone_id_length);
+	std::memcpy(request_url + base_url.length() + zone_id_length, dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + zone_id_length + dns_records_url.length(), record_id, record_id_length);
 	request_url[request_url_length] = '\0';
 
 	constexpr std::string_view request_body_start {R"({"content": ")"};
-	const     std::string_view new_ip_sv {new_ip};
 	constexpr std::string_view request_body_end {"\"}"};
+
+	constexpr std::size_t request_body_capacity {
+		request_body_start.length() +
+		ip_address_max_length +
+		request_body_end.length()
+	};
 
 	const std::size_t request_body_length {
 		request_body_start.length() +
-		new_ip_sv.length() +
+		new_ip_length +
 		request_body_end.length()
 	};
 
 	// This request buffer needs to be valid when calling curl_easy_perform()
-	char* request_body {new char[request_body_length + 1]};
+	char request_body [request_body_capacity + 1];
 
 	// Concatenate the strings to make the request body
 	std::memcpy(request_body, request_body_start.data(), request_body_start.length());
-	std::memcpy(request_body + request_body_start.length(), new_ip_sv.data(), new_ip_sv.length());
-	std::memcpy(request_body + request_body_start.length() + new_ip_sv.length(), request_body_end.data(), request_body_end.length());
+	std::memcpy(request_body + request_body_start.length(), new_ip, new_ip_length);
+	std::memcpy(request_body + request_body_start.length() + new_ip_length, request_body_end.data(), request_body_end.length());
 	request_body[request_body_length] = '\0';
 
 	priv::curl_patch_setup(
@@ -314,12 +352,7 @@ int tachi_update_record_raw(
 		request_body
 	);
 
-	int error {curl_easy_perform(*curl)};
-
-	delete[] request_url;
-	delete[] request_body;
-
-	return error;
+	return curl_easy_perform(*curl);
 }
 
 } // extern "C"

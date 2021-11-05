@@ -68,7 +68,11 @@
 		#define TACHI_NOEXCEPT throw()
 	#endif
 #else
-	#define TACHI_NOEXCEPT
+	#if __GNUC__ >= 4
+		#define TACHI_NOEXCEPT __attribute__ ((nothrow))
+	#else
+		#define TACHI_NOEXCEPT
+	#endif
 #endif
 
 #if __STDC_VERSION__ >= 199901L
@@ -77,6 +81,8 @@
 	#define TACHI_RESTRICT __restrict__
 #elif defined(_MSC_VER)
 	#define TACHI_RESTRICT __restrict
+#else
+	#define TACHI_RESTRICT
 #endif
 
 #ifdef __cplusplus
