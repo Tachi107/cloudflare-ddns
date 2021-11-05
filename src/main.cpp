@@ -14,7 +14,7 @@
 #endif
 #include <simdjson.h>
 #include <toml++/toml.h>
-#include <tachi/cloudflare-ddns.hpp>
+#include <tachi/cloudflare-ddns.h>
 #include "src/config_path.hpp"
 
 /*
@@ -77,13 +77,13 @@ int main(const int argc, const char* const argv[]) {
 
 	std::future<void> dns_response_future {std::async(
 		std::launch::async,
-		tachi::get_record_raw,
+		tachi_get_record_raw,
 		api_token, zone_id, record_name, &curl_handle
 	)};
 
 	std::future<std::string> local_ip_future {std::async(
 		std::launch::async,
-		tachi::get_local_ip
+		tachi_get_local_ip
 	)};
 
 	simdjson::dom::parser parser;
@@ -94,7 +94,7 @@ int main(const int argc, const char* const argv[]) {
 
 	if (local_ip != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		dns_response.clear();
-		tachi::update_record_raw(
+		tachi_update_record_raw(
 			api_token,
 			zone_id,
 			std::string{static_cast<std::string_view>((*parsed["result"].begin())["id"])},

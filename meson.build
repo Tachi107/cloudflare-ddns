@@ -73,7 +73,9 @@ if not simdjson_dep.found()
 			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 			'BUILD_SHARED_LIBS': false,
 			'SIMDJSON_WINDOWS_DLL': false,
-			'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false
+			'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false,
+			'SIMDJSON_DISABLE_DEPRECATED_API': true,
+			'SIMDJSON_ENABLE_FUZZING': false
 		})
 		simdjson_options.set_install(false)
 		if compiler.get_argument_syntax() == 'msvc'
@@ -115,6 +117,7 @@ libcloudflare_ddns = library(
 	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
 	install: true,
+	override_options: 'cpp_eh=none',
 	version: meson.project_version()
 )
 

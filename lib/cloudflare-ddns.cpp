@@ -137,9 +137,17 @@ int tachi_get_record(
 		return 1;
 	}
 
+	// Cloudflare returns a json array of one element containing the
+	// actual result object
 	simdjson::dom::element result;
-	if ((*parsed["result"].begin()).get(result) != simdjson::SUCCESS) {
-		return 1;
+	{
+		simdjson::dom::array results;
+		if (parsed["result"].get(results) != simdjson::SUCCESS) {
+			return 1;
+		}
+		if ((*results.begin()).get(result) != simdjson::SUCCESS) {
+			return 1;
+		}
 	}
 
 	std::string_view record_ip_sv;
