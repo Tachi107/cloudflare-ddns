@@ -49,7 +49,7 @@ namespace priv {
 
 struct static_buffer {
 	static constexpr std::size_t capacity {CURL_MAX_WRITE_SIZE};
-	std::size_t size;
+	std::size_t size {0};
 	char buffer[capacity];
 };
 
