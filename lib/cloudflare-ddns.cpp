@@ -115,7 +115,7 @@ static void curl_patch_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTR
 
 } // namespace priv
 
-int tachi_get_local_ip(
+TACHI_NODISCARD int tachi_get_local_ip(
 	size_t ip_size,
 	char* TACHI_RESTRICT ip
 ) TACHI_NOEXCEPT {
@@ -153,7 +153,7 @@ int tachi_get_local_ip(
 	return 0;
 }
 
-int tachi_get_record(
+TACHI_NODISCARD int tachi_get_record(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_name,
@@ -212,7 +212,7 @@ int tachi_get_record(
 	return 0;
 }
 
-int tachi_get_record_raw(
+TACHI_NODISCARD int tachi_get_record_raw(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_name,
@@ -259,7 +259,7 @@ int tachi_get_record_raw(
 	return curl_easy_perform(*curl);
 }
 
-int tachi_update_record(
+TACHI_NODISCARD int tachi_update_record(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_id,
@@ -302,7 +302,7 @@ int tachi_update_record(
 	return 0;
 }
 
-int tachi_update_record_raw(
+TACHI_NODISCARD int tachi_update_record_raw(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_id,

@@ -35,7 +35,7 @@ int main() {
 		};
 		if (error != 0) {
 			std::cerr << "getaddrinfo: " << gai_strerror(error);
-			std::exit(EXIT_FAILURE);
+			return EXIT_FAILURE;
 		}
 
 		std::array<char, INET6_ADDRSTRLEN> address;

@@ -80,7 +80,7 @@ extern "C" {
 	#endif
 #endif
 
-#if __STDC_VERSION__ >= 199901L
+#if !defined(__cplusplus) && __STDC_VERSION__ >= 199901L
 	#define TACHI_RESTRICT   restrict
 #elif defined(__GNUC__)
 	#define TACHI_RESTRICT __restrict__
@@ -88,6 +88,18 @@ extern "C" {
 	#define TACHI_RESTRICT __restrict
 #else
 	#define TACHI_RESTRICT
+#endif
+
+#if __cplusplus >= 201703L || __STDC_VERSION__ >= 202300L
+	#define TACHI_NODISCARD [[nodiscard]]
+#elif __cplusplus >= 201103L && defined(__GNUC__)
+	#define TACHI_NODISCARD [[gnu::warn_unused_result]]
+#elif defined(__GNUC__)
+	#define TACHI_NODISCARD __attribute__((warn_unused_result))
+#elif defined(_MSC_VER)
+	#define TACHI_NODISCARD _Check_return_
+#else
+	#define TACHI_NODISCARD
 #endif
 
 /**
@@ -100,7 +112,7 @@ extern "C" {
  * containing the IP address in dot-decimal notation. It uses Cloudflare
  * to determine the public address, querying https://1.1.1.1/cdn-cgi/trace
  */
-TACHI_PUB int tachi_get_local_ip(
+TACHI_NODISCARD TACHI_PUB int tachi_get_local_ip(
 	size_t ip_size, char* TACHI_RESTRICT ip
 ) TACHI_NOEXCEPT;
 
@@ -117,7 +129,7 @@ TACHI_PUB int tachi_get_local_ip(
  * to control your own cURL handles to get better performance you can use
  * get_record_raw(), but you'll have to parse the result yourself.
  */
-TACHI_PUB int tachi_get_record(
+TACHI_NODISCARD TACHI_PUB int tachi_get_record(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_name,
@@ -135,7 +147,7 @@ TACHI_PUB int tachi_get_record(
  * get_record(), but you'll have to consult Cloudflare's API reference and
  * you'll also need to parse the result yourself.
  */
-TACHI_PUB int tachi_get_record_raw(
+TACHI_NODISCARD TACHI_PUB int tachi_get_record_raw(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_name,
@@ -153,7 +165,7 @@ TACHI_PUB int tachi_get_record_raw(
  * itself, which may be slow. If you want faster performance by reusing the
  * same handle you can look into update_record_raw().
  */
-TACHI_PUB int tachi_update_record(
+TACHI_NODISCARD TACHI_PUB int tachi_update_record(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_id,
@@ -169,7 +181,7 @@ TACHI_PUB int tachi_update_record(
  * performance but has greater complexity. If you don't particurarly care
  * about performance you can use the simpler update_record() function.
  */
-TACHI_PUB int tachi_update_record_raw(
+TACHI_NODISCARD TACHI_PUB int tachi_update_record_raw(
 	const char* TACHI_RESTRICT api_token,
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_id,
