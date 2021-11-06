@@ -37,29 +37,44 @@ namespace std {
  * altrimenti rischierei di incorrere in alcuni buffer overflow.
  */
 
+extern "C" {
+
 constexpr std::string_view base_url          {"https://api.cloudflare.com/client/v4/zones/"};
 constexpr std::size_t zone_id_length         {32U};
 constexpr std::size_t record_id_length       {32U};
 constexpr std::size_t record_name_max_length {255U};
 constexpr std::size_t ip_address_max_length  {46U};
 
-extern "C" {
-
 namespace priv {
+
+struct static_buffer {
+	static constexpr std::size_t capacity {CURL_MAX_WRITE_SIZE};
+	std::size_t size;
+	char buffer[capacity];
+};
 
 static std::size_t write_data(
 	char* TACHI_RESTRICT incoming_buffer,
-	const std::size_t size,
+	const std::size_t /*size*/, // size will always be 1
 	const std::size_t count,
-	std::string* TACHI_RESTRICT data)
-{
-	data->append(incoming_buffer, size * count);
-	return size * count;
+	static_buffer* TACHI_RESTRICT data
+) TACHI_NOEXCEPT {
+	// Check if the static buffer can handle all the new data
+	if (data->size + count >= static_buffer::capacity) {
+		return 0;
+	}
+	// Append to the buffer
+	std::memcpy(data->buffer + data->size, incoming_buffer, /*size **/ count);
+	// Increase the current size
+	data->size += /*size **/ count;
+	// null-terminate the buffer (so that it can be used as a C string)
+	// data->buffer[data->size] = '\0';
+	return /*size **/ count;
 }
 
 static void curl_handle_setup(
 	CURL** TACHI_RESTRICT curl,
-	const std::string& response_buffer
+	const static_buffer& response_buffer
 ) TACHI_NOEXCEPT {
 	// General curl options
 	curl_easy_setopt(*curl, CURLOPT_NOPROGRESS, 1L);
@@ -106,7 +121,7 @@ int tachi_get_local_ip(
 ) TACHI_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
-	std::string response;
+	priv::static_buffer response;
 
 	priv::curl_handle_setup(&curl, response);
 	priv::curl_doh_setup(&curl);
@@ -120,9 +135,10 @@ int tachi_get_local_ip(
 	// Cleaning up the handle as I won't reuse it
 	curl_easy_cleanup(curl);
 
+	const std::string_view response_sv {response.buffer, response.size};
 	// Parsing the response
-	const std::size_t ip_begin {response.find("ip=") + 3U};  // + 3 because "ip=" is 3 chars
-	const std::size_t ip_end {response.find('\n', ip_begin)};
+	const std::size_t ip_begin {response_sv.find("ip=") + 3U};  // + 3 because "ip=" is 3 chars
+	const std::size_t ip_end {response_sv.find('\n', ip_begin)};
 	const std::size_t ip_length {ip_end - ip_begin};
 
 	if (ip_length >= ip_size) {
@@ -131,7 +147,7 @@ int tachi_get_local_ip(
 
 	// Copying the ip in the caller's buffer
 	// Using memcpy because I don't need to copy the whole response
-	std::memcpy(ip, response.c_str() + ip_begin, ip_length);
+	std::memcpy(ip, response.buffer + ip_begin, ip_length);
 	ip[ip_length] = '\0';
 
 	return 0;
@@ -145,7 +161,7 @@ int tachi_get_record(
 	size_t record_id_size, char* TACHI_RESTRICT record_id
 ) TACHI_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
-	std::string response;
+	priv::static_buffer response;
 
 	priv::curl_handle_setup(&curl, response);
 
@@ -156,7 +172,7 @@ int tachi_get_record(
 	simdjson::dom::parser parser;
 
 	simdjson::dom::element parsed;
-	if (parser.parse(response).get(parsed) != simdjson::SUCCESS) {
+	if (parser.parse(std::string_view{response.buffer, response.size}).get(parsed) != simdjson::SUCCESS) {
 		return 1;
 	}
 
@@ -251,7 +267,7 @@ int tachi_update_record(
 	size_t record_ip_size, char* TACHI_RESTRICT record_ip
 ) TACHI_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
-	std::string response;
+	priv::static_buffer response;
 
 	priv::curl_handle_setup(&curl, response);
 
@@ -262,7 +278,7 @@ int tachi_update_record(
 	simdjson::dom::parser parser;
 
 	simdjson::dom::element parsed;
-	if (parser.parse(response).get(parsed) != simdjson::SUCCESS) {
+	if (parser.parse(std::string_view{response.buffer, response.size}).get(parsed) != simdjson::SUCCESS) {
 		return 1;
 	}
 

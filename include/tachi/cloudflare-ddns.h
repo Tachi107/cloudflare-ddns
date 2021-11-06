@@ -19,6 +19,11 @@
  */
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 
 /**
@@ -83,10 +88,6 @@
 	#define TACHI_RESTRICT __restrict
 #else
 	#define TACHI_RESTRICT
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /**
@@ -177,5 +178,5 @@ TACHI_PUB int tachi_update_record_raw(
 ) TACHI_NOEXCEPT;
 
 #ifdef __cplusplus
-}
+} // extern "C"
 #endif
