@@ -6,7 +6,7 @@
 
 #include <tachi/cloudflare-ddns.h>
 // curl.h redefines fopen on Windows, causing issues.
-#if defined(fopen) && (fopen == curlx_win32_fopen)
+#if defined(fopen)
 namespace std {
 	const auto& curlx_win32_fopen = fopen;
 }
