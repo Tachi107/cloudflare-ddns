@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+#define TACHI_ZONE_ID_LENGTH         32U
+#define TACHI_RECORD_ID_LENGTH       32U
+#define TACHI_RECORD_NAME_MAX_LENGTH 255U
+#define TACHI_IP_ADDRESS_MAX_LENGTH  46U
+
 #include <stddef.h>
 
 /**

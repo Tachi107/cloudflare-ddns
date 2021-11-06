@@ -8,11 +8,11 @@
 
 int main() {
 	"update_record"_test = [] {
-		std::array<char, INET6_ADDRSTRLEN> local_ip;
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> local_ip;
 		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
 
-		std::array<char, INET6_ADDRSTRLEN> record_ip;
-		std::array<char, 33> record_id;
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
 		expect(eq(tachi_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),

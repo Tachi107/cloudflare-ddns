@@ -9,6 +9,9 @@
 	#ifdef TACHI_HAS_NETDB_H
 		#include <netdb.h>
 	#endif
+	#ifdef TACHI_HAS_ARPA_INET_H
+		#include <arpa/inet.h>
+	#endif
 	#ifdef TACHI_HAS_WS2TCPIP_H
 		#include <ws2tcpip.h>
 	#endif
@@ -47,8 +50,8 @@ int main() {
 		freeaddrinfo(dns_response);
 		#endif
 
-		std::array<char, INET6_ADDRSTRLEN> record_ip;
-		std::array<char, 33> record_id;
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
 
 		expect(eq(tachi_get_record(
 			test_api_token.data(),

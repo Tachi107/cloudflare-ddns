@@ -31,7 +31,7 @@ int main() {
 
 		response.pop_back(); // remove \n character
 
-		std::array<char, INET6_ADDRSTRLEN> local_ip;
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> local_ip;
 
 		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
 

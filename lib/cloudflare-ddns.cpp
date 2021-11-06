@@ -39,11 +39,7 @@ namespace std {
 
 extern "C" {
 
-constexpr std::string_view base_url          {"https://api.cloudflare.com/client/v4/zones/"};
-constexpr std::size_t zone_id_length         {32U};
-constexpr std::size_t record_id_length       {32U};
-constexpr std::size_t record_name_max_length {255U};
-constexpr std::size_t ip_address_max_length  {46U};
+constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
 
 namespace priv {
 
@@ -221,7 +217,7 @@ TACHI_NODISCARD int tachi_get_record_raw(
 	const std::size_t record_name_length {std::strlen(record_name)};
 
 	// The length of API IDs should always be 32
-	if (std::strlen(zone_id) != zone_id_length || record_name_length > record_name_max_length) {
+	if (std::strlen(zone_id) != TACHI_ZONE_ID_LENGTH || record_name_length > TACHI_RECORD_NAME_MAX_LENGTH) {
 		return 2;
 	}
 
@@ -232,14 +228,14 @@ TACHI_NODISCARD int tachi_get_record_raw(
 
 	constexpr std::size_t request_url_capacity {
 		base_url.length() +
-		zone_id_length +
+		TACHI_ZONE_ID_LENGTH +
 		dns_records_url.length() +
-		record_name_max_length
+		TACHI_RECORD_NAME_MAX_LENGTH
 	};
 
 	const std::size_t request_url_length {
 		base_url.length() +
-		zone_id_length +
+		TACHI_ZONE_ID_LENGTH +
 		dns_records_url.length() +
 		record_name_length
 	};
@@ -249,9 +245,9 @@ TACHI_NODISCARD int tachi_get_record_raw(
 
 	// Concatenate strings
 	std::memcpy(request_url, base_url.data(), base_url.length());
-	std::memcpy(request_url + base_url.length(), zone_id, zone_id_length);
-	std::memcpy(request_url + base_url.length() + zone_id_length, dns_records_url.data(), dns_records_url.length());
-	std::memcpy(request_url + base_url.length() + zone_id_length + dns_records_url.length(), record_name, record_name_length);
+	std::memcpy(request_url + base_url.length(), zone_id, TACHI_ZONE_ID_LENGTH);
+	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH, dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH + dns_records_url.length(), record_name, record_name_length);
 	request_url[request_url_length] = '\0';
 
 	priv::curl_get_setup(curl, request_url);
@@ -312,7 +308,7 @@ TACHI_NODISCARD int tachi_update_record_raw(
 	const std::size_t new_ip_length {std::strlen(new_ip)};
 
 	// The length of API IDs should always be 32
-	if (std::strlen(zone_id) != zone_id_length || std::strlen(record_id) != record_id_length || new_ip_length > ip_address_max_length) {
+	if (std::strlen(zone_id) != TACHI_ZONE_ID_LENGTH || std::strlen(record_id) != TACHI_RECORD_ID_LENGTH || new_ip_length > TACHI_IP_ADDRESS_MAX_LENGTH) {
 		return 2;
 	}
 
@@ -323,9 +319,9 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	constexpr std::size_t request_url_length {
 		base_url.length() +
-		zone_id_length +
+		TACHI_ZONE_ID_LENGTH +
 		dns_records_url.length() +
-		record_id_length
+		TACHI_RECORD_ID_LENGTH
 	};
 
 	// +1 because of '\0'
@@ -333,9 +329,9 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	// Concatenate the strings to make the request url
 	std::memcpy(request_url, base_url.data(), base_url.length());
-	std::memcpy(request_url + base_url.length(), zone_id, zone_id_length);
-	std::memcpy(request_url + base_url.length() + zone_id_length, dns_records_url.data(), dns_records_url.length());
-	std::memcpy(request_url + base_url.length() + zone_id_length + dns_records_url.length(), record_id, record_id_length);
+	std::memcpy(request_url + base_url.length(), zone_id, TACHI_ZONE_ID_LENGTH);
+	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH, dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH + dns_records_url.length(), record_id, TACHI_RECORD_ID_LENGTH);
 	request_url[request_url_length] = '\0';
 
 	constexpr std::string_view request_body_start {R"({"content": ")"};
@@ -343,7 +339,7 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	constexpr std::size_t request_body_capacity {
 		request_body_start.length() +
-		ip_address_max_length +
+		TACHI_IP_ADDRESS_MAX_LENGTH +
 		request_body_end.length()
 	};
 
