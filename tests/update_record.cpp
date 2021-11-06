@@ -12,7 +12,7 @@ int main() {
 		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
 
 		std::array<char, INET6_ADDRSTRLEN> record_ip;
-		std::array<char, 32> record_id;
+		std::array<char, 33> record_id;
 		expect(eq(tachi_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),

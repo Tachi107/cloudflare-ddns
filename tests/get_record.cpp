@@ -48,7 +48,7 @@ int main() {
 		#endif
 
 		std::array<char, INET6_ADDRSTRLEN> record_ip;
-		std::array<char, 100> record_id;
+		std::array<char, 33> record_id;
 
 		expect(eq(tachi_get_record(
 			test_api_token.data(),
