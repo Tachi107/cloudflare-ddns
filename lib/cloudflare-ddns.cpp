@@ -5,15 +5,17 @@
  */
 
 #include <tachi/cloudflare-ddns.h>
+#include <curl/curl.h>
 // curl.h redefines fopen on Windows, causing issues.
+#ifdef fopen
 namespace std {
 	const auto& curlx_win32_fopen = fopen;
 }
+#endif
 #include <string>
 #include <string_view>
 #include <cstring>
 #include <simdjson.h>
-#include <curl/curl.h>
 
 /*
  * By reading Cloudflare's docs, I can see what is the maximum allowed
