@@ -5,6 +5,7 @@
  */
 
 #include "common.hpp"
+#include <array>
 
 int main() {
 	"update_record"_test = [] {

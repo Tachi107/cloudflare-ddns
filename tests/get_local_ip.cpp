@@ -6,6 +6,7 @@
 
 #include "common.hpp"
 #include <curl/curl.h>
+#include <array>
 
 extern "C" {
 static std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {

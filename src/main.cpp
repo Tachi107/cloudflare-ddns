@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <future>
+#include <array>
 // curl.h redefines fopen on Windows, causing issues.
 #if defined(_WIN32) and defined(fopen)
 	#undef fopen

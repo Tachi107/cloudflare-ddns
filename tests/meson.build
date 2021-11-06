@@ -30,16 +30,7 @@ if compiler.has_function('getaddrinfo')
 	test_args += '-DTACHI_HAS_GETADDRINFO'
 endif
 
-if compiler.has_header('netdb.h')
-	test_args += '-DTACHI_HAS_NETDB_H'
-endif
-
-if compiler.has_header('arpa/inet.h')
-	test_args += '-DTACHI_HAS_ARPA_INET_H'
-endif
-
 if compiler.has_header('ws2tcpip.h')
-	test_args += '-DTACHI_HAS_WS2TCPIP_H'
 	test_deps += compiler.find_library('Ws2_32')
 	if compiler.has_function('getaddrinfo', prefix: '#include <ws2tcpip.h>', dependencies: test_deps)
 		test_args += '-DTACHI_HAS_GETADDRINFO'

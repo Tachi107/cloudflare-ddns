@@ -6,18 +6,19 @@
 
 #include "common.hpp"
 #ifdef TACHI_HAS_GETADDRINFO
-	#ifdef TACHI_HAS_NETDB_H
+	#if __has_include(<netdb.h>)
 		#include <netdb.h>
 	#endif
-	#ifdef TACHI_HAS_ARPA_INET_H
+	#if __has_include(<arpa/inet.h>)
 		#include <arpa/inet.h>
 	#endif
-	#ifdef TACHI_HAS_WS2TCPIP_H
+	#if __has_include(<ws2tcpip.h>)
 		#include <ws2tcpip.h>
 	#endif
 #else
 	#error "Test not implemented on this platform"
 #endif
+#include <array>
 
 int main() {
 		/**
@@ -26,7 +27,7 @@ int main() {
 	 */
 	"get_record"_test = [] {
 		#if TACHI_HAS_GETADDRINFO
-		#if TACHI_HAS_WS2TCPIP_H
+		#if __has_include(<ws2tcpip.h>)
 			WSADATA wsaData;
 			// Manually setting the version to 2.2 instead of using MAKEWORD
 			WSAStartup(0b00000010'00000010, &wsaData);
