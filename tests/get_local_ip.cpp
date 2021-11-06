@@ -33,7 +33,7 @@ int main() {
 
 		std::array<char, INET6_ADDRSTRLEN> local_ip;
 
-		tachi_get_local_ip(local_ip.size(), local_ip.data());
+		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
 
 		expect(eq(
 			std::string_view{local_ip.data()},

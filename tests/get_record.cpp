@@ -33,10 +33,7 @@ int main() {
 		const int error {
 			getaddrinfo(test_record_name.data(), nullptr, nullptr, &dns_response)
 		};
-		if (error != 0) {
-			std::cerr << "getaddrinfo: " << gai_strerror(error);
-			return EXIT_FAILURE;
-		}
+		expect(eq(error, 0)) << "getaddrinfo: " << gai_strerror(error);
 
 		std::array<char, INET6_ADDRSTRLEN> address;
 		inet_ntop(
@@ -53,13 +50,13 @@ int main() {
 		std::array<char, INET6_ADDRSTRLEN> record_ip;
 		std::array<char, 100> record_id;
 
-		tachi_get_record(
+		expect(eq(tachi_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),
 			test_record_name.data(),
 			record_ip.size(), record_ip.data(),
 			record_id.size(), record_id.data()
-		);
+		), 0));
 
 		expect(eq(
 			std::string_view{address.data()},
