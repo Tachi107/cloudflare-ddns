@@ -15,18 +15,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'debian:stable', 'debian:testing' ]
-        compiler: [ 'g++', 'clang' ]
+        os: [ 'debian:stable', 'debian:testing', 'redhat/ubi8:latest' ]
+        compiler: [ 'gcc', 'clang' ]
 
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.os }}
 
     steps:
-    - name: Install dependencies
+    - name: Install dependencies (Debian)
+      if: contains(matrix.os, 'debian')
       run: |
+        if [ ${{ matrix.comiler }} = gcc ]; then compiler=g++; else compiler=clang; fi
         apt-get -qq update
-        apt-get -qq install ${{ matrix.compiler }} meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git
+        apt-get -qq install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git
+
+    - name: Install dependencies (Red Hat)
+      if: contains(matrix.os, 'redhat')
+      run: |
+        if [ ${{ matrix.comiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
+        yum install $compiler meson pkgconf cmake libcurl-devel git
 
     - uses: actions/checkout@v2
       with:
