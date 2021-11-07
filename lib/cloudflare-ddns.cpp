@@ -39,10 +39,12 @@ static void curl_handle_setup(CURL** curl, const std::string& response_buffer) n
 }
 
 static void curl_doh_setup(CURL** curl) noexcept {
+#if LIBCURL_VERSION_NUM >= 0x073e00
 	struct curl_slist* manual_doh_address {nullptr};
 	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, manual_doh_address);
 	curl_easy_setopt(*curl, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
+#endif
 }
 
 static void curl_auth_setup(CURL** curl, const char* const api_token) noexcept {
