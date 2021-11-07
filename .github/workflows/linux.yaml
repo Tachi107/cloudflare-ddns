@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get -qq update
-        apt-get -qq install ${{ matrix.compiler }} meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git --no-install-recommends
+        apt-get -qq install ${{ matrix.compiler }} meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git ca-certificates --no-install-recommends
 
     - uses: actions/checkout@v2
       with:
