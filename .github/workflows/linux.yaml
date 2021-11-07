@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'debian:stable', 'debian:testing', 'ubuntu:latest', 'ubuntu:rolling' ]
+        os: [ 'debian:stable', 'debian:testing' ]
         compiler: [ 'g++', 'clang' ]
 
     runs-on: ubuntu-latest
