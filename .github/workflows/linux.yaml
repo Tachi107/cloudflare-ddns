@@ -42,7 +42,9 @@ jobs:
         submodules: true
 
     - name: Configure Meson
-      run: meson setup build -Dtests=true -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name='${{ secrets.RECORD_NAME }}'
+      run: |
+        if expr ${{ matrix.os }} : ".*redhat" >/dev/null; then enable_tests=false; else enable_tests=true; fi
+        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name='${{ secrets.RECORD_NAME }}'
 
     - name: Build
       run: ninja -C build
