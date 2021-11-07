@@ -44,7 +44,8 @@ jobs:
     - name: Configure Meson
       run: |
         if expr ${{ matrix.os }} : ".*redhat" >/dev/null; then enable_tests=false; else enable_tests=true; fi
-        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name='${{ secrets.RECORD_NAME }}'
+        record_name=$(printf '${{ matrix.compiler }}.${{ matrix.os }}.linux.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
+        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name"
 
     - name: Build
       run: ninja -C build
