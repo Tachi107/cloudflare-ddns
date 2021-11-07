@@ -35,8 +35,7 @@ jobs:
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
         yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-        subscription-manager repos --enable "codeready-builder-for-rhel-8-$(arch)-rpms"
-        yum install -y $compiler meson pkgconf cmake libcurl-devel git
+        yum install -y $compiler pkgconf cmake libcurl-devel git
 
     - uses: actions/checkout@v2
       with:
