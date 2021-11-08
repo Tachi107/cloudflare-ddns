@@ -55,7 +55,7 @@ jobs:
     - name: Build
       run: |
         sudo apt-get -qq update && sudo apt-get -qq install ninja-build libcurl4-openssl-dev libsimdjson-dev
-        sudo pip install meson==0.56.2
+        sudo pip install meson
         meson setup build
         meson compile -C build
 

@@ -83,11 +83,14 @@ static void curl_handle_setup(
 	curl_easy_setopt(*curl, CURLOPT_WRITEDATA, &response_buffer);
 }
 
+
 static void curl_doh_setup(CURL** TACHI_RESTRICT curl) TACHI_NOEXCEPT {
+#if LIBCURL_VERSION_NUM >= 0x073e00
 	struct curl_slist* manual_doh_address {nullptr};
 	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, manual_doh_address);
 	curl_easy_setopt(*curl, CURLOPT_DOH_URL, "https://cloudflare-dns.com/dns-query");
+#endif
 }
 
 static void curl_auth_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const api_token) TACHI_NOEXCEPT {

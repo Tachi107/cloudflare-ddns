@@ -2,30 +2,50 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-name: Linux
+name: linux
 
-on: [push]
+on: push
 
 defaults:
   run:
     shell: sh
 
 jobs:
-  ubuntu:
-    runs-on: ubuntu-20.04
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'debian:stable', 'debian:testing', 'redhat/ubi8:latest' ]
+        compiler: [ 'gcc', 'clang' ]
+
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Install dependencies
+    - name: Install dependencies (Debian)
+      if: contains(matrix.os, 'debian')
       run: |
-        sudo rm /etc/apt/sources.list /etc/apt/sources.list.d/*
-        printf "Enabled: yes\nTypes: deb\nURIs: http://azure.archive.ubuntu.com/ubuntu/\nSuites: focal focal-updates focal-backports focal-security hirsute\nComponents: main universe\n" | sudo tee /etc/apt/sources.list.d/system.sources
-        printf "APT::Default-Release \"focal\";\n" | sudo tee /etc/apt/apt.conf.d/00default-release
-        sudo apt-get -qq update && sudo apt-get -qq install meson libcurl4-openssl-dev libsimdjson-dev/hirsute
+        if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler=clang; fi
+        apt-get -qq update
+        apt-get -qq install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git
+
+    - name: Install dependencies (Red Hat)
+      if: contains(matrix.os, 'redhat')
+      run: |
+        if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
+        yum install -y $compiler pkgconf cmake libcurl-devel git python3
+        pip3 install meson ninja
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
 
     - name: Configure Meson
-      run: meson setup build -Dtests=true -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name='${{ secrets.RECORD_NAME }}'
+      run: |
+        if expr ${{ matrix.os }} : ".*redhat" >/dev/null; then enable_tests=false; else enable_tests=true; fi
+        record_name=$(printf '${{ matrix.compiler }}.${{ matrix.os }}.linux.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
+        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name"
 
     - name: Build
       run: ninja -C build
@@ -37,4 +57,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: cloudflare-ddns-linux
-        path: ${{runner.workspace}}/cloudflare-ddns/build/cloudflare-ddns
+        path: build/cloudflare-ddns
