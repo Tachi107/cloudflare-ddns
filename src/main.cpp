@@ -8,23 +8,44 @@
 #include <string>
 #include <iostream>
 #include <future>
+#include <array>
 // curl.h redefines fopen on Windows, causing issues.
 #if defined(_WIN32) and defined(fopen)
 	#undef fopen
 #endif
 #include <simdjson.h>
 #include <toml++/toml.h>
-#include <tachi/cloudflare-ddns.hpp>
-#include "src/config_path.hpp"
+#include <tachi/cloudflare-ddns.h>
+#include "config_path.hpp"
 
 /*
  * Two handles for two theads.
  * One for cdn-cgi/trace and one for DNS IP
  */
 
-std::size_t write_data(char* incoming_buffer, const std::size_t size, const std::size_t count, std::string* data) {
-	data->append(incoming_buffer, size * count);
-	return size * count;
+struct static_buffer {
+	static constexpr std::size_t capacity {600}; // Tipical size of largest response (GET to fetch the DNS IP)
+	std::size_t size {0};
+	char buffer[capacity];
+};
+
+static std::size_t write_data(
+	char* TACHI_RESTRICT incoming_buffer,
+	const std::size_t /*size*/, // size will always be 1
+	const std::size_t count,
+	static_buffer* TACHI_RESTRICT data
+) TACHI_NOEXCEPT {
+	// Check if the static buffer can handle all the new data
+	if (data->size + count >= static_buffer::capacity) {
+		return 0;
+	}
+	// Append to the buffer
+	std::memcpy(data->buffer + data->size, incoming_buffer, /*size **/ count);
+	// Increase the current size
+	data->size += /*size **/ count;
+	// null-terminate the buffer (so that it can be used as a C string)
+	// data->buffer[data->size] = '\0';
+	return /*size **/ count;
 }
 
 int main(const int argc, const char* const argv[]) {
@@ -64,8 +85,7 @@ int main(const int argc, const char* const argv[]) {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	CURL* curl_handle {curl_easy_init()};
-	std::string dns_response;
-	dns_response.reserve(600);	// Tipical size of largest response (GET to fetch the DNS IP)
+	static_buffer dns_response;
 
 	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
 	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
@@ -75,33 +95,45 @@ int main(const int argc, const char* const argv[]) {
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
 
-	std::future<void> dns_response_future {std::async(
+	std::future<int> dns_response_future {std::async(
 		std::launch::async,
-		tachi::get_record_raw,
-		api_token, zone_id, record_name, &curl_handle
+		tachi_get_record_raw,
+		api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle
 	)};
 
-	std::future<std::string> local_ip_future {std::async(
+	std::array<char, 46> local_ip;
+	std::future<int> local_ip_future {std::async(
 		std::launch::async,
-		tachi::get_local_ip
+		tachi_get_local_ip,
+		local_ip.size(), local_ip.data()
 	)};
 
 	simdjson::dom::parser parser;
-	dns_response_future.wait();
-	const simdjson::dom::element parsed {parser.parse(dns_response)};
 
-	std::string local_ip {local_ip_future.get()};
+	if (dns_response_future.get() != 0) {
+		std::cerr << "Error getting DNS record info\n";
+		return EXIT_FAILURE;
+	}
+	const simdjson::dom::element parsed {parser.parse(std::string_view{dns_response.buffer, dns_response.size})};
 
-	if (local_ip != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
-		dns_response.clear();
-		tachi::update_record_raw(
-			api_token,
-			zone_id,
-			std::string{static_cast<std::string_view>((*parsed["result"].begin())["id"])},
-			local_ip,
+	if (local_ip_future.get() != 0) {
+		std::cerr << "Error getting the local IP address\n";
+		return EXIT_FAILURE;
+	}
+
+	if (std::string_view{local_ip.data()} != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
+		dns_response.size = 0;
+		if (tachi_update_record_raw(
+			api_token.c_str(),
+			zone_id.c_str(),
+			static_cast<const char*>((*parsed["result"].begin())["id"]),
+			local_ip.data(),
 			&curl_handle
-		);
-		std::cout << "New IP: " << parser.parse(dns_response)["result"]["content"] << '\n';
+		) != 0) {
+			std::cerr << "Error updating the DNS record\n";
+			return EXIT_FAILURE;
+		}
+		std::cout << "New IP: " << parser.parse(std::string_view{dns_response.buffer, dns_response.size})["result"]["content"] << '\n';
 	}
 	else {
 		std::cout << "The DNS is up to date\n";

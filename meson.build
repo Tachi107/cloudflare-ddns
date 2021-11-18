@@ -14,7 +14,7 @@ project(
 		'cpp_rtti=false'
 	],
 	version: '0.4.0',
-	license: 'AGPL-3.0-or-later',
+	license: ['AGPL-3.0-or-later', 'LGPL-3.0-or-later'],
 	meson_version: '>=0.53.0'
 )
 
@@ -22,13 +22,12 @@ compiler = meson.get_compiler('cpp')
 
 windows_deps = []
 
-cmake = import('cmake')
-
 libcurl_dep = dependency('libcurl', required: false)
 if not libcurl_dep.found()
 	if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
 		error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
 	endif
+	cmake = import('cmake')
 	if meson.version().version_compare('>=0.55.0')
 		libcurl_options = cmake.subproject_options()
 		libcurl_options.add_cmake_defines({
@@ -65,6 +64,7 @@ if not simdjson_dep.found()
 	if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
 		error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
 	endif
+	cmake = import('cmake')
 	if meson.version().version_compare('>=0.55.0')
 		simdjson_options = cmake.subproject_options()
 		simdjson_options.add_cmake_defines({
@@ -73,11 +73,13 @@ if not simdjson_dep.found()
 			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 			'BUILD_SHARED_LIBS': false,
 			'SIMDJSON_WINDOWS_DLL': false,
-			'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false
+			'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false,
+			'SIMDJSON_DISABLE_DEPRECATED_API': true,
+			'SIMDJSON_ENABLE_FUZZING': false
 		})
 		simdjson_options.set_install(false)
 		if compiler.get_argument_syntax() == 'msvc'
-			simdjson_options.append_compile_args('c', '/MT')
+			simdjson_options.append_compile_args('c',   '/MT')
 			simdjson_options.append_compile_args('cpp', '/MT')
 		endif
 		simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
@@ -85,15 +87,6 @@ if not simdjson_dep.found()
 		simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
 	endif
 endif
-
-tomlplusplus_dep = dependency(
-	'tomlplusplus',
-	fallback: ['tomlplusplus', 'tomlplusplus_dep'],
-	default_options: ['default_library=static']
-)
-
-config_path_hpp = ''
-subdir('src')
 
 extra_args = []
 
@@ -109,12 +102,12 @@ libcloudflare_ddns = library(
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
-		tomlplusplus_dep,
 		windows_deps
 	],
 	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
 	install: true,
+	override_options: 'cpp_eh=none',
 	version: meson.project_version()
 )
 
@@ -125,27 +118,13 @@ cloudflare_ddns_dep = declare_dependency(
 	version: meson.project_version()
 )
 
-executable(
-	'cloudflare-ddns',
-	'src'/'main.cpp',
-	dependencies: [
-		cloudflare_ddns_dep,
-		libcurl_dep,
-		simdjson_dep,
-		tomlplusplus_dep,
-		dependency('threads'),
-		windows_deps
-	],
-	gnu_symbol_visibility: 'hidden',
-	install: true,
-	sources: config_path_hpp
-)
+if get_option('executable')
+	subdir('src')
+endif
 
 if get_option('tests')
 	subdir('tests')
 endif
-
-install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
 
 import('pkgconfig').generate(
 	libcloudflare_ddns,

@@ -5,28 +5,34 @@
  */
 
 #include "common.hpp"
+#include <array>
 
 int main() {
 	"update_record"_test = [] {
-		const auto local_ip {tachi::get_local_ip()};
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> local_ip;
+		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
 
-		const auto[record_ip, record_id] {
-			tachi::get_record(
-				std::string{test_api_token},
-				std::string{test_zone_id},
-				std::string{test_record_name}
-			)
-		};
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
+		expect(eq(tachi_get_record(
+			test_api_token.data(),
+			test_zone_id.data(),
+			test_record_name.data(),
+			record_ip.size(), record_ip.data(),
+			record_id.size(), record_id.data()
+		), 0));
 
-		const auto new_ip {
-			tachi::update_record(
-				std::string{test_api_token},
-				std::string{test_zone_id},
-				record_id,
-				local_ip
-			)
-		};
+		expect(eq(tachi_update_record(
+			test_api_token.data(),
+			test_zone_id.data(),
+			record_id.data(),
+			local_ip.data(),
+			record_ip.size(), record_ip.data()
+		), 0));
 
-		expect(eq(local_ip, new_ip));
+		expect(eq(
+			std::string_view{local_ip.data()},
+			std::string_view{record_ip.data()}
+		));
 	};
 }

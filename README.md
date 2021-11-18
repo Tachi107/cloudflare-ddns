@@ -21,17 +21,23 @@ To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/a
 
 Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a TOML configuration file, located in `/etc/cloudflare-ddns/config.toml` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.toml` otherwise (`/usr/local/etc` by default); [here's the template](config.toml). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
-## Dependencies
+You can download the latest release from the GitHub Releases page, or, if you prefer, you can [build](#Build) the program yourself.
 
-cloudflare-ddns relies on libcurl, simdjson and tomlplusplus. I recommend you to compile the program yourself, but I also provide a statically linked executable for every release. It is not 100% self-contained but it should work in most cases.
+## Library
+
+cloudflare-ddns is also a library! In fact, the command line tool is fully based around it. It is fully tested with CI jobs, so you can be sure that it will always work as expected.
 
 ## Build
 
-To build cloudflare-ddns you'll need to install `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
+libcloudflare-ddns relies on [libcurl](https://curl.se) and [simdjson](https://simdjson.org), while the binary also depends on [tomlplusplus](https://marzer.github.io/tomlplusplus/).
+
+On Debian and derivatives, you can install the packages `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
 
 After having installed the dependencies, you can build the program with `meson setup build` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
 
 If your libcurl is older than version 7.64.1 (for example in Debian 10) you'll see a lot of connection logs related to DNS over HTTPS lookups; that's a [libcurl bug](https://github.com/curl/curl/issues/3660), and there's nothing I can do about it :/
+
+If you're interested in only building the library, you can pass `-Dexecutable=false` to `meson setup`.
 
 ## Systemd timer
 
@@ -47,8 +53,8 @@ After=network-online.target
 [Service]
 Type=oneshot
 # Sleep to avoid connection issues when running the script at boot
-ExecStartPre=/bin/sleep 20
-ExecStart=/opt/cloudflare-ddns <api_key> <zone_id> <dns_record>
+ExecStartPre=/usr/bin/sleep 20
+ExecStart=/usr/local/bin/cloudflare-ddns <api_key> <zone_id> <dns_record>
 User=www-data
 Group=www-data
 NoNewPrivileges=true
