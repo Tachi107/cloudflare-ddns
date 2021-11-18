@@ -79,7 +79,7 @@ if not simdjson_dep.found()
 		})
 		simdjson_options.set_install(false)
 		if compiler.get_argument_syntax() == 'msvc'
-			simdjson_options.append_compile_args('c', '/MT')
+			simdjson_options.append_compile_args('c',   '/MT')
 			simdjson_options.append_compile_args('cpp', '/MT')
 		endif
 		simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
@@ -87,15 +87,6 @@ if not simdjson_dep.found()
 		simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
 	endif
 endif
-
-tomlplusplus_dep = dependency(
-	'tomlplusplus',
-	fallback: ['tomlplusplus', 'tomlplusplus_dep'],
-	default_options: ['default_library=static']
-)
-
-config_path_hpp = ''
-subdir('src')
 
 extra_args = []
 
@@ -128,27 +119,13 @@ cloudflare_ddns_dep = declare_dependency(
 	version: meson.project_version()
 )
 
-executable(
-	'cloudflare-ddns',
-	'src'/'main.cpp',
-	dependencies: [
-		cloudflare_ddns_dep,
-		libcurl_dep,
-		simdjson_dep,
-		tomlplusplus_dep,
-		dependency('threads'),
-		windows_deps
-	],
-	gnu_symbol_visibility: 'hidden',
-	install: true,
-	sources: config_path_hpp
-)
+if get_option('executable')
+	subdir('src')
+endif
 
 if get_option('tests')
 	subdir('tests')
 endif
-
-install_data('config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
 
 import('pkgconfig').generate(
 	libcloudflare_ddns,

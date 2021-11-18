@@ -37,6 +37,8 @@ After having installed the dependencies, you can build the program with `meson s
 
 If your libcurl is older than version 7.64.1 (for example in Debian 10) you'll see a lot of connection logs related to DNS over HTTPS lookups; that's a [libcurl bug](https://github.com/curl/curl/issues/3660), and there's nothing I can do about it :/
 
+If you're interested in only building the library, you can pass `-Dexecutable=false` to `meson setup`.
+
 ## Systemd timer
 
 Here's an example of a systemd service + timer that checks and eventually updates one DNS record
