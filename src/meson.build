@@ -16,7 +16,7 @@ tomlplusplus_dep = dependency(
 
 executable(
 	'cloudflare-ddns',
-	'src'/'main.cpp',
+	'main.cpp',
 	dependencies: [
 		cloudflare_ddns_dep,
 		libcurl_dep,
