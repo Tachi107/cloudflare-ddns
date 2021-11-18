@@ -16,7 +16,7 @@
 #include <simdjson.h>
 #include <toml++/toml.h>
 #include <tachi/cloudflare-ddns.h>
-#include "src/config_path.hpp"
+#include "config_path.hpp"
 
 /*
  * Two handles for two theads.
