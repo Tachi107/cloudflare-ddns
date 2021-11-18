@@ -11,11 +11,11 @@ environment:
     - arch: x64
       compiler: msvc2019
   api_token:
-    secure: ED4kqXSHe32rlVYnkZdP4mWu+/UHWp0/DmKiQvhvzavp4vtbzcSHiYp/HEtEK3VL
+    secure: Zo4CXhD9M2XoeZkF1emEcQK/g6PGIFztGZ1FaYaKg7I5YhDbj962xzj0jqUhgW2C
   zone_id:
-    secure: ds1KfFqFjuCHJg7jdGVwFON4Ys0z029hkqyUE6h7J/1+tECQzLTxHkGBpl4S30Ud
+    secure: SQDa4GZsqrxoVemMabChKXvSOt+EM1Ky2EX6dyN0w7zitwTsQeYOEh8gFMkA21in
   record_name:
-    secure: IiQA4wuz76kwEqZ+K+bB7v/obAtUJnt7xvdebkPMvrz76VsxGvrYGDTZQYBzq3xs
+    secure: EElzS3TkDp8Ph6oz3DWAQxtcbuQE9nyxhjlbEgqcOn4=
 
 platform:
   - x64
@@ -31,7 +31,7 @@ install:
   - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
 
 build_script:
-  - cmd: meson setup build --default-library=static -Db_vscrt=static_from_buildtype -Dtests=true -Dtest_api_token=%api_token% -Dtest_zone_id=%zone_id% -Dtest_record_name=%record_name%
+  - cmd: meson setup build --default-library=static -Db_vscrt=static_from_buildtype -Dtests=true -Dtest_api_token=%api_token% -Dtest_zone_id=%zone_id% -Dtest_record_name=%arch%.%record_name%
   - cmd: meson compile -C build
 
 test_script:
