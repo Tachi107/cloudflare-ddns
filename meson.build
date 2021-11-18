@@ -102,7 +102,6 @@ libcloudflare_ddns = library(
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
-		tomlplusplus_dep,
 		windows_deps
 	],
 	gnu_symbol_visibility: 'hidden',
