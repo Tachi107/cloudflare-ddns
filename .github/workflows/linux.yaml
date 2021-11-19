@@ -54,11 +54,11 @@ jobs:
       run: ninja -C build
 
     - name: Test
-      if: \! contains(matrix.os, 'redhat')
+      if: ! contains(matrix.os, 'redhat')
       run: meson test -C build --verbose
 
     - name: Coverage
-      if: \! contains(matrix.os, 'redhat')
+      if: ! contains(matrix.os, 'redhat')
       run: |
         mkdir --parents $HOME/.local/bin
         if [ "${{ matrix.compiler }}" = 'clang' ]; then printf 'llvm-cov gcov "$@"' > $HOME/.local/bin/cov.sh; else printf 'gcov "$@"' > $HOME/.local/bin/cov.sh; fi && chmod +x $HOME/.local/bin/cov.sh
