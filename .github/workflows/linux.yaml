@@ -31,7 +31,7 @@ jobs:
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler=clang; fi
         apt-get -qq update
-        apt-get -qq install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git curl gpg gpgv
+        apt-get -qq install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev git curl gpg gpgv lcov llvm
 
     - name: Install dependencies (Red Hat)
       if: contains(matrix.os, 'redhat')
@@ -54,10 +54,16 @@ jobs:
       run: ninja -C build
 
     - name: Test
+      if: \! contains(matrix.os, 'redhat')
       run: meson test -C build --verbose
 
     - name: Coverage
+      if: \! contains(matrix.os, 'redhat')
       run: |
+        mkdir --parents $HOME/.local/bin
+        if [ "${{ matrix.compiler }}" = 'clang' ]; then printf 'llvm-cov gcov "$@"' > $HOME/.local/bin/cov.sh; else printf 'gcov "$@"' > $HOME/.local/bin/cov.sh; fi && chmod +x $HOME/.local/bin/cov.sh
+        lcov --capture --output-file coverage.info --directory . --gcov-tool $HOME/.local/bin/cov.sh --exclude '/usr/*' --exclude "${HOME}"'/.cache/*' --exclude '*/tests/*' --exclude '*/subprojects/*'
+        lcov --list coverage.info
         curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
         curl --silent --remote-name https://uploader.codecov.io/latest/linux/codecov
         curl --silent --remote-name https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
