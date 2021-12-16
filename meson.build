@@ -90,7 +90,7 @@ if not simdjson_dep.found()
 		endif
 	else
 		# muon can't find dependencies using CMake, yet
-		libsimdjson = compiler.find_library('simdjson', has_headers: 'simdjson.h', required: false)
+		libsimdjson = compiler.find_library('simdjson', required: false)
 		if not libsimdjson.found()
 			simdjson_dep = declare_dependency(
 				compile_args: '-DSIMDJSON_THREADS_ENABLED=1',
