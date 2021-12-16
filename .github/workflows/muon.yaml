@@ -41,7 +41,7 @@ jobs:
         build/muon install build
 
     - name: Configure Muon
-      run: muon setup -Dmuon=true build
+      run: muon setup -Dmuon=true -Dexecutable=false build
 
     - name: Build
       run: ninja -C build

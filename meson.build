@@ -110,6 +110,14 @@ if default_library == 'shared' or default_library == 'both'
 	extra_args += '-DTACHI_SHARED_LIB'
 endif
 
+muon_unsupported_kwargs = {}
+if not get_option('muon')
+	muon_unsupported_kwargs = {
+		'gnu_symbol_visibility': 'hidden',
+		'override_options': 'cpp_eh=none'
+	}
+endif
+
 libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
@@ -119,11 +127,10 @@ libcloudflare_ddns = library(
 		simdjson_dep,
 		windows_deps
 	],
-	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
 	install: true,
-	override_options: 'cpp_eh=none',
-	version: meson.project_version()
+	version: meson.project_version(),
+	kwargs: muon_unsupported_kwargs
 )
 
 cloudflare_ddns_dep = declare_dependency(
