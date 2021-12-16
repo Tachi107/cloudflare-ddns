@@ -35,7 +35,7 @@ jobs:
       run: |
         git clone --depth=1 --single-branch https://git.sr.ht/~lattis/muon
         cd muon
-        ./bootstrap.sh
+        ./bootstrap.sh build
         build/muon setup build
         ninja -C build
         build/muon install build
