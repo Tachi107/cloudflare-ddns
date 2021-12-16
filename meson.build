@@ -60,31 +60,46 @@ if not libcurl_dep.found()
 endif
 
 simdjson_dep = dependency('simdjson', required: false)
+
 if not simdjson_dep.found()
-	if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
-		error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
-	endif
-	cmake = import('cmake')
-	if meson.version().version_compare('>=0.55.0')
-		simdjson_options = cmake.subproject_options()
-		simdjson_options.add_cmake_defines({
-			'CMAKE_BUILD_TYPE': get_option('buildtype'),
-			'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
-			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
-			'BUILD_SHARED_LIBS': false,
-			'SIMDJSON_WINDOWS_DLL': false,
-			'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false,
-			'SIMDJSON_DISABLE_DEPRECATED_API': true,
-			'SIMDJSON_ENABLE_FUZZING': false
-		})
-		simdjson_options.set_install(false)
-		if compiler.get_argument_syntax() == 'msvc'
-			simdjson_options.append_compile_args('c',   '/MT')
-			simdjson_options.append_compile_args('cpp', '/MT')
+	if not get_option('muon')
+		if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
+			error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
 		endif
-		simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
+		cmake = import('cmake')
+		if meson.version().version_compare('>=0.55.0')
+			simdjson_options = cmake.subproject_options()
+			simdjson_options.add_cmake_defines({
+				'CMAKE_BUILD_TYPE': get_option('buildtype'),
+				'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
+				'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
+				'BUILD_SHARED_LIBS': false,
+				'SIMDJSON_WINDOWS_DLL': false,
+				'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false,
+				'SIMDJSON_DISABLE_DEPRECATED_API': true,
+				'SIMDJSON_ENABLE_FUZZING': false
+			})
+			simdjson_options.set_install(false)
+			if compiler.get_argument_syntax() == 'msvc'
+				simdjson_options.append_compile_args('c',   '/MT')
+				simdjson_options.append_compile_args('cpp', '/MT')
+			endif
+			simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
+		else
+			simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
+		endif
 	else
-		simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
+		# muon can't find dependencies using CMake, yet
+		libsimdjson = compiler.find_library('simdjson', required: false)
+		if not libsimdjson.found()
+			simdjson_dep = declare_dependency(
+				compile_args: '-DSIMDJSON_THREADS_ENABLED=1',
+				dependencies: [
+					libsimdjson,
+					dependency('threads')
+				]
+			)
+		endif
 	endif
 endif
 
@@ -93,6 +108,14 @@ extra_args = []
 default_library = get_option('default_library')
 if default_library == 'shared' or default_library == 'both'
 	extra_args += '-DTACHI_SHARED_LIB'
+endif
+
+muon_unsupported_kwargs = {}
+if not get_option('muon')
+	muon_unsupported_kwargs = {
+		'gnu_symbol_visibility': 'hidden',
+		'override_options': 'cpp_eh=none'
+	}
 endif
 
 libcloudflare_ddns = library(
@@ -104,11 +127,10 @@ libcloudflare_ddns = library(
 		simdjson_dep,
 		windows_deps
 	],
-	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
 	install: true,
-	override_options: 'cpp_eh=none',
-	version: meson.project_version()
+	version: meson.project_version(),
+	kwargs: muon_unsupported_kwargs
 )
 
 cloudflare_ddns_dep = declare_dependency(

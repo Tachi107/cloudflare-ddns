@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2021 Andrea Pappacoda
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: muon
+
+on: push
+
+defaults:
+  run:
+    shell: sh
+
+jobs:
+  muon:
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [ 'g++', 'clang' ]
+
+    runs-on: ubuntu-latest
+    container:
+      image: debian:testing
+
+    steps:
+    - name: Install dependencies
+      run: |
+        apt-get -qq update
+        apt-get -qq install ${{ matrix.compiler }} ninja-build libpkgconf-dev pkgconf libarchive-dev cmake libcurl4-openssl-dev libsimdjson-dev git
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install muon
+      run: |
+        git clone --depth=1 --single-branch https://git.sr.ht/~lattis/muon
+        cd muon
+        ./bootstrap.sh build
+        build/muon setup build
+        ninja -C build
+        build/muon install build
+
+    - name: Configure Muon
+      run: muon setup -Dmuon=true -Dexecutable=false build
+
+    - name: Build
+      run: ninja -C build

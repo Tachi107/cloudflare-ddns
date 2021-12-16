@@ -7,3 +7,4 @@ option('tests',            type: 'boolean', value: false, description: 'Build te
 option('test_api_token',   type: 'string', description: 'API token to use for tests')
 option('test_zone_id',     type: 'string', description: 'Zone ID to use for tests')
 option('test_record_name', type: 'string', description: 'Record name to use for tests')
+option('muon',             type: 'boolean', value: false, description: 'Enable if building with muon')
