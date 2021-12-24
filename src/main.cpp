@@ -14,7 +14,7 @@
 	#undef fopen
 #endif
 #include <simdjson.h>
-#include <toml++/toml.h>
+#include <INIReader.h>
 #include <tachi/cloudflare-ddns.h>
 #include "config_path.hpp"
 
@@ -55,18 +55,23 @@ int main(const int argc, const char* const argv[]) {
 
 	if (argc == 1 || argc == 3) {
 		const std::string_view config_file {argc == 1 ? config_path : std::string_view{argv[2]}};
-		try {
-			const auto config = toml::parse_file(config_file);
-			api_token = config["api_token"].value_exact<std::string>().value();
-			zone_id = config["zone_id"].value_exact<std::string>().value();
-			record_name = config["record_name"].value_exact<std::string>().value();
-		}
-		catch (const toml::parse_error& err) {
-			std::cerr << "Error parsing " << err.source() << ":\n\t" << err.description() << '\n';
+		const INIReader reader {std::string{config_file}};
+
+		if (reader.ParseError() == -1) {
+			std::cerr << "Unable to open " << config_file << '\n';
 			return EXIT_FAILURE;
 		}
-		catch (const std::bad_optional_access& err) {
-			std::cerr << "Config is missing some required values\n";
+		else if (int error = reader.ParseError(); error > 0) {
+			std::cerr << "Error parsing " << config_file << " on line " << error << '\n';
+			return EXIT_FAILURE;
+		}
+
+		api_token   = reader.GetString("ddns", "api_token",   "n");
+		zone_id     = reader.GetString("ddns", "zone_id",     "n");
+		record_name = reader.GetString("ddns", "record_name", "n");
+
+		if (api_token == "n" || zone_id == "n" || record_name == "n") {
+			std::cerr << "Error parsing " << config_file << '\n';
 			return EXIT_FAILURE;
 		}
 	}

@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
-[submodule "cloudflare-ddns/subprojects/simdjson"]
-	path = subprojects/simdjson
-	url = https://github.com/simdjson/simdjson.git
 [submodule "subprojects/curl"]
 	path = subprojects/curl
 	url = https://github.com/curl/curl.git
-[submodule "subprojects/tomlplusplus"]
-	path = subprojects/tomlplusplus
-	url = https://github.com/marzer/tomlplusplus.git
+[submodule "subprojects/inih"]
+	path = subprojects/inih
+	url = https://github.com/benhoyt/inih.git
+[submodule "subprojects/simdjson"]
+	path = subprojects/simdjson
+	url = https://github.com/simdjson/simdjson.git
 [submodule "subprojects/ut"]
 	path = subprojects/ut
 	url = https://github.com/boost-ext/ut.git

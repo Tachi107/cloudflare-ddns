@@ -90,16 +90,13 @@ if not simdjson_dep.found()
 		endif
 	else
 		# muon can't find dependencies using CMake, yet
-		libsimdjson = compiler.find_library('simdjson', required: false)
-		if not libsimdjson.found()
-			simdjson_dep = declare_dependency(
-				compile_args: '-DSIMDJSON_THREADS_ENABLED=1',
-				dependencies: [
-					libsimdjson,
-					dependency('threads')
-				]
-			)
-		endif
+		simdjson_dep = declare_dependency(
+			compile_args: '-DSIMDJSON_THREADS_ENABLED=1',
+			dependencies: [
+				compiler.find_library('simdjson'),
+				dependency('threads')
+			]
+		)
 	endif
 endif
 
@@ -110,6 +107,8 @@ if default_library == 'shared' or default_library == 'both'
 	extra_args += '-DTACHI_SHARED_LIB'
 endif
 
+# Put kwargs unsupported by muon in a dictionary so that they get used only
+# when building with meson
 muon_unsupported_kwargs = {}
 if not get_option('muon')
 	muon_unsupported_kwargs = {
@@ -127,6 +126,7 @@ libcloudflare_ddns = library(
 		simdjson_dep,
 		windows_deps
 	],
+	extra_files: 'include'/'tachi'/'cloudflare-ddns.h',
 	include_directories: 'include',
 	install: true,
 	version: meson.project_version(),
