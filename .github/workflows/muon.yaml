@@ -38,7 +38,7 @@ jobs:
         ./bootstrap.sh build
         build/muon setup build
         ninja -C build
-        build/muon install build
+        build/muon install -C build
 
     - name: Configure Muon
       run: muon setup -Dmuon=true -Dexecutable=false build
