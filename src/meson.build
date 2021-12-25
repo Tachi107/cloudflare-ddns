@@ -8,10 +8,10 @@ if get_option('prefix') == '/usr'
 	sysconfdir = get_option('sysconfdir')
 endif
 
-tomlplusplus_dep = dependency(
-	'tomlplusplus',
-	fallback: ['tomlplusplus', 'tomlplusplus_dep'],
-	default_options: ['default_library=static']
+INIReader_dep = dependency(
+	'INIReader',
+	fallback: ['inih', 'INIReader_dep'],
+	default_options: ['default_library=static', 'distro_install=false']
 )
 
 executable(
@@ -21,7 +21,7 @@ executable(
 		cloudflare_ddns_dep,
 		libcurl_dep,
 		simdjson_dep,
-		tomlplusplus_dep,
+		INIReader_dep,
 		dependency('threads'),
 		windows_deps
 	],
@@ -34,4 +34,4 @@ executable(
 	)
 )
 
-install_data('..'/'config.toml', install_dir: get_option('sysconfdir')/'cloudflare-ddns')
+install_data('..'/'config.ini', install_dir: get_option('sysconfdir')/'cloudflare-ddns')

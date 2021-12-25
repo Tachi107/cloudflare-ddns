@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get -qq update
-        apt-get -qq install ${{ matrix.compiler }} ninja-build libpkgconf-dev pkgconf libarchive-dev cmake libcurl4-openssl-dev libsimdjson-dev git
+        apt-get -qq install ${{ matrix.compiler }} ninja-build libpkgconf-dev pkgconf libarchive-dev cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git
 
     - uses: actions/checkout@v2
       with:
@@ -38,7 +38,7 @@ jobs:
         ./bootstrap.sh build
         build/muon setup build
         ninja -C build
-        build/muon install build
+        build/muon -C build install
 
     - name: Configure Muon
       run: muon setup -Dmuon=true -Dexecutable=false build

@@ -164,7 +164,7 @@ TACHI_NODISCARD int tachi_get_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	tachi_get_record_raw(api_token, zone_id, record_name, &curl);
+	static_cast<void>(tachi_get_record_raw(api_token, zone_id, record_name, &curl));
 
 	curl_easy_cleanup(curl);
 
@@ -270,7 +270,7 @@ TACHI_NODISCARD int tachi_update_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
+	static_cast<void>(tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl));
 
 	curl_easy_cleanup(curl);
 

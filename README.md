@@ -20,7 +20,7 @@ This tool is a oneshot program: you run it, it updates the DNS record, and it te
 
 To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens) and the Zone ID of the DNS that you want to update; you can get the latter in the Overview panel of your zone.
 
-Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a TOML configuration file, located in `/etc/cloudflare-ddns/config.toml` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.toml` otherwise (`/usr/local/etc` by default); [here's the template](config.toml). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
+Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a ini configuration file, located in `/etc/cloudflare-ddns/config.ini` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.ini` otherwise (`/usr/local/etc` by default); [here's the template](config.ini). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
 You can download the latest release from the GitHub Releases page, or, if you prefer, you can [build](#Build) the program yourself.
 
@@ -30,9 +30,9 @@ cloudflare-ddns is also a library! In fact, the command line tool is fully based
 
 ## Build
 
-libcloudflare-ddns relies on [libcurl](https://curl.se) and [simdjson](https://simdjson.org), while the binary also depends on [tomlplusplus](https://marzer.github.io/tomlplusplus/).
+libcloudflare-ddns relies on [libcurl](https://curl.se) and [simdjson](https://simdjson.org), while the binary also depends on [inih](https://github.com/benhoyt/inih).
 
-On Debian and derivatives, you can install the packages `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
+On Debian and derivatives, you can install the packages `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev`, `libinih-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
 
 After having installed the dependencies, you can build the program with `meson setup build` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
 
