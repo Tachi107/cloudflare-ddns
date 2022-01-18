@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: CC0-1.0
+
+[Unit]
+Description=Simple utility to dynamically change a DNS record
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=@bindir@/cloudflare-ddns
+User=www-data
+Group=www-data
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true

@@ -20,7 +20,7 @@ This tool is a oneshot program: you run it, it updates the DNS record, and it te
 
 To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens) and the Zone ID of the DNS that you want to update; you can get the latter in the Overview panel of your zone.
 
-Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a ini configuration file, located in `/etc/cloudflare-ddns/config.ini` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.ini` otherwise (`/usr/local/etc` by default); [here's the template](config.ini). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
+Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a ini configuration file, located in `/etc/cloudflare-ddns/config.ini` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.ini` otherwise (`/usr/local/etc` by default); [here's the template](src/config.ini). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
 You can download the latest release from the GitHub Releases page, or, if you prefer, you can [build](#Build) the program yourself.
 
@@ -53,17 +53,12 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-# Sleep to avoid connection issues when running the script at boot
-ExecStartPre=/usr/bin/sleep 20
 ExecStart=/usr/local/bin/cloudflare-ddns <api_key> <zone_id> <dns_record>
 User=www-data
 Group=www-data
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-
-[Install]
-WantedBy=default.target
 ```
 
 ### `cloudflare-ddns.timer`
@@ -73,6 +68,7 @@ WantedBy=default.target
 Description=Run cloudflare-ddns every hour
 
 [Timer]
+OnBootSec=1m
 OnUnitActiveSec=1h
 
 [Install]

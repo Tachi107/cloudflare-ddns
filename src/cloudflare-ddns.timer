@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: CC0-1.0
+
+[Unit]
+Description=Run cloudflare-ddns every hour
+
+[Timer]
+OnBootSec=1m
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
