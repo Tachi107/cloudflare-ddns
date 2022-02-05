@@ -44,7 +44,7 @@ systemddir = 'lib'/'systemd'/'system'
 
 configure_file(
 	input: 'cloudflare-ddns.service.in',
-	output: 'cloudflare-ddns.service.in',
+	output: 'cloudflare-ddns.service',
 	configuration: {'bindir': get_option('prefix')/get_option('bindir')},
 	install: true,
 	install_dir: systemddir

@@ -140,6 +140,11 @@ cloudflare_ddns_dep = declare_dependency(
 	version: meson.project_version()
 )
 
+install_subdir(
+	'include'/'tachi',
+	install_dir: get_option('includedir')
+)
+
 if get_option('executable')
 	subdir('src')
 endif
