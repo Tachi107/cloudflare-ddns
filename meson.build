@@ -14,7 +14,7 @@ project(
 		'cpp_rtti=false'
 	],
 	version: '0.4.0',
-	license: ['AGPL-3.0-or-later', 'LGPL-3.0-or-later'],
+	license: 'AGPL-3.0-or-later OR LGPL-3.0-or-later',
 	meson_version: '>=0.53.0'
 )
 
