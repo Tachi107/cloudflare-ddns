@@ -2,9 +2,6 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Posso prendere https://github.com/PwRAu/scraf-backend/blob/main/.github/workflows/test-and-analyze.yaml
-# come punto di riferimento, ma ogni sanitizer lo metto in un job diverso così da parallelizzare il tutto
-
 name: linux
 
 on: push
@@ -24,6 +21,7 @@ jobs:
       matrix:
         os: [ 'debian:stable', 'debian:testing', 'redhat/ubi8:latest' ]
         compiler: [ 'gcc', 'clang' ]
+        sanitizer: [ 'address', 'thread', 'undefined', 'memory' ]
 
     runs-on: ubuntu-latest
     container:
@@ -51,8 +49,8 @@ jobs:
     - name: Configure Meson
       run: |
         if expr ${{ matrix.os }} : ".*redhat" >/dev/null; then enable_tests=false; else enable_tests=true; fi
-        record_name=$(printf '${{ matrix.compiler }}.${{ matrix.os }}.linux.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
-        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name" --buildtype=debug -Db_coverage=true
+        record_name=$(printf '${{ matrix.sanitizer }}.${{ matrix.compiler }}.${{ matrix.os }}.${{ github.workflow }}.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
+        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name" --buildtype=debug -Db_coverage=true -Db_sanitize=${{ matrix.sanitizer }}
 
     - name: Build
       run: ninja -C build
