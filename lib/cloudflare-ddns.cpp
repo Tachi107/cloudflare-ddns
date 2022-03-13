@@ -98,16 +98,9 @@ TACHI_NODISCARD static curl_slist* curl_doh_setup(CURL** TACHI_RESTRICT curl) TA
 #endif
 }
 
-/*
- * Returns the curl_slist that must be freed with curl_slist_free_all()
- */
-TACHI_NODISCARD static curl_slist* curl_auth_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const api_token) TACHI_NOEXCEPT {
+static void curl_auth_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const api_token) TACHI_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
-	struct curl_slist* headers {nullptr};
-	headers = curl_slist_append(headers, "Content-Type: application/json");
-	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, headers);
-	return headers;
 }
 
 static void curl_get_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const url) TACHI_NOEXCEPT {
@@ -176,8 +169,16 @@ TACHI_NODISCARD int tachi_get_record(
 
 	priv::curl_handle_setup(&curl, response);
 
+	struct curl_slist* headers {nullptr};
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+	curl_slist* free_me_doh {priv::curl_doh_setup(&curl)};
+
 	static_cast<void>(tachi_get_record_raw(api_token, zone_id, record_name, &curl));
 
+	curl_slist_free_all(free_me_doh);
+	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
 
 	simdjson::dom::parser parser;
@@ -236,8 +237,7 @@ TACHI_NODISCARD int tachi_get_record_raw(
 		return 2;
 	}
 
-	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
-	curl_slist* free_me_auth {priv::curl_auth_setup(curl, api_token)};
+	priv::curl_auth_setup(curl, api_token);
 
 	constexpr std::string_view dns_records_url {"/dns_records?type=A,AAAA&name="};
 
@@ -267,9 +267,6 @@ TACHI_NODISCARD int tachi_get_record_raw(
 
 	priv::curl_get_setup(curl, request_url);
 
-	curl_slist_free_all(free_me_doh);
-	curl_slist_free_all(free_me_auth);
-
 	return curl_easy_perform(*curl);
 }
 
@@ -285,8 +282,13 @@ TACHI_NODISCARD int tachi_update_record(
 
 	priv::curl_handle_setup(&curl, response);
 
+	struct curl_slist* headers {nullptr};
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
 	static_cast<void>(tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl));
 
+	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
 
 	simdjson::dom::parser parser;
@@ -331,7 +333,7 @@ TACHI_NODISCARD int tachi_update_record_raw(
 	}
 
 	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
-	curl_slist* free_me_auth {priv::curl_auth_setup(curl, api_token)};
+	priv::curl_auth_setup(curl, api_token);
 
 	constexpr std::string_view dns_records_url {"/dns_records/"};
 
@@ -386,7 +388,6 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	// Maybe I shouldn't set up DOH in _raw() functions
 	curl_slist_free_all(free_me_doh);
-	curl_slist_free_all(free_me_auth);
 
 	return error;
 }
