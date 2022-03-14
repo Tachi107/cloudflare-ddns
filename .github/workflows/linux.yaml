@@ -64,7 +64,7 @@ jobs:
         record_name=$(printf '${{ matrix.sanitizer }}.${{ matrix.compiler }}.${{ matrix.os }}.${{ github.workflow }}.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
         if [ ${{ matrix.compiler }} = gcc ]; then CXX=g++; else CXX=clang++; fi
         export CXX
-        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name" --buildtype=debug -Db_coverage=true -Db_sanitize=${{ matrix.sanitizer }} -Db_lundef=false
+        meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name" --buildtype=debug -Db_coverage=true -Db_sanitize=${{ matrix.sanitizer }} -Db_lundef=false -Db_lto=false
       env:
         CC: ${{ matrix.compiler }}
 
