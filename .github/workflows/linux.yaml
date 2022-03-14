@@ -24,7 +24,15 @@ jobs:
         sanitizer: [ 'address', 'thread', 'undefined', 'memory' ]
         exclude:
           - os: 'redhat/ubi8:latest'
-            sanitizer: ['address', 'thread']
+            sanitizer: 'address'
+          - os: 'redhat/ubi8:latest'
+            sanitizer: 'thread'
+          - os: 'redhat/ubi8:latest'
+            sanitizer: 'undefined'
+          - os: 'redhat/ubi8:latest'
+            sanitizer: 'memory'
+          - compiler: gcc
+            sanitizer: 'memory'
 #          - compiler: 'gcc'
 #            sanitizer: 'memory'
 
