@@ -24,9 +24,9 @@ windows_deps = []
 
 libcurl_dep = dependency('libcurl', required: false)
 if not libcurl_dep.found()
-#	if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
-#		error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
-#	endif
+	if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
+		warning('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
+	endif
 	cmake = import('cmake')
 	if meson.version().version_compare('>=0.55.0')
 		libcurl_options = cmake.subproject_options()
@@ -63,9 +63,9 @@ simdjson_dep = dependency('simdjson', required: false)
 
 if not simdjson_dep.found()
 	if not get_option('muon')
-#		if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
-#			error('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
-#		endif
+		if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
+			warning('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
+		endif
 		cmake = import('cmake')
 		if meson.version().version_compare('>=0.55.0')
 			simdjson_options = cmake.subproject_options()
