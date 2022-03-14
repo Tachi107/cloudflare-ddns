@@ -31,7 +31,6 @@ jobs:
       with:
         submodules: true
 
-    # Autopurge pkgconf so that GCC is purged as well
     - name: Install muon
       run: |
         git clone --depth=1 --single-branch https://git.sr.ht/~lattis/muon
@@ -40,7 +39,6 @@ jobs:
         build/muon setup build
         ninja -C build
         build/muon -C build install
-#        apt -y autopurge pkgconf
 
     - name: Configure Muon
       run: muon setup -Dmuon=true -Dexecutable=false build
