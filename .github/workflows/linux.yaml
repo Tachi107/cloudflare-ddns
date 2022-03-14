@@ -43,7 +43,7 @@ jobs:
       if: contains(matrix.os, 'redhat')
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
-        yum install -y $compiler pkgconf cmake libcurl-devel git python3 gnupg libasan
+        yum install -y $compiler pkgconf cmake libcurl-devel git python3 gnupg libasan libtsan libubsan
         pip3 install meson ninja
 
     - uses: actions/checkout@v2
@@ -55,6 +55,8 @@ jobs:
         if expr ${{ matrix.os }} : ".*redhat" >/dev/null; then enable_tests=false; else enable_tests=true; fi
         record_name=$(printf '${{ matrix.sanitizer }}.${{ matrix.compiler }}.${{ matrix.os }}.${{ github.workflow }}.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
         meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name" --buildtype=debug -Db_coverage=true -Db_sanitize=${{ matrix.sanitizer }} -Db_lundef=false
+      env:
+        CC: ${{ matrix.compiler }}
 
     - name: Build
       run: ninja -C build
