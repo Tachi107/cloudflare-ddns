@@ -32,8 +32,9 @@ jobs:
       if: contains(matrix.os, 'debian')
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler=clang; fi
-        apt-get -qq update
-        apt-get -qq install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git curl gpg gpgv lcov llvm
+        apt -y update
+        apt -y install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git curl gpg gpgv lcov llvm
+        apt rdepends --installed gcc
 
     - name: Install dependencies (Red Hat)
       if: contains(matrix.os, 'redhat')
