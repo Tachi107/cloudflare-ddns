@@ -25,6 +25,7 @@ jobs:
         exclude:
           - os: 'redhat/ubi8:latest'
             sanitizer: 'address'
+            sanitizer: 'thread'
 #          - compiler: 'gcc'
 #            sanitizer: 'memory'
 
