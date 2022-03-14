@@ -33,7 +33,7 @@ jobs:
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler=clang; fi
         apt -y update
-        apt -y install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git curl gpg gpgv lcov llvm --no-install-recommends
+        apt -y install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git ca-certificates curl gpg gpgv lcov llvm --no-install-recommends
         apt rdepends --installed gcc
         apt rdepends --installed g++
         apt rdepends --installed build-essential
