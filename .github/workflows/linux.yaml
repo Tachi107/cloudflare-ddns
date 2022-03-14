@@ -35,6 +35,9 @@ jobs:
         apt -y update
         apt -y install $compiler meson pkgconf cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git curl gpg gpgv lcov llvm
         apt rdepends --installed gcc
+        apt rdepends --installed g++
+        apt rdepends --installed build-essential
+
 
     - name: Install dependencies (Red Hat)
       if: contains(matrix.os, 'redhat')
