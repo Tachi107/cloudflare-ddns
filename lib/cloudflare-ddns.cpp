@@ -86,7 +86,7 @@ static void curl_handle_setup(
 /*
  * Returns the curl_slist that must be freed with curl_slist_free_all()
  */
-TACHI_NODISCARD static curl_slist* curl_doh_setup(CURL** TACHI_RESTRICT curl) TACHI_NOEXCEPT {
+TACHI_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** TACHI_RESTRICT curl) TACHI_NOEXCEPT {
 #if LIBCURL_VERSION_NUM >= 0x073e00
 	struct curl_slist* manual_doh_address {nullptr};
 	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");

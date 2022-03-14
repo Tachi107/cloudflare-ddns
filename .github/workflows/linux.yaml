@@ -43,7 +43,7 @@ jobs:
       if: contains(matrix.os, 'redhat')
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
-        yum install -y $compiler pkgconf cmake libcurl-devel git python3 gnupg
+        yum install -y $compiler pkgconf cmake libcurl-devel git python3 gnupg libasan
         pip3 install meson ninja
 
     - uses: actions/checkout@v2
