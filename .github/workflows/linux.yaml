@@ -101,5 +101,5 @@ jobs:
       with:
         name: cloudflare-ddns-linux
         path: |
-          build/libcloudflare-ddns.so.0.4.0
+          build/libcloudflare-ddns.so.*
           build/src/cloudflare-ddns
