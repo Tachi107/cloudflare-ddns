@@ -173,11 +173,8 @@ TACHI_NODISCARD int tachi_get_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	curl_slist* free_me_doh {priv::curl_doh_setup(&curl)};
-
 	static_cast<void>(tachi_get_record_raw(api_token, zone_id, record_name, &curl));
 
-	curl_slist_free_all(free_me_doh);
 	curl_easy_cleanup(curl);
 
 	simdjson::dom::parser parser;
@@ -236,7 +233,8 @@ TACHI_NODISCARD int tachi_get_record_raw(
 		return 2;
 	}
 
-	curl_slist* free_me {priv::curl_auth_setup(curl, api_token)};
+	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
+	curl_slist* free_me_headers {priv::curl_auth_setup(curl, api_token)};
 
 	constexpr std::string_view dns_records_url {"/dns_records?type=A,AAAA&name="};
 
@@ -269,7 +267,10 @@ TACHI_NODISCARD int tachi_get_record_raw(
 	int error = curl_easy_perform(*curl);
 
 	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, nullptr);
-	curl_slist_free_all(free_me);
+	curl_slist_free_all(free_me_headers);
+
+	curl_easy_setopt(*curl, CURLOPT_RESOLVE, nullptr);
+	curl_slist_free_all(free_me_doh);
 
 	return error;
 }
