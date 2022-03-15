@@ -94,13 +94,11 @@ jobs:
         chmod +x codecov
         ./codecov
 
-    - run: ls --color=always -lAh build/*
-
     - name: Store compiled program
       if: matrix.sanitizer == 'none'
       uses: actions/upload-artifact@v3
       with:
-        name: cloudflare-ddns-linux
+        name: cloudflare-ddns-${{ matrix.os }}-${{ matrix.compiler }}
         path: |
           build/libcloudflare-ddns.so.*
           !build/libcloudflare-ddns.so.*.p
