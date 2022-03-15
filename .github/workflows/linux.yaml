@@ -97,7 +97,7 @@ jobs:
     - run: ls --color=always -lAh build/*
 
     - name: Store compiled program
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: cloudflare-ddns-linux
         path: |
