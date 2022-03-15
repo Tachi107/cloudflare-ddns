@@ -94,12 +94,12 @@ jobs:
         chmod +x codecov
         ./codecov
 
-    - run: |
-        ls --color=always -lAh
-        ls --color=always -lAh *
+    - run: ls --color=always -lAh build/*
 
     - name: Store compiled program
       uses: actions/upload-artifact@v2
       with:
         name: cloudflare-ddns-linux
-        path: build/cloudflare-ddns
+        path: |
+          build/libcloudflare-ddns.so.0.4.0
+          build/src/cloudflare-ddns

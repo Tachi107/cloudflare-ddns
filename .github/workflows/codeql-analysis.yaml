@@ -54,8 +54,9 @@ jobs:
     #    uses a compiled language
     - name: Build
       run: |
-        sudo apt-get -qq update && sudo apt-get -qq install ninja-build libcurl4-openssl-dev libsimdjson-dev libinih-dev
-        sudo pip install meson
+        sudo apt-get -y update
+        sudo apt-get -y install ninja-build libcurl4-openssl-dev libsimdjson-dev libinih-dev python3-pip
+        sudo pip3 install meson
         meson setup build
         meson compile -C build
 
