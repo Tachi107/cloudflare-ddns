@@ -94,11 +94,15 @@ jobs:
         chmod +x codecov
         ./codecov
 
+    - name: Artifact name
+      if: matrix.sanitizer == 'none'
+      run: printf 'artifact_name=cloudflare-ddns.${{ matrix.os }}.${{ matrix.compiler }}' | tr -dc '[:alnum:]._-=' >> $GITHUB_ENV
+
     - name: Store compiled program
       if: matrix.sanitizer == 'none'
       uses: actions/upload-artifact@v3
       with:
-        name: cloudflare-ddns-${{ matrix.compiler }}
+        name: ${{ env.artifact_name }}
         path: |
           build/libcloudflare-ddns.so.*
           !build/libcloudflare-ddns.so.*.p
