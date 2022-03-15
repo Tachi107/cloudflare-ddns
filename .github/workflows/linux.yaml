@@ -97,6 +97,7 @@ jobs:
     - run: ls --color=always -lAh build/*
 
     - name: Store compiled program
+      if: matrix.sanitizer == none
       uses: actions/upload-artifact@v3
       with:
         name: cloudflare-ddns-linux
