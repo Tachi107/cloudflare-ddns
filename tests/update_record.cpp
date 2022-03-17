@@ -35,4 +35,48 @@ int main() {
 			std::string_view{record_ip.data()}
 		));
 	};
+
+	// Still can't report an invalid token or IP address
+	"update_record_bad_usage"_test = [] {
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
+		//expect(eq(
+		//	tachi_update_record(
+		//		"an invalid token",
+		//		test_zone_id.data(),
+		//		"a string that is 32 chars looong",
+		//		"1.2.3.4",
+		//		record_ip.size(), record_ip.data()
+		//	), 2
+		//));
+
+		expect(eq(
+			tachi_update_record(
+				test_api_token.data(),
+				"an invalid zone id",
+				"a string that is 32 chars looong",
+				"1.2.3.4",
+				record_ip.size(), record_ip.data()
+			), 2
+		));
+
+		expect(eq(
+			tachi_update_record(
+				test_api_token.data(),
+				test_zone_id.data(),
+				"a string that is not 32 characters long",
+				"1.2.3.4",
+				record_ip.size(), record_ip.data()
+			), 2
+		));
+
+		expect(eq(
+			tachi_update_record(
+				test_api_token.data(),
+				test_zone_id.data(),
+				"a string that is 32 chars looong",
+				"Ciao a tutti ragazzi e bentornati in questo nuovo video io sono Tachi_107",
+				record_ip.size(), record_ip.data()
+			), 2
+		));
+	};
 }

@@ -67,4 +67,46 @@ int main() {
 			std::string_view{record_ip.data()}
 		));
 	};
+
+	"get_record_bad_usage"_test = [] {
+		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
+
+		//expect(eq(
+		//	tachi_get_record(
+		//		"invalid api token",
+		//		test_zone_id.data(),
+		//		test_record_name.data(),
+		//		record_ip.size(), record_ip.data(),
+		//		record_id.size(), record_id.data()
+		//	),
+		//	2
+		//));
+
+		expect(eq(
+			tachi_get_record(
+				test_api_token.data(),
+				"invalid zone id",
+				test_record_name.data(),
+				record_ip.size(), record_ip.data(),
+				record_id.size(), record_id.data()
+			),
+			2
+		));
+
+		expect(eq(
+			tachi_get_record(
+				test_api_token.data(),
+				test_zone_id.data(),
+				"Ciao a tutti ragazzi e bentornati in questo nuovo video io sono Tachi_107"
+				"ed oggi siamo qui nell'aspettatissimo -egh- guerra verso il drago e il wither"
+				"una roba che penso che nessuno abbia mai fatto perché è una roba malsana che non riusciremo mai a fare."
+				"In pratica, ceh, adesso noi entriamo e ci sarà il nostro bellissimo drago"
+				"e uccideremo anche il wither nello stesso momento -non spingetemi- è una roba malsas",
+				record_ip.size(), record_ip.data(),
+				record_id.size(), record_id.data()
+			),
+			2
+		));
+	};
 }
