@@ -134,15 +134,18 @@ TACHI_NODISCARD int tachi_get_local_ip(
 	priv::curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
 
 	// Performing the request
-	if (curl_easy_perform(curl) != 0) {
-		return 1;
-	}
+	const int curl_error = curl_easy_perform(curl);
 
 	// Cleaning up the headers
 	curl_slist_free_all(free_me);
 
 	// Cleaning up the handle as I won't reuse it
 	curl_easy_cleanup(curl);
+
+	if (curl_error != 0) {
+		// I can return as I've cleaned up everything
+		return 1;
+	}
 
 	const std::string_view response_sv {response.buffer, response.size};
 	// Parsing the response
