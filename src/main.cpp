@@ -82,7 +82,7 @@ int main(const int argc, const char* const argv[]) {
 	}
 	else {
 		std::cerr 
-			<< "Bad usage! You can run the program without arguments and load the config in" << config_path 
+			<< "Bad usage! You can run the program without arguments and load the config in " << config_path 
 			<< " or pass the API token, the Zone ID and the DNS record name as arguments\n";
 		return EXIT_FAILURE;
 	}

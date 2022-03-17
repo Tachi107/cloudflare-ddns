@@ -40,7 +40,7 @@ executable(
 install_data(
 	'config.ini',
 	install_dir: get_option('sysconfdir')/'cloudflare-ddns',
-	install_mode: 'rw-------'
+	install_mode: ['rw-------', 'www-data', 'www-data']
 )
 
 if host_machine.system() == 'linux'

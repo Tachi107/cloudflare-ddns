@@ -5,12 +5,37 @@
 [Unit]
 Description=Simple utility to dynamically change a DNS record
 After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
 ExecStart=@bindir@/cloudflare-ddns
 User=www-data
 Group=www-data
+
+# Hardening
+CapabilityBoundingSet=
+DynamicUser=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
 NoNewPrivileges=true
-ProtectSystem=strict
+PrivateDevices=true
+PrivateTmp=true
+PrivateUsers=true
+ProcSubset=pid
+ProtectClock=true
 ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=strict
+RemoveIPC=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~ @privileged @resources
+UMask=0077
