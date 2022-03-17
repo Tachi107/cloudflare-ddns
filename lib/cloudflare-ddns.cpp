@@ -98,6 +98,7 @@ TACHI_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** TACHI_
 #endif
 }
 
+// I should probably check that api_token is somewhat valid
 TACHI_NODISCARD static curl_slist* curl_auth_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const api_token) TACHI_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
@@ -133,15 +134,18 @@ TACHI_NODISCARD int tachi_get_local_ip(
 	priv::curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
 
 	// Performing the request
-	if (curl_easy_perform(curl) != 0) {
-		return 1;
-	}
+	const int curl_error = curl_easy_perform(curl);
 
 	// Cleaning up the headers
 	curl_slist_free_all(free_me);
 
 	// Cleaning up the handle as I won't reuse it
 	curl_easy_cleanup(curl);
+
+	if (curl_error != 0) {
+		// I can return as I've cleaned up everything
+		return 1;
+	}
 
 	const std::string_view response_sv {response.buffer, response.size};
 	// Parsing the response
@@ -173,9 +177,13 @@ TACHI_NODISCARD int tachi_get_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	static_cast<void>(tachi_get_record_raw(api_token, zone_id, record_name, &curl));
+	const int error = tachi_get_record_raw(api_token, zone_id, record_name, &curl);
 
 	curl_easy_cleanup(curl);
+
+	if (error != 0) {
+		return error;
+	}
 
 	simdjson::dom::parser parser;
 
@@ -264,7 +272,7 @@ TACHI_NODISCARD int tachi_get_record_raw(
 
 	priv::curl_get_setup(curl, request_url);
 
-	int error = curl_easy_perform(*curl);
+	const int curl_error = curl_easy_perform(*curl);
 
 	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, nullptr);
 	curl_slist_free_all(free_me_headers);
@@ -272,7 +280,11 @@ TACHI_NODISCARD int tachi_get_record_raw(
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, nullptr);
 	curl_slist_free_all(free_me_doh);
 
-	return error;
+	if (curl_error != 0) {
+		return 1;
+	}
+
+	return 0;
 }
 
 TACHI_NODISCARD int tachi_update_record(
@@ -287,9 +299,13 @@ TACHI_NODISCARD int tachi_update_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	static_cast<void>(tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl));
+	const int error = tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
 
 	curl_easy_cleanup(curl);
+
+	if (error != 0) {
+		return error;
+	}
 
 	simdjson::dom::parser parser;
 
@@ -384,7 +400,7 @@ TACHI_NODISCARD int tachi_update_record_raw(
 		request_body
 	);
 
-	int error {curl_easy_perform(*curl)};
+	const int curl_error {curl_easy_perform(*curl)};
 
 	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, nullptr);
 	curl_slist_free_all(free_me_headers);
@@ -392,7 +408,11 @@ TACHI_NODISCARD int tachi_update_record_raw(
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, nullptr);
 	curl_slist_free_all(free_me_doh);
 
-	return error;
+	if (curl_error != 0) {
+		return 1;
+	}
+
+	return 0;
 }
 
 } // extern "C"
