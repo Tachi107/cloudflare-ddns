@@ -5,7 +5,7 @@
 [Unit]
 Description=Simple utility to dynamically change a DNS record
 After=network-online.target
-Wants=network-online.target
+Requisite=network-online.target
 
 [Service]
 Type=oneshot
