@@ -20,7 +20,7 @@ project(
 
 compiler = meson.get_compiler('cpp')
 
-windows_deps = []
+extra_deps = []
 
 libcurl_dep = dependency('libcurl', required: false)
 if not libcurl_dep.found()
@@ -40,7 +40,9 @@ if not libcurl_dep.found()
 			'HTTP_ONLY': true,
 			'CURL_DISABLE_COOKIES': true,
 			'CURL_DISABLE_VERBOSE_STRINGS': true,
-			'ENABLE_UNIX_SOCKETS': false
+			'ENABLE_UNIX_SOCKETS': false,
+			'OPENSSL_USE_STATIC_LIBS': true,
+			'OPENSSL_MSVC_STATIC_RT': true
 		})
 		if host_machine.system() == 'windows'
 			libcurl_options.add_cmake_defines({
@@ -48,8 +50,11 @@ if not libcurl_dep.found()
 				'CURL_USE_SCHANNEL': true,
 				'CURL_TARGET_WINDOWS_VERSION': '0x0A00' # Win 10
 			})
-			windows_deps += compiler.find_library('crypt32')
-			windows_deps += compiler.find_library('ws2_32')
+			extra_deps += compiler.find_library('crypt32')
+			extra_deps += compiler.find_library('ws2_32')
+		else
+			# Required by static OpenSSL
+			extra_deps += compiler.find_library('dl', required: false)
 		endif
 		libcurl_options.set_install(false)
 		libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD', '-DCURL_STATICLIB')
@@ -124,7 +129,7 @@ libcloudflare_ddns = library(
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
-		windows_deps
+		extra_deps
 	],
 	extra_files: 'include'/'tachi'/'cloudflare-ddns.h',
 	include_directories: 'include',

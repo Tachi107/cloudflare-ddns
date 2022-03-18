@@ -26,7 +26,7 @@ executable(
 		simdjson_dep,
 		INIReader_dep,
 		dependency('threads'),
-		windows_deps
+		extra_deps
 	],
 	gnu_symbol_visibility: 'hidden',
 	install: true,
