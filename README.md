@@ -40,9 +40,9 @@ If your libcurl is older than version 7.64.1 (for example in Debian 10) you'll s
 
 If you're interested in only building the library, you can pass `-Dexecutable=false` to `meson setup`.
 
-## Systemd timer
+## systemd timer
 
-Here's an example of a systemd service + timer that checks and eventually updates one DNS record
+Here's an example of a systemd service + timer that periodically checks and eventually updates one DNS record
 
 ### `cloudflare-ddns.service`
 
@@ -50,26 +50,24 @@ Here's an example of a systemd service + timer that checks and eventually update
 [Unit]
 Description=Simple utility to dynamically change a DNS record
 After=network-online.target
+Requisite=network-online.target
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/cloudflare-ddns <api_key> <zone_id> <dns_record>
 User=www-data
 Group=www-data
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
 ```
 
 ### `cloudflare-ddns.timer`
 
 ```ini
 [Unit]
-Description=Run cloudflare-ddns every hour
+Description=Run cloudflare-ddns every 15 minutes
 
 [Timer]
 OnBootSec=1m
-OnUnitActiveSec=1h
+OnUnitActiveSec=15m
 
 [Install]
 WantedBy=timers.target

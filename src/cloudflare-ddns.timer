@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: CC0-1.0
 
 [Unit]
-Description=Run cloudflare-ddns every hour
+Description=Run cloudflare-ddns every 15 minutes
 
 [Timer]
 OnBootSec=1m
-OnUnitActiveSec=1h
+OnUnitActiveSec=15m
 
 [Install]
 WantedBy=timers.target
