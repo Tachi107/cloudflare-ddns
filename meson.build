@@ -45,7 +45,7 @@ if not libcurl_dep.found()
 		if host_machine.system() == 'windows'
 			libcurl_options.add_cmake_defines({
 				'CURL_STATIC_CRT': true,
-				'CMAKE_USE_SCHANNEL': true,
+				'CURL_USE_SCHANNEL': true,
 				'CURL_TARGET_WINDOWS_VERSION': '0x0A00' # Win 10
 			})
 			windows_deps += compiler.find_library('crypt32')
