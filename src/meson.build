@@ -43,6 +43,20 @@ install_data(
 	install_mode: ['rw-------', 'www-data', 'www-data']
 )
 
+# https://github.com/mesonbuild/meson/issues/1550
+# https://github.com/mesonbuild/meson/pull/9342
+ronn = find_program('ronn', required: get_option('man'))
+if ronn.found()
+	custom_target(
+		'man',
+		command: [ronn, '--roff', '--output-dir', meson.current_build_dir(), '@INPUT@'],
+		input: 'cloudflare-ddns.1.ronn',
+		output: 'cloudflare-ddns.1',
+		install: true,
+		install_dir: get_option('mandir')/'man1'
+	)
+endif
+
 if host_machine.system() == 'linux'
 	systemddir = 'lib'/'systemd'/'system'
 
