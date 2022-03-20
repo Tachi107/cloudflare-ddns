@@ -48,6 +48,11 @@ static std::size_t write_data(
 	return /*size **/ count;
 }
 
+void curl_cleanup(CURL** curl) {
+	curl_easy_cleanup(*curl);
+	curl_global_cleanup();
+}
+
 int main(const int argc, const char* const argv[]) {
 	std::string api_token;
 	std::string zone_id;
@@ -81,8 +86,8 @@ int main(const int argc, const char* const argv[]) {
 		record_name = argv[3];
 	}
 	else {
-		std::cerr 
-			<< "Bad usage! You can run the program without arguments and load the config in " << config_path 
+		std::cerr
+			<< "Bad usage! You can run the program without arguments and load the config in " << config_path
 			<< " or pass the API token, the Zone ID and the DNS record name as arguments\n";
 		return EXIT_FAILURE;
 	}
@@ -117,12 +122,14 @@ int main(const int argc, const char* const argv[]) {
 
 	if (dns_response_future.get() != 0) {
 		std::cerr << "Error getting DNS record info\n";
+		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
 	}
 	const simdjson::dom::element parsed {parser.parse(std::string_view{dns_response.buffer, dns_response.size})};
 
 	if (local_ip_future.get() != 0) {
 		std::cerr << "Error getting the local IP address\n";
+		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
 	}
 
@@ -136,6 +143,7 @@ int main(const int argc, const char* const argv[]) {
 			&curl_handle
 		) != 0) {
 			std::cerr << "Error updating the DNS record\n";
+			curl_cleanup(&curl_handle);
 			return EXIT_FAILURE;
 		}
 		std::cout << "New IP: " << parser.parse(std::string_view{dns_response.buffer, dns_response.size})["result"]["content"] << '\n';
@@ -143,6 +151,5 @@ int main(const int argc, const char* const argv[]) {
 	else {
 		std::cout << "The DNS is up to date\n";
 	}
-	curl_easy_cleanup(curl_handle);
-	curl_global_cleanup();
+	curl_cleanup(&curl_handle);
 }
