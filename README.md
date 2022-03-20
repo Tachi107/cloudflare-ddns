@@ -12,7 +12,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 [![codecov](https://codecov.io/gh/Tachi107/cloudflare-ddns/branch/main/graph/badge.svg?token=Y7NI126ZUQ)](https://codecov.io/gh/Tachi107/cloudflare-ddns)
 [![REUSE status](https://api.reuse.software/badge/github.com/Tachi107/cloudflare-ddns)](https://api.reuse.software/info/github.com/Tachi107/cloudflare-ddns)
 
-cloudflare-ddns is a tool that can be used to dynamically update a DNS record using Cloudflare's API.
+cloudflare-ddns is a little program that is really useful when you want to host something but your ISP only provides you a dynamic IP address. It uses Cloudflare's API to update a given DNS record when needed.
+
+It's super fast and really lightweight, making it a valid choice for constrained environments.
 
 ## Usage
 
@@ -26,7 +28,7 @@ You can download the latest release from the GitHub Releases page, or, if you pr
 
 ## Library
 
-cloudflare-ddns is also a library! In fact, the command line tool is fully based around it. It is fully tested with CI jobs, so you can be sure that it will always work as expected.
+cloudflare-ddns is also a library! In fact, the command line tool is fully based on it. It is regularly tested with CI jobs, so you can be sure that it will always work as expected.
 
 ## Build
 
@@ -34,7 +36,7 @@ libcloudflare-ddns relies on [libcurl](https://curl.se) and [simdjson](https://s
 
 On Debian and derivatives, you can install the packages `meson`, `pkg-config`, `cmake`, `libcurl4-openssl-dev`, `libinih-dev` and a recent version of `libsimdjson-dev`. You should be fine with the packages available in Debian 10 (+backports) or Ubuntu Hirsute.
 
-After having installed the dependencies, you can build the program with `meson setup build` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
+After installing the dependencies, you can build the program with `meson setup build` and then `meson compile -C build`. If your Meson version is too old, you have to run `ninja -C build` instead of `meson compile`.
 
 If your libcurl is older than version 7.64.1 (for example in Debian 10) you'll see a lot of connection logs related to DNS over HTTPS lookups; that's a [libcurl bug](https://github.com/curl/curl/issues/3660), and there's nothing I can do about it :/
 
@@ -63,11 +65,11 @@ Group=www-data
 
 ```ini
 [Unit]
-Description=Run cloudflare-ddns every 15 minutes
+Description=Run cloudflare-ddns every 5 minutes
 
 [Timer]
 OnBootSec=1m
-OnUnitActiveSec=15m
+OnUnitActiveSec=5m
 
 [Install]
 WantedBy=timers.target
