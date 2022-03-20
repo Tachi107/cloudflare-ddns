@@ -4,6 +4,7 @@
 
 [Unit]
 Description=Simple utility to dynamically change a DNS record
+Documentation=man:cloudflare-ddns(1)
 After=network-online.target
 Requisite=network-online.target
 
