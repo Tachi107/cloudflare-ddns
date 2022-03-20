@@ -38,5 +38,5 @@ test_script:
   - cmd: meson test -C build --verbose
 
 artifacts:
-  - path: build\cloudflare-ddns.exe
+  - path: build\src\cloudflare-ddns.exe
     name: cloudflare-ddns-x64
