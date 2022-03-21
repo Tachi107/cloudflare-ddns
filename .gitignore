@@ -4,3 +4,7 @@
 
 # Clangd
 /.cache/clangd
+
+# Meson wraps
+/subprojects/*
+!/subprojects/*.wrap

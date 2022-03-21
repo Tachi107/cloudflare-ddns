@@ -1,0 +1,5 @@
+[wrap-file]
+source_url = https://github.com/simdjson/simdjson/archive/refs/tags/v1.0.2.tar.gz
+source_filename = simdjson-1.0.2.tar.gz
+directory = simdjson-1.0.2
+source_hash = 46d5995488de76ae61f1c3bcff445a9085c8d34f6cbc9bf0422a99c6d98a002c
