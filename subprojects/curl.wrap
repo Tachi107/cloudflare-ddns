@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: CC0-1.0
+
 [wrap-file]
 source_url = https://github.com/curl/curl/releases/download/curl-7_82_0/curl-7.82.0.tar.gz
 source_filename = curl-7.82.0.tar.gz

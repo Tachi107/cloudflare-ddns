@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: CC0-1.0
+
 [wrap-file]
 directory = inih-r53
 source_url = https://github.com/benhoyt/inih/archive/r53.tar.gz
