@@ -28,6 +28,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get -y update
+        sudo apt-get -y install python3-pip ninja-build
+        sudo pip3 install meson
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
@@ -40,16 +46,8 @@ jobs:
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    #- name: Autobuild
-    #  uses: github/codeql-action/autobuild@v1
-
-    - name: Build
-      run: |
-        sudo apt-get -y update
-        sudo apt-get -y install ninja-build libcurl4-openssl-dev libsimdjson-dev libinih-dev python3-pip
-        sudo pip3 install meson
-        meson setup build
-        meson compile -C build
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v1
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
