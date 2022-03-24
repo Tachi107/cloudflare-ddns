@@ -107,9 +107,13 @@ endif
 
 extra_args = []
 
-default_library = get_option('default_library')
-if default_library == 'shared' or default_library == 'both'
-	extra_args += '-DTACHI_SHARED_LIB'
+if host_machine.system() == 'windows'
+	default_library = get_option('default_library')
+	if default_library == 'both'
+		error('default_library=both is not supported on Windows')
+	elif default_library == 'shared'
+		extra_args += '-DTACHI_SHARED_LIB'
+	endif
 endif
 
 # Put kwargs unsupported by muon in a dictionary so that they get used only

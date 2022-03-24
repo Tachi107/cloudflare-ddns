@@ -15,7 +15,7 @@
  * The user of the library is responsable for calling curl_global_init.
  *
  * I'm following the C23 conventions for function parameter order, see
- * https://wg14.link/n2086
+ * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2611.htm
  */
 
 #pragma once
