@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: CC0-1.0
+
+Checks: '*,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-special-member-functions,
+  -hicpp-special-member-functions,
+  -fuchsia-statically-constructed-objects,
+  -fuchsia-default-arguments-calls,
+  -fuchsia-default-arguments-declarations,
+  -google-objc-function-naming,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -misc-non-private-member-variables-in-classes,
+  -readability-implicit-bool-conversion,
+  -readability-else-after-return,
+  -google-runtime-references,
+  -fuchsia-overloaded-operator,
+  -readability-redundant-access-specifiers,
+  -misc-new-delete-overloads,
+  -llvmlibc-callee-namespace,
+  -llvm-else-after-return,
+  -llvmlibc-restrict-system-libc-headers,
+  -llvmlibc-implementation-in-namespace,
+  -altera-unroll-loops,
+  -altera-struct-pack-align,
+  -bugprone-easily-swappable-parameters'
+
+CheckOptions:
+  - key: llvm-namespace-comment.ShortNamespaceLines
+    value: 10

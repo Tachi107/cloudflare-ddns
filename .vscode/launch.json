@@ -1,0 +1,21 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+ *
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "lldb",
+			"expressions": "native",
+			"request": "launch",
+			"name": "Debug",
+			"program": "${workspaceFolder}/build/src/cloudflare-ddns",
+			"preLaunchTask": "compile",
+			"args": [],
+			"cwd": "${workspaceFolder}/build"
+		}
+	]
+}

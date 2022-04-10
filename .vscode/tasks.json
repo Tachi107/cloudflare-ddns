@@ -1,0 +1,21 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+ *
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "compile",
+			"type": "process",
+			"command": "meson",
+			"args": ["compile", "-C", "build"],
+			"presentation": {
+				"reveal": "silent",
+				"focus": false
+			}
+		}
+	]
+}
