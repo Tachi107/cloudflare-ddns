@@ -79,6 +79,7 @@ if not simdjson_dep.found()
 				'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
 				'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 				'BUILD_SHARED_LIBS': false,
+				'SIMDJSON_DEVELOPER_MODE': false,
 				'SIMDJSON_WINDOWS_DLL': false,
 				'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false,
 				'SIMDJSON_DISABLE_DEPRECATED_API': true,
