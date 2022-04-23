@@ -36,7 +36,7 @@ if not libcurl_dep.found()
 			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 			'BUILD_SHARED_LIBS': false,
 			'BUILD_CURL_EXE': false,
-			'CURL_LTO': true,
+			'CURL_LTO': get_option('b_lto'),
 			'HTTP_ONLY': true,
 			'CURL_DISABLE_COOKIES': true,
 			'CURL_DISABLE_VERBOSE_STRINGS': true,
