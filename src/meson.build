@@ -39,7 +39,7 @@ executable(
 install_data(
 	'config.ini',
 	install_dir: get_option('sysconfdir')/'cloudflare-ddns',
-	install_mode: ['rw-------', 'www-data', 'www-data']
+	install_mode: ['rw-------', 'cloudflare-ddns', 'cloudflare-ddns']
 )
 
 # https://github.com/mesonbuild/meson/issues/1550
@@ -60,15 +60,23 @@ if host_machine.system() == 'linux'
 	systemddir = 'lib'/'systemd'/'system'
 
 	configure_file(
-		input: 'cloudflare-ddns.service.in',
+		input: 'systemd'/'cloudflare-ddns.service.in',
 		output: 'cloudflare-ddns.service',
-		configuration: {'bindir': get_option('prefix')/get_option('bindir')},
+		configuration: {
+			'bindir': get_option('prefix')/get_option('bindir'),
+			'libdir': get_option('prefix')/get_option('libdir')
+		},
 		install: true,
 		install_dir: systemddir
 	)
 
 	install_data(
-		'cloudflare-ddns.timer',
+		'systemd'/'cloudflare-ddns.timer',
 		install_dir: systemddir
+	)
+
+	install_data(
+		'sysusers.d'/'cloudflare-ddns.conf',
+		install_dir: 'lib'/'sysusers.d'
 	)
 endif

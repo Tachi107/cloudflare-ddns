@@ -11,14 +11,18 @@ Requisite=network-online.target
 [Service]
 Type=oneshot
 ExecStart=@bindir@/cloudflare-ddns
-User=www-data
-Group=www-data
+User=cloudflare-ddns
+Group=cloudflare-ddns
+
+ConfigurationDirectory=cloudflare-ddns
+ConfigurationDirectoryMode=0700
 
 # Hardening
 CapabilityBoundingSet=
-DynamicUser=true
+ExecPaths=@bindir@/cloudflare-ddns @libdir@ /usr/lib
 LockPersonality=true
 MemoryDenyWriteExecute=true
+NoExecPaths=/
 NoNewPrivileges=true
 PrivateDevices=true
 PrivateTmp=true
