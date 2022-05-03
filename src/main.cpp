@@ -133,23 +133,32 @@ int main(const int argc, const char* const argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (std::string_view{local_ip.data()} != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
-		dns_response.size = 0;
-		if (tachi_update_record_raw(
-			api_token.c_str(),
-			zone_id.c_str(),
-			static_cast<const char*>((*parsed["result"].begin())["id"]),
-			local_ip.data(),
-			&curl_handle
-		) != 0) {
-			std::cerr << "Error updating the DNS record\n";
-			curl_cleanup(&curl_handle);
-			return EXIT_FAILURE;
+	try {
+		if (std::string_view{local_ip.data()} != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
+			dns_response.size = 0;
+			if (tachi_update_record_raw(
+				api_token.c_str(),
+				zone_id.c_str(),
+				static_cast<const char*>((*parsed["result"].begin())["id"]),
+				local_ip.data(),
+				&curl_handle
+			) != 0) {
+				std::cerr << "Error updating the DNS record\n";
+				curl_cleanup(&curl_handle);
+				return EXIT_FAILURE;
+			}
+			std::cout << "New IP: " << parser.parse(std::string_view{dns_response.buffer, dns_response.size})["result"]["content"] << '\n';
 		}
-		std::cout << "New IP: " << parser.parse(std::string_view{dns_response.buffer, dns_response.size})["result"]["content"] << '\n';
+		else {
+			std::cout << "The DNS is up to date\n";
+		}
 	}
-	else {
-		std::cout << "The DNS is up to date\n";
+	catch (const std::exception& e) {
+		std::cerr
+			<< "Something went really wrong. Here's what:\n\t" << e.what()
+			<< "\n\nHere's some more info that could help:\n\t"
+			   "Local IP: " << local_ip.data() << "\n\t"
+			   "DNS response: " << std::string_view{dns_response.buffer, dns_response.size};
 	}
 	curl_cleanup(&curl_handle);
 }
