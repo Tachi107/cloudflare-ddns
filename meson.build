@@ -134,7 +134,7 @@ endif
 libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
-	cpp_args: [extra_args, '-DDDNS_BUILDING_DLL'],
+	cpp_args: extra_args,
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,

@@ -4,6 +4,14 @@
  * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
+/*
+ * Define DDNS_BUILDING_DLL in the .cpp file so that DDNS_PUB correctly
+ * expands to __declspec(dllexport)
+ */
+#if defined _WIN32 && defined DDNS_SHARED_LIB
+#	define DDNS_BUILDING_DLL
+#endif
+
 #include <ddns/cloudflare-ddns.h>
 #include <curl/curl.h>
 // curl.h redefines fopen on Windows, causing issues.
