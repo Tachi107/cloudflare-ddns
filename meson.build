@@ -160,7 +160,7 @@ install_subdir(
 )
 
 if get_option('executable')
-	subdir('src')
+	subdir('exe')
 endif
 
 if get_option('tests')

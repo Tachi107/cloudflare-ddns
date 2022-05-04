@@ -12,7 +12,7 @@
 			"expressions": "native",
 			"request": "launch",
 			"name": "Debug",
-			"program": "${workspaceFolder}/build/src/cloudflare-ddns",
+			"program": "${workspaceFolder}/build/exe/cloudflare-ddns",
 			"preLaunchTask": "compile",
 			"args": [],
 			"cwd": "${workspaceFolder}/build"

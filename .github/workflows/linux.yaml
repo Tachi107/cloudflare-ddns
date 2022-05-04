@@ -106,4 +106,4 @@ jobs:
         path: |
           build/libcloudflare-ddns.so.*
           !build/libcloudflare-ddns.so.*.p
-          build/src/cloudflare-ddns
+          build/exe/cloudflare-ddns
