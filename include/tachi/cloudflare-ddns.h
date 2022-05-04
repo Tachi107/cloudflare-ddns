@@ -29,8 +29,8 @@ extern "C" {
 #define TACHI_RECORD_NAME_MAX_LENGTH 255U
 #define TACHI_IP_ADDRESS_MAX_LENGTH  46U
 
-/* For size_t */
-#include <stddef.h>
+#include <stddef.h> /* size_t */
+#include <stdbool.h> /* bool, true */
 
 /*
  * When dealing with the shared library on Windows, a few things need
@@ -119,18 +119,23 @@ extern "C" {
  * the function returns 2; if some other error occurs, it returns 1. It
  * uses Cloudflare to determine the public address, querying
  * https://one.one.one.one/cdn-cgi/trace
+ *
+ * Depending on the value of the ipv6 parameter, the function will either
+ * force the HTTP request to use IPv4 (false) or IPv6 (true), also
+ * determining the kind of IP address returned.
  */
 TACHI_NODISCARD TACHI_PUB int tachi_get_local_ip(
-	size_t ip_size, char* TACHI_RESTRICT ip
+	size_t ip_size, char* TACHI_RESTRICT ip, bool ipv6
 ) TACHI_NOEXCEPT;
 
 /**
  * Get the current IP address of a given A/AAAA DNS record
  *
  * This function queries Cloudflare's API to retrieve the status of a given
- * A or AAAA record, returning its current IP address and its internal ID,
- * that can be used to refer to it in the API. The two values are written
- * in record_ip and record_id, respectively. If their _size is too small,
+ * A or AAAA record, returning its current IP address, its internal ID that
+ * can be used to refer to it in the API and a boolean indicating whether
+ * it is an A or AAAA record. The three values are written in record_ip,
+ * record_id, and aaaa respectively. If their _size is too small,
  * the function returns 2; if some other error occurs, it returns 1. Since
  * Cloudflare's API returns data in JSON form, the function uses simdjson
  * to parse that data as fast as possible. Since the function has to access
@@ -144,7 +149,8 @@ TACHI_NODISCARD TACHI_PUB int tachi_get_record(
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_name,
 	size_t record_ip_size, char* TACHI_RESTRICT record_ip,
-	size_t record_id_size, char* TACHI_RESTRICT record_id
+	size_t record_id_size, char* TACHI_RESTRICT record_id,
+	bool* aaaa
 ) TACHI_NOEXCEPT;
 
 /**

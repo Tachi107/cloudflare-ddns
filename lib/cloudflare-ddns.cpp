@@ -123,7 +123,8 @@ static void curl_patch_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTR
 
 TACHI_NODISCARD int tachi_get_local_ip(
 	size_t ip_size,
-	char* TACHI_RESTRICT ip
+	char* TACHI_RESTRICT ip,
+	bool ipv6
 ) TACHI_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
@@ -132,6 +133,13 @@ TACHI_NODISCARD int tachi_get_local_ip(
 	priv::curl_handle_setup(&curl, response);
 	curl_slist* free_me {priv::curl_doh_setup(&curl)};
 	priv::curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
+
+	if (ipv6) {
+		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
+	}
+	else {
+		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+	}
 
 	// Performing the request
 	const int curl_error = curl_easy_perform(curl);
@@ -170,7 +178,8 @@ TACHI_NODISCARD int tachi_get_record(
 	const char* TACHI_RESTRICT zone_id,
 	const char* TACHI_RESTRICT record_name,
 	size_t record_ip_size, char* TACHI_RESTRICT record_ip,
-	size_t record_id_size, char* TACHI_RESTRICT record_id
+	size_t record_id_size, char* TACHI_RESTRICT record_id,
+	bool* aaaa
 ) TACHI_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
 	priv::static_buffer response;
@@ -215,6 +224,11 @@ TACHI_NODISCARD int tachi_get_record(
 		return 1;
 	}
 
+	std::string_view type;
+	if (result["type"].get(type) != simdjson::SUCCESS) {
+		return 1;
+	}
+
 	if (record_ip_sv.length() >= record_ip_size || record_id_sv.length() >= record_id_size) {
 		return 2;
 	}
@@ -224,6 +238,8 @@ TACHI_NODISCARD int tachi_get_record(
 
 	std::memcpy(record_id, record_id_sv.data(), record_id_sv.length());
 	record_id[record_id_sv.length()] = '\0';
+
+	*aaaa = (type == "AAAA");
 
 	return 0;
 }
