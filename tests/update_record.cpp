@@ -9,12 +9,12 @@
 
 int main() {
 	"update_record"_test = [] {
-		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> local_ip;
-		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
+		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
+		expect(eq(ddns_get_local_ip(local_ip.size(), local_ip.data()), 0));
 
-		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
-		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
-		expect(eq(tachi_get_record(
+		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
+		expect(eq(ddns_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),
 			test_record_name.data(),
@@ -22,7 +22,7 @@ int main() {
 			record_id.size(), record_id.data()
 		), 0));
 
-		expect(eq(tachi_update_record(
+		expect(eq(ddns_update_record(
 			test_api_token.data(),
 			test_zone_id.data(),
 			record_id.data(),
@@ -38,9 +38,9 @@ int main() {
 
 	// Still can't report an invalid token or IP address
 	"update_record_bad_usage"_test = [] {
-		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
 		//expect(eq(
-		//	tachi_update_record(
+		//	ddns_update_record(
 		//		"an invalid token",
 		//		test_zone_id.data(),
 		//		"a string that is 32 chars looong",
@@ -50,7 +50,7 @@ int main() {
 		//));
 
 		expect(eq(
-			tachi_update_record(
+			ddns_update_record(
 				test_api_token.data(),
 				"an invalid zone id",
 				"a string that is 32 chars looong",
@@ -60,7 +60,7 @@ int main() {
 		));
 
 		expect(eq(
-			tachi_update_record(
+			ddns_update_record(
 				test_api_token.data(),
 				test_zone_id.data(),
 				"a string that is not 32 characters long",
@@ -70,7 +70,7 @@ int main() {
 		));
 
 		expect(eq(
-			tachi_update_record(
+			ddns_update_record(
 				test_api_token.data(),
 				test_zone_id.data(),
 				"a string that is 32 chars looong",

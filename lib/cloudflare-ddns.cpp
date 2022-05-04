@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
-#include <tachi/cloudflare-ddns.h>
+#include <ddns/cloudflare-ddns.h>
 #include <curl/curl.h>
 // curl.h redefines fopen on Windows, causing issues.
 #if fopen == curlx_win32_fopen
@@ -50,11 +50,11 @@ struct static_buffer {
 };
 
 static std::size_t write_data(
-	char* TACHI_RESTRICT incoming_buffer,
+	char* DDNS_RESTRICT incoming_buffer,
 	const std::size_t /*size*/, // size will always be 1
 	const std::size_t count,
-	static_buffer* TACHI_RESTRICT data
-) TACHI_NOEXCEPT {
+	static_buffer* DDNS_RESTRICT data
+) DDNS_NOEXCEPT {
 	// Check if the static buffer can handle all the new data
 	if (data->size + count >= static_buffer::capacity) {
 		return 0;
@@ -69,9 +69,9 @@ static std::size_t write_data(
 }
 
 static void curl_handle_setup(
-	CURL** TACHI_RESTRICT curl,
+	CURL** DDNS_RESTRICT curl,
 	const static_buffer& response_buffer
-) TACHI_NOEXCEPT {
+) DDNS_NOEXCEPT {
 	// General curl options
 	curl_easy_setopt(*curl, CURLOPT_NOPROGRESS, 1L);
 	curl_easy_setopt(*curl, CURLOPT_NOSIGNAL, 1L);
@@ -86,7 +86,7 @@ static void curl_handle_setup(
 /*
  * Returns the curl_slist that must be freed with curl_slist_free_all()
  */
-TACHI_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** TACHI_RESTRICT curl) TACHI_NOEXCEPT {
+DDNS_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** DDNS_RESTRICT curl) DDNS_NOEXCEPT {
 #if LIBCURL_VERSION_NUM >= 0x073e00
 	struct curl_slist* manual_doh_address {nullptr};
 	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
@@ -99,7 +99,7 @@ TACHI_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** TACHI_
 }
 
 // I should probably check that api_token is somewhat valid
-TACHI_NODISCARD static curl_slist* curl_auth_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const api_token) TACHI_NOEXCEPT {
+DDNS_NODISCARD static curl_slist* curl_auth_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const api_token) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
 	struct curl_slist* headers {nullptr};
@@ -108,12 +108,12 @@ TACHI_NODISCARD static curl_slist* curl_auth_setup(CURL** TACHI_RESTRICT curl, c
 	return headers;
 }
 
-static void curl_get_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const url) TACHI_NOEXCEPT {
+static void curl_get_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const url) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPGET, 1L);
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 }
 
-static void curl_patch_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTRICT const url, const char* TACHI_RESTRICT const body) TACHI_NOEXCEPT {
+static void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const url, const char* DDNS_RESTRICT const body) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_CUSTOMREQUEST, "PATCH");
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
@@ -121,11 +121,11 @@ static void curl_patch_setup(CURL** TACHI_RESTRICT curl, const char* TACHI_RESTR
 
 } // namespace priv
 
-TACHI_NODISCARD int tachi_get_local_ip(
+DDNS_NODISCARD int ddns_get_local_ip(
 	size_t ip_size,
-	char* TACHI_RESTRICT ip,
+	char* DDNS_RESTRICT ip,
 	bool ipv6
-) TACHI_NOEXCEPT {
+) DDNS_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
 	priv::static_buffer response;
@@ -173,20 +173,20 @@ TACHI_NODISCARD int tachi_get_local_ip(
 	return 0;
 }
 
-TACHI_NODISCARD int tachi_get_record(
-	const char* TACHI_RESTRICT api_token,
-	const char* TACHI_RESTRICT zone_id,
-	const char* TACHI_RESTRICT record_name,
-	size_t record_ip_size, char* TACHI_RESTRICT record_ip,
-	size_t record_id_size, char* TACHI_RESTRICT record_id,
+DDNS_NODISCARD int ddns_get_record(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT zone_id,
+	const char* DDNS_RESTRICT record_name,
+	size_t record_ip_size, char* DDNS_RESTRICT record_ip,
+	size_t record_id_size, char* DDNS_RESTRICT record_id,
 	bool* aaaa
-) TACHI_NOEXCEPT {
+) DDNS_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
 	priv::static_buffer response;
 
 	priv::curl_handle_setup(&curl, response);
 
-	const int error = tachi_get_record_raw(api_token, zone_id, record_name, &curl);
+	const int error = ddns_get_record_raw(api_token, zone_id, record_name, &curl);
 
 	curl_easy_cleanup(curl);
 
@@ -244,16 +244,16 @@ TACHI_NODISCARD int tachi_get_record(
 	return 0;
 }
 
-TACHI_NODISCARD int tachi_get_record_raw(
-	const char* TACHI_RESTRICT api_token,
-	const char* TACHI_RESTRICT zone_id,
-	const char* TACHI_RESTRICT record_name,
-	void**      TACHI_RESTRICT curl
-) TACHI_NOEXCEPT {
+DDNS_NODISCARD int ddns_get_record_raw(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT zone_id,
+	const char* DDNS_RESTRICT record_name,
+	void**      DDNS_RESTRICT curl
+) DDNS_NOEXCEPT {
 	const std::size_t record_name_length {std::strlen(record_name)};
 
 	// The length of API IDs should always be 32
-	if (std::strlen(zone_id) != TACHI_ZONE_ID_LENGTH || record_name_length > TACHI_RECORD_NAME_MAX_LENGTH) {
+	if (std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || record_name_length > DDNS_RECORD_NAME_MAX_LENGTH) {
 		return 2;
 	}
 
@@ -264,14 +264,14 @@ TACHI_NODISCARD int tachi_get_record_raw(
 
 	constexpr std::size_t request_url_capacity {
 		base_url.length() +
-		TACHI_ZONE_ID_LENGTH +
+		DDNS_ZONE_ID_LENGTH +
 		dns_records_url.length() +
-		TACHI_RECORD_NAME_MAX_LENGTH
+		DDNS_RECORD_NAME_MAX_LENGTH
 	};
 
 	const std::size_t request_url_length {
 		base_url.length() +
-		TACHI_ZONE_ID_LENGTH +
+		DDNS_ZONE_ID_LENGTH +
 		dns_records_url.length() +
 		record_name_length
 	};
@@ -281,9 +281,9 @@ TACHI_NODISCARD int tachi_get_record_raw(
 
 	// Concatenate strings
 	std::memcpy(request_url, base_url.data(), base_url.length());
-	std::memcpy(request_url + base_url.length(), zone_id, TACHI_ZONE_ID_LENGTH);
-	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH, dns_records_url.data(), dns_records_url.length());
-	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH + dns_records_url.length(), record_name, record_name_length);
+	std::memcpy(request_url + base_url.length(), zone_id, DDNS_ZONE_ID_LENGTH);
+	std::memcpy(request_url + base_url.length() + DDNS_ZONE_ID_LENGTH, dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + DDNS_ZONE_ID_LENGTH + dns_records_url.length(), record_name, record_name_length);
 	request_url[request_url_length] = '\0';
 
 	priv::curl_get_setup(curl, request_url);
@@ -303,19 +303,19 @@ TACHI_NODISCARD int tachi_get_record_raw(
 	return 0;
 }
 
-TACHI_NODISCARD int tachi_update_record(
-	const char* TACHI_RESTRICT api_token,
-	const char* TACHI_RESTRICT zone_id,
-	const char* TACHI_RESTRICT record_id,
-	const char* TACHI_RESTRICT new_ip,
-	size_t record_ip_size, char* TACHI_RESTRICT record_ip
-) TACHI_NOEXCEPT {
+DDNS_NODISCARD int ddns_update_record(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT zone_id,
+	const char* DDNS_RESTRICT record_id,
+	const char* DDNS_RESTRICT new_ip,
+	size_t record_ip_size, char* DDNS_RESTRICT record_ip
+) DDNS_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
 	priv::static_buffer response;
 
 	priv::curl_handle_setup(&curl, response);
 
-	const int error = tachi_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
+	const int error = ddns_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
 
 	curl_easy_cleanup(curl);
 
@@ -350,17 +350,17 @@ TACHI_NODISCARD int tachi_update_record(
 	return 0;
 }
 
-TACHI_NODISCARD int tachi_update_record_raw(
-	const char* TACHI_RESTRICT api_token,
-	const char* TACHI_RESTRICT zone_id,
-	const char* TACHI_RESTRICT record_id,
-	const char* TACHI_RESTRICT new_ip,
-	void**      TACHI_RESTRICT curl
-) TACHI_NOEXCEPT {
+DDNS_NODISCARD int ddns_update_record_raw(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT zone_id,
+	const char* DDNS_RESTRICT record_id,
+	const char* DDNS_RESTRICT new_ip,
+	void**      DDNS_RESTRICT curl
+) DDNS_NOEXCEPT {
 	const std::size_t new_ip_length {std::strlen(new_ip)};
 
 	// The length of API IDs should always be 32
-	if (std::strlen(zone_id) != TACHI_ZONE_ID_LENGTH || std::strlen(record_id) != TACHI_RECORD_ID_LENGTH || new_ip_length > TACHI_IP_ADDRESS_MAX_LENGTH) {
+	if (std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || std::strlen(record_id) != DDNS_RECORD_ID_LENGTH || new_ip_length > DDNS_IP_ADDRESS_MAX_LENGTH) {
 		return 2;
 	}
 
@@ -371,9 +371,9 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	constexpr std::size_t request_url_length {
 		base_url.length() +
-		TACHI_ZONE_ID_LENGTH +
+		DDNS_ZONE_ID_LENGTH +
 		dns_records_url.length() +
-		TACHI_RECORD_ID_LENGTH
+		DDNS_RECORD_ID_LENGTH
 	};
 
 	// +1 because of '\0'
@@ -381,9 +381,9 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	// Concatenate the strings to make the request url
 	std::memcpy(request_url, base_url.data(), base_url.length());
-	std::memcpy(request_url + base_url.length(), zone_id, TACHI_ZONE_ID_LENGTH);
-	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH, dns_records_url.data(), dns_records_url.length());
-	std::memcpy(request_url + base_url.length() + TACHI_ZONE_ID_LENGTH + dns_records_url.length(), record_id, TACHI_RECORD_ID_LENGTH);
+	std::memcpy(request_url + base_url.length(), zone_id, DDNS_ZONE_ID_LENGTH);
+	std::memcpy(request_url + base_url.length() + DDNS_ZONE_ID_LENGTH, dns_records_url.data(), dns_records_url.length());
+	std::memcpy(request_url + base_url.length() + DDNS_ZONE_ID_LENGTH + dns_records_url.length(), record_id, DDNS_RECORD_ID_LENGTH);
 	request_url[request_url_length] = '\0';
 
 	constexpr std::string_view request_body_start {R"({"content": ")"};
@@ -391,7 +391,7 @@ TACHI_NODISCARD int tachi_update_record_raw(
 
 	constexpr std::size_t request_body_capacity {
 		request_body_start.length() +
-		TACHI_IP_ADDRESS_MAX_LENGTH +
+		DDNS_IP_ADDRESS_MAX_LENGTH +
 		request_body_end.length()
 	};
 

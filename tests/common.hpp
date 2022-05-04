@@ -7,7 +7,7 @@
 #pragma once
 #define BOOST_UT_DISABLE_MODULE
 #include <boost/ut.hpp>
-#include <tachi/cloudflare-ddns.h>
+#include <ddns/cloudflare-ddns.h>
 #include "credentials.hpp"
 
 using namespace boost::ut;

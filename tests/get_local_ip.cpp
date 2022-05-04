@@ -32,9 +32,9 @@ int main() {
 
 		response.pop_back(); // remove \n character
 
-		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> local_ip;
+		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
 
-		expect(eq(tachi_get_local_ip(local_ip.size(), local_ip.data()), 0));
+		expect(eq(ddns_get_local_ip(local_ip.size(), local_ip.data()), 0));
 
 		expect(eq(
 			std::string_view{local_ip.data()},

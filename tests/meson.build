@@ -27,13 +27,13 @@ else
 endif
 
 if compiler.has_function('getaddrinfo')
-	test_args += '-DTACHI_HAS_GETADDRINFO'
+	test_args += '-DDDNS_HAS_GETADDRINFO'
 endif
 
 if compiler.has_header('ws2tcpip.h')
 	test_deps += compiler.find_library('Ws2_32')
 	if compiler.has_function('getaddrinfo', prefix: '#include <ws2tcpip.h>', dependencies: test_deps)
-		test_args += '-DTACHI_HAS_GETADDRINFO'
+		test_args += '-DDDNS_HAS_GETADDRINFO'
 	endif
 endif
 

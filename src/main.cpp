@@ -15,7 +15,7 @@
 #endif
 #include <simdjson.h>
 #include <INIReader.h>
-#include <tachi/cloudflare-ddns.h>
+#include <ddns/cloudflare-ddns.h>
 #include "config_path.hpp"
 
 /*
@@ -30,11 +30,11 @@ struct static_buffer {
 };
 
 static std::size_t write_data(
-	char* TACHI_RESTRICT incoming_buffer,
+	char* DDNS_RESTRICT incoming_buffer,
 	const std::size_t /*size*/, // size will always be 1
 	const std::size_t count,
-	static_buffer* TACHI_RESTRICT data
-) TACHI_NOEXCEPT {
+	static_buffer* DDNS_RESTRICT data
+) DDNS_NOEXCEPT {
 	// Check if the static buffer can handle all the new data
 	if (data->size + count >= static_buffer::capacity) {
 		return 0;
@@ -107,14 +107,14 @@ int main(const int argc, const char* const argv[]) {
 
 	std::future<int> dns_response_future {std::async(
 		std::launch::async,
-		tachi_get_record_raw,
+		ddns_get_record_raw,
 		api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle
 	)};
 
 	std::array<char, 46> local_ip;
 	std::future<int> local_ip_future {std::async(
 		std::launch::async,
-		tachi_get_local_ip,
+		ddns_get_local_ip,
 		local_ip.size(), local_ip.data()
 	)};
 
@@ -135,7 +135,7 @@ int main(const int argc, const char* const argv[]) {
 
 	if (std::string_view{local_ip.data()} != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		dns_response.size = 0;
-		if (tachi_update_record_raw(
+		if (ddns_update_record_raw(
 			api_token.c_str(),
 			zone_id.c_str(),
 			static_cast<const char*>((*parsed["result"].begin())["id"]),
