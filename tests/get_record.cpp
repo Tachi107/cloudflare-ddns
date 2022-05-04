@@ -21,7 +21,7 @@
 #include <array>
 
 int main() {
-		/**
+	/**
 	 * Get the current IP of an A record and compare if against the
 	 * return value of ddns_get_record()
 	 */
@@ -53,24 +53,28 @@ int main() {
 
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
 		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
+		bool aaaa;
 
 		expect(eq(ddns_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),
 			test_record_name.data(),
 			record_ip.size(), record_ip.data(),
-			record_id.size(), record_id.data()
+			record_id.size(), record_id.data(),
+			&aaaa
 		), 0));
 
 		expect(eq(
 			std::string_view{address.data()},
 			std::string_view{record_ip.data()}
 		));
+		expect(eq(aaaa, false));
 	};
 
 	"get_record_bad_usage"_test = [] {
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
 		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
+		bool aaaa;
 
 		//expect(eq(
 		//	ddns_get_record(
@@ -89,7 +93,8 @@ int main() {
 				"invalid zone id",
 				test_record_name.data(),
 				record_ip.size(), record_ip.data(),
-				record_id.size(), record_id.data()
+				record_id.size(), record_id.data(),
+				&aaaa
 			),
 			2
 		));
@@ -104,7 +109,8 @@ int main() {
 				"In pratica, ceh, adesso noi entriamo e ci sarà il nostro bellissimo drago"
 				"e uccideremo anche il wither nello stesso momento -non spingetemi- è una roba malsas",
 				record_ip.size(), record_ip.data(),
-				record_id.size(), record_id.data()
+				record_id.size(), record_id.data(),
+				&aaaa
 			),
 			2
 		));

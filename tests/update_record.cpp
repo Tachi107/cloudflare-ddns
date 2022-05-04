@@ -10,16 +10,18 @@
 int main() {
 	"update_record"_test = [] {
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
-		expect(eq(ddns_get_local_ip(local_ip.size(), local_ip.data()), 0));
+		expect(eq(ddns_get_local_ip(local_ip.size(), local_ip.data(), false), 0));
 
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
 		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
+		bool aaaa;
 		expect(eq(ddns_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),
 			test_record_name.data(),
 			record_ip.size(), record_ip.data(),
-			record_id.size(), record_id.data()
+			record_id.size(), record_id.data(),
+			&aaaa
 		), 0));
 
 		expect(eq(ddns_update_record(
