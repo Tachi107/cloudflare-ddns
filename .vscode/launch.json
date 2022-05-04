@@ -14,7 +14,7 @@
 			"name": "Debug",
 			"program": "${workspaceFolder}/build/exe/cloudflare-ddns",
 			"preLaunchTask": "compile",
-			"args": [],
+			"args": ["--config", "config.ini"],
 			"cwd": "${workspaceFolder}/build"
 		}
 	]

@@ -24,7 +24,6 @@ executable(
 		libcurl_dep,
 		simdjson_dep,
 		INIReader_dep,
-		dependency('threads'),
 		extra_deps
 	],
 	gnu_symbol_visibility: 'hidden',
