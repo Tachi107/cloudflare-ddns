@@ -29,8 +29,8 @@ extern "C" {
 #define DDNS_RECORD_NAME_MAX_LENGTH 255U
 #define DDNS_IP_ADDRESS_MAX_LENGTH  46U
 
+#include <stdbool.h> /* bool */
 #include <stddef.h> /* size_t */
-#include <stdbool.h> /* bool, true */
 
 /*
  * When dealing with the shared library on Windows, a few things need
@@ -164,8 +164,7 @@ DDNS_NODISCARD DDNS_PUB int ddns_get_record(
  * you'll also need to parse the result yourself. If the length of the zone
  * id is not DDNS_ZONE_ID_LENGTH, or if the length of the record name is
  * greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns 2; if
- * something goes wrong with the HTTP request, it returns the value of
- * curl_easy_perform().
+ * something goes wrong with the HTTP request, it returns 1.
  */
 DDNS_NODISCARD DDNS_PUB int ddns_get_record_raw(
 	const char* DDNS_RESTRICT api_token,
@@ -207,9 +206,9 @@ DDNS_NODISCARD DDNS_PUB int ddns_update_record(
  * for better performance but has greater complexity. If the length of the
  * zone id is not DDNS_ZONE_ID_LENGTH, or if the length of the record name
  * is greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns 2; if
- * something goes wrong with the HTTP request, it returns the value of
- * curl_easy_perform(). If you don't particularly care about performance
- * you can use the simpler update_record() function.
+ * something goes wrong with the HTTP request, it returns 1. If you don't
+ * particularly care about performance you can use the simpler
+ * update_record() function.
  */
 DDNS_NODISCARD DDNS_PUB int ddns_update_record_raw(
 	const char* DDNS_RESTRICT api_token,

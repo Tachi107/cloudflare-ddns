@@ -13,6 +13,7 @@
 #endif
 
 #include <ddns/cloudflare-ddns.h>
+
 #include <curl/curl.h>
 // curl.h redefines fopen on Windows, causing issues.
 #if fopen == curlx_win32_fopen
@@ -20,9 +21,10 @@ namespace std {
 	const auto& curlx_win32_fopen = fopen;
 }
 #endif
-#include <string>
-#include <string_view>
-#include <cstring>
+
+#include <cstring> /* std::memcpy, std::size_t, std::strlen */
+#include <string_view> /* std::string_view */
+
 #include <simdjson.h>
 
 /*
@@ -47,7 +49,12 @@ namespace std {
 
 extern "C" {
 
-constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
+static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
+
+namespace json {
+	using element = simdjson::dom::element;
+	using parser = simdjson::dom::parser;
+}
 
 namespace priv {
 
@@ -158,7 +165,7 @@ DDNS_NODISCARD int ddns_get_local_ip(
 	// Cleaning up the handle as I won't reuse it
 	curl_easy_cleanup(curl);
 
-	if (curl_error != 0) {
+	if (curl_error) {
 		// I can return as I've cleaned up everything
 		return 1;
 	}
@@ -198,13 +205,13 @@ DDNS_NODISCARD int ddns_get_record(
 
 	curl_easy_cleanup(curl);
 
-	if (error != 0) {
+	if (error) {
 		return error;
 	}
 
-	simdjson::dom::parser parser;
+	json::parser parser;
 
-	simdjson::dom::element parsed;
+	json::element parsed;
 	if (parser.parse(std::string_view{response.buffer, response.size}).get(parsed) != simdjson::SUCCESS) {
 		return 1;
 	}
@@ -304,7 +311,7 @@ DDNS_NODISCARD int ddns_get_record_raw(
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, nullptr);
 	curl_slist_free_all(free_me_doh);
 
-	if (curl_error != 0) {
+	if (curl_error) {
 		return 1;
 	}
 
@@ -327,7 +334,7 @@ DDNS_NODISCARD int ddns_update_record(
 
 	curl_easy_cleanup(curl);
 
-	if (error != 0) {
+	if (error) {
 		return error;
 	}
 
@@ -432,7 +439,7 @@ DDNS_NODISCARD int ddns_update_record_raw(
 	curl_easy_setopt(*curl, CURLOPT_RESOLVE, nullptr);
 	curl_slist_free_all(free_me_doh);
 
-	if (curl_error != 0) {
+	if (curl_error) {
 		return 1;
 	}
 
