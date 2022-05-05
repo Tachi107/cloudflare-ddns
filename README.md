@@ -22,7 +22,7 @@ This tool is a oneshot program: you run it, it updates the DNS record, and it te
 
 To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens) and the Zone ID of the DNS that you want to update; you can get the latter in the Overview panel of your zone.
 
-Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a ini configuration file, located in `/etc/cloudflare-ddns/config.ini` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.ini` otherwise (`/usr/local/etc` by default), by passing no arguments at all; [here's the template](src/config.ini). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
+Once you got the executable you can use it in two ways: you can pass the API Token, the Zone ID and the record name as command line arguments or you can use a ini configuration file, located in `/etc/cloudflare-ddns/config.ini` when installing the software in `/usr` (e.g. when using the Debian package), and in `$install_prefix/etc/cloudflare-ddns/config.ini` otherwise (`/usr/local/etc` by default), by passing no arguments at all; [here's the template](exe/config.ini). If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
 You can download the latest release from the GitHub Releases page, or, if you prefer, you can [build](#Build) the program yourself.
 

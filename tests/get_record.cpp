@@ -5,7 +5,7 @@
  */
 
 #include "common.hpp"
-#ifdef TACHI_HAS_GETADDRINFO
+#ifdef DDNS_HAS_GETADDRINFO
 	#if __has_include(<netdb.h>)
 		#include <netdb.h>
 	#endif
@@ -21,12 +21,12 @@
 #include <array>
 
 int main() {
-		/**
+	/**
 	 * Get the current IP of an A record and compare if against the
-	 * return value of tachi::get_record()
+	 * return value of ddns_get_record()
 	 */
 	"get_record"_test = [] {
-		#if TACHI_HAS_GETADDRINFO
+		#if DDNS_HAS_GETADDRINFO
 		#if __has_include(<ws2tcpip.h>)
 			WSADATA wsaData;
 			// Manually setting the version to 2.2 instead of using MAKEWORD
@@ -51,29 +51,33 @@ int main() {
 		freeaddrinfo(dns_response);
 		#endif
 
-		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
-		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
+		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
+		bool aaaa;
 
-		expect(eq(tachi_get_record(
+		expect(eq(ddns_get_record(
 			test_api_token.data(),
 			test_zone_id.data(),
 			test_record_name.data(),
 			record_ip.size(), record_ip.data(),
-			record_id.size(), record_id.data()
+			record_id.size(), record_id.data(),
+			&aaaa
 		), 0));
 
 		expect(eq(
 			std::string_view{address.data()},
 			std::string_view{record_ip.data()}
 		));
+		expect(eq(aaaa, false));
 	};
 
 	"get_record_bad_usage"_test = [] {
-		std::array<char, TACHI_IP_ADDRESS_MAX_LENGTH> record_ip;
-		std::array<char, TACHI_RECORD_ID_LENGTH + 1> record_id;
+		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
+		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
+		bool aaaa;
 
 		//expect(eq(
-		//	tachi_get_record(
+		//	ddns_get_record(
 		//		"invalid api token",
 		//		test_zone_id.data(),
 		//		test_record_name.data(),
@@ -84,18 +88,19 @@ int main() {
 		//));
 
 		expect(eq(
-			tachi_get_record(
+			ddns_get_record(
 				test_api_token.data(),
 				"invalid zone id",
 				test_record_name.data(),
 				record_ip.size(), record_ip.data(),
-				record_id.size(), record_id.data()
+				record_id.size(), record_id.data(),
+				&aaaa
 			),
 			2
 		));
 
 		expect(eq(
-			tachi_get_record(
+			ddns_get_record(
 				test_api_token.data(),
 				test_zone_id.data(),
 				"Ciao a tutti ragazzi e bentornati in questo nuovo video io sono Tachi_107"
@@ -104,7 +109,8 @@ int main() {
 				"In pratica, ceh, adesso noi entriamo e ci sarà il nostro bellissimo drago"
 				"e uccideremo anche il wither nello stesso momento -non spingetemi- è una roba malsas",
 				record_ip.size(), record_ip.data(),
-				record_id.size(), record_id.data()
+				record_id.size(), record_id.data(),
+				&aaaa
 			),
 			2
 		));

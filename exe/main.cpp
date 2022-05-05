@@ -5,23 +5,27 @@
  */
 
 #include <curl/curl.h>
-#include <string>
-#include <iostream>
-#include <future>
-#include <array>
+
+#include <array> /* std::array */
+#include <cstddef> /* std::size_t */
+#include <cstring> /* std::memcpy */
+#include <iostream> /* std::cout, std::cerr */
+#include <string> /* std::string */
+#include <string_view> /* std::string_view */
+
 // curl.h redefines fopen on Windows, causing issues.
 #if defined(_WIN32) and defined(fopen)
 	#undef fopen
 #endif
-#include <simdjson.h>
 #include <INIReader.h>
-#include <tachi/cloudflare-ddns.h>
+#include <simdjson.h>
+#include <ddns/cloudflare-ddns.h>
 #include "config_path.hpp"
 
-/*
- * Two handles for two theads.
- * One for cdn-cgi/trace and one for DNS IP
- */
+namespace json {
+	using element = simdjson::dom::element;
+	using parser = simdjson::dom::parser;
+}
 
 struct static_buffer {
 	static constexpr std::size_t capacity {600}; // Tipical size of largest response (GET to fetch the DNS IP)
@@ -30,11 +34,11 @@ struct static_buffer {
 };
 
 static std::size_t write_data(
-	char* TACHI_RESTRICT incoming_buffer,
+	char* DDNS_RESTRICT incoming_buffer,
 	const std::size_t /*size*/, // size will always be 1
 	const std::size_t count,
-	static_buffer* TACHI_RESTRICT data
-) TACHI_NOEXCEPT {
+	static_buffer* DDNS_RESTRICT data
+) DDNS_NOEXCEPT {
 	// Check if the static buffer can handle all the new data
 	if (data->size + count >= static_buffer::capacity) {
 		return 0;
@@ -105,29 +109,25 @@ int main(const int argc, const char* const argv[]) {
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
 
-	std::future<int> dns_response_future {std::async(
-		std::launch::async,
-		tachi_get_record_raw,
-		api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle
-	)};
-
-	std::array<char, 46> local_ip;
-	std::future<int> local_ip_future {std::async(
-		std::launch::async,
-		tachi_get_local_ip,
-		local_ip.size(), local_ip.data()
-	)};
-
-	simdjson::dom::parser parser;
-
-	if (dns_response_future.get() != 0) {
+	int error = ddns_get_record_raw(api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle);
+	if (error) {
 		std::cerr << "Error getting DNS record info\n";
 		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
 	}
-	const simdjson::dom::element parsed {parser.parse(std::string_view{dns_response.buffer, dns_response.size})};
 
-	if (local_ip_future.get() != 0) {
+	json::parser parser;
+	const json::element parsed {parser.parse(std::string_view{dns_response.buffer, dns_response.size})};
+
+	const bool ipv6 = [&parsed]() {
+		const auto type = static_cast<std::string_view>((*parsed["result"].begin())["type"]);
+		return type == "AAAA";
+	}();
+
+	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
+
+	error = ddns_get_local_ip(local_ip.size(), local_ip.data(), ipv6);
+	if (error) {
 		std::cerr << "Error getting the local IP address\n";
 		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
@@ -135,7 +135,7 @@ int main(const int argc, const char* const argv[]) {
 
 	if (std::string_view{local_ip.data()} != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
 		dns_response.size = 0;
-		if (tachi_update_record_raw(
+		if (ddns_update_record_raw(
 			api_token.c_str(),
 			zone_id.c_str(),
 			static_cast<const char*>((*parsed["result"].begin())["id"]),

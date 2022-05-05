@@ -117,7 +117,7 @@ if host_machine.system() == 'windows'
 	if default_library == 'both'
 		error('default_library=both is not supported on Windows')
 	elif default_library == 'shared'
-		extra_args += '-DTACHI_SHARED_LIB'
+		extra_args += '-DDDNS_SHARED_LIB'
 	endif
 endif
 
@@ -134,13 +134,13 @@ endif
 libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
-	cpp_args: [extra_args, '-DTACHI_BUILDING_DLL'],
+	cpp_args: extra_args,
 	dependencies: [
 		libcurl_dep,
 		simdjson_dep,
 		extra_deps
 	],
-	extra_files: 'include'/'tachi'/'cloudflare-ddns.h',
+	extra_files: 'include'/'ddns'/'cloudflare-ddns.h',
 	include_directories: 'include',
 	install: true,
 	version: meson.project_version(),
@@ -155,12 +155,12 @@ cloudflare_ddns_dep = declare_dependency(
 )
 
 install_subdir(
-	'include'/'tachi',
+	'include'/'ddns',
 	install_dir: get_option('includedir')
 )
 
 if get_option('executable')
-	subdir('src')
+	subdir('exe')
 endif
 
 if get_option('tests')
