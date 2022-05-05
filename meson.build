@@ -33,6 +33,8 @@ if not libcurl_dep.found()
 		libcurl_options.add_cmake_defines({
 			'CMAKE_BUILD_TYPE': get_option('buildtype'),
 			'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
+			'CMAKE_INTERPROCEDURAL_OPTIMIZATION': get_option('b_lto'),
+			'CMAKE_POLICY_DEFAULT_CMP0069': 'NEW',
 			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 			'BUILD_SHARED_LIBS': false,
 			'BUILD_CURL_EXE': false,
@@ -77,6 +79,8 @@ if not simdjson_dep.found()
 			simdjson_options.add_cmake_defines({
 				'CMAKE_BUILD_TYPE': get_option('buildtype'),
 				'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
+				'CMAKE_INTERPROCEDURAL_OPTIMIZATION': get_option('b_lto'),
+				'CMAKE_POLICY_DEFAULT_CMP0069': 'NEW',
 				'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
 				'BUILD_SHARED_LIBS': false,
 				'SIMDJSON_DEVELOPER_MODE': false,
