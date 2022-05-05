@@ -52,9 +52,10 @@ extern "C" {
 static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
 
 namespace json {
-	using element = simdjson::dom::element;
-	using parser = simdjson::dom::parser;
-	using array = simdjson::dom::array;
+	using parser = simdjson::ondemand::parser;
+	using document = simdjson::ondemand::document;
+	using object = simdjson::ondemand::object;
+	using array = simdjson::ondemand::array;
 }
 
 namespace priv {
@@ -212,17 +213,17 @@ DDNS_NODISCARD int ddns_get_record(
 
 	json::parser parser;
 
-	json::element parsed;
-	if (parser.parse(std::string_view{response.buffer, response.size}).get(parsed) != simdjson::SUCCESS) {
+	json::document json;
+	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != simdjson::SUCCESS) {
 		return 1;
 	}
 
 	// Cloudflare returns a json array of one element containing the
 	// actual result object
-	json::element result;
+	json::object result;
 	{
 		json::array results;
-		if (parsed["result"].get(results) != simdjson::SUCCESS) {
+		if (json["result"].get(results) != simdjson::SUCCESS) {
 			return 1;
 		}
 		if ((*results.begin()).get(result) != simdjson::SUCCESS) {
@@ -341,13 +342,13 @@ DDNS_NODISCARD int ddns_update_record(
 
 	json::parser parser;
 
-	json::element parsed;
-	if (parser.parse(std::string_view{response.buffer, response.size}).get(parsed) != simdjson::SUCCESS) {
+	json::document json;
+	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != simdjson::SUCCESS) {
 		return 1;
 	}
 
-	json::element result;
-	if (parsed["result"].get(result) != simdjson::SUCCESS) {
+	json::object result;
+	if (json["result"].get(result) != simdjson::SUCCESS) {
 		return 1;
 	}
 

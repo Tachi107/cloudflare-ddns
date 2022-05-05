@@ -23,12 +23,14 @@
 #include "config_path.hpp"
 
 namespace json {
-	using element = simdjson::dom::element;
-	using parser = simdjson::dom::parser;
+	using parser = simdjson::ondemand::parser;
+	using document = simdjson::ondemand::document;
+	using object = simdjson::ondemand::object;
+	using array = simdjson::ondemand::array;
 }
 
 struct static_buffer {
-	static constexpr std::size_t capacity {600}; // Tipical size of largest response (GET to fetch the DNS IP)
+	static constexpr std::size_t capacity {1024}; // Tipical size of largest response (GET to fetch the DNS IP) plus some padding
 	std::size_t size {0};
 	char buffer[capacity];
 };
@@ -117,12 +119,17 @@ int main(const int argc, const char* const argv[]) {
 	}
 
 	json::parser parser;
-	const json::element parsed {parser.parse(std::string_view{dns_response.buffer, dns_response.size})};
+	json::document json {parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity)};
 
-	const bool ipv6 = [&parsed]() {
-		const auto type = static_cast<std::string_view>((*parsed["result"].begin())["type"]);
-		return type == "AAAA";
-	}();
+	json::array result_arr = json["result"];
+	json::object result = *result_arr.begin();
+
+	// parse values in the expected order to improve performance
+	const std::string_view id_sv = result["id"];
+	const std::string_view type = result["type"];
+	const std::string_view content = result["content"];
+
+	const bool ipv6 = (type == "AAAA");
 
 	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
 
@@ -133,12 +140,19 @@ int main(const int argc, const char* const argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (std::string_view{local_ip.data()} != static_cast<std::string_view>((*parsed["result"].begin())["content"])) {
+	if (local_ip.data() != content) {
+		// simdjson ondemand doesn't have get_c_str(), so I need to create
+		// a NULL-termiated C string manually. id_sv.length() and
+		// DDNS_RECORD_ID_LENGTH are the same.
+		char id[DDNS_RECORD_ID_LENGTH + 1];
+		std::memcpy(id, id_sv.data(), DDNS_RECORD_ID_LENGTH);
+		id[DDNS_RECORD_ID_LENGTH] = '\0';
+
 		dns_response.size = 0;
 		if (ddns_update_record_raw(
 			api_token.c_str(),
 			zone_id.c_str(),
-			static_cast<const char*>((*parsed["result"].begin())["id"]),
+			id,
 			local_ip.data(),
 			&curl_handle
 		) != 0) {
@@ -146,7 +160,8 @@ int main(const int argc, const char* const argv[]) {
 			curl_cleanup(&curl_handle);
 			return EXIT_FAILURE;
 		}
-		std::cout << "New IP: " << parser.parse(std::string_view{dns_response.buffer, dns_response.size})["result"]["content"] << '\n';
+		json::document json = parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity);
+		std::cout << "New IP: " << json["result"]["content"] << '\n';
 	}
 	else {
 		std::cout << "The DNS is up to date\n";
