@@ -1,0 +1,4 @@
+setup(
+    'build',
+    options: { 'muon': true },
+)

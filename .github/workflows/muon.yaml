@@ -44,8 +44,8 @@ jobs:
         ninja -C build
         build/muon -C build install
 
-    - name: Configure Muon
-      run: muon setup -Dmuon=true -Dexecutable=false build
+    - name: Configure muon
+      run: muon auto
       env:
         CC: ${{ matrix.compiler }}
 

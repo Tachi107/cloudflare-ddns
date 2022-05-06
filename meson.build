@@ -137,7 +137,6 @@ endif
 muon_unsupported_kwargs = {}
 if not get_option('muon')
 	muon_unsupported_kwargs = {
-		'gnu_symbol_visibility': 'hidden',
 		'override_options': 'cpp_eh=none'
 	}
 endif
@@ -152,6 +151,7 @@ libcloudflare_ddns = library(
 		extra_deps
 	],
 	extra_files: 'include'/'ddns'/'cloudflare-ddns.h',
+	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',
 	install: true,
 	version: meson.project_version(),
