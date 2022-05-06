@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: CC0-1.0
+
 setup(
     'build',
     options: { 'muon': true },
