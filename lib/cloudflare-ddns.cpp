@@ -52,10 +52,10 @@ extern "C" {
 static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
 
 namespace json {
-	using parser = simdjson::ondemand::parser;
-	using document = simdjson::ondemand::document;
-	using object = simdjson::ondemand::object;
-	using array = simdjson::ondemand::array;
+	using simdjson::ondemand::parser;
+	using simdjson::ondemand::document;
+	using simdjson::ondemand::object;
+	using simdjson::ondemand::array;
 }
 
 namespace priv {

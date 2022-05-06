@@ -23,10 +23,10 @@
 #include "config_path.hpp"
 
 namespace json {
-	using parser = simdjson::ondemand::parser;
-	using document = simdjson::ondemand::document;
-	using object = simdjson::ondemand::object;
-	using array = simdjson::ondemand::array;
+	using simdjson::ondemand::parser;
+	using simdjson::ondemand::document;
+	using simdjson::ondemand::object;
+	using simdjson::ondemand::array;
 }
 
 struct static_buffer {

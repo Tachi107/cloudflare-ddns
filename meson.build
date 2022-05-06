@@ -68,7 +68,18 @@ endif
 
 simdjson_dep = dependency('simdjson', version: '>=0.9.0', required: false)
 
-if not simdjson_dep.found()
+# Old Meson versions are unable to extract the version from simdjson
+simdjson_dep_found = simdjson_dep.found()
+if simdjson_dep_found
+	simdjson_version = compiler.get_define(
+		'SIMDJSON_VERSION',
+		dependencies: simdjson_dep,
+		prefix: '#include <simdjson.h>'
+	)
+	simdjson_dep_found = simdjson_version.version_compare('>=0.9.0')
+endif
+
+if not simdjson_dep_found
 	if not get_option('muon')
 		if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
 			warning('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
