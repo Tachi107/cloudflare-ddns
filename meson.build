@@ -66,7 +66,7 @@ if not libcurl_dep.found()
 	endif
 endif
 
-simdjson_dep = dependency('simdjson', required: false)
+simdjson_dep = dependency('simdjson', version: '>=0.9.0', required: false)
 
 if not simdjson_dep.found()
 	if not get_option('muon')
