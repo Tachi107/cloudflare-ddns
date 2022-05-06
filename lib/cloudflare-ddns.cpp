@@ -56,6 +56,7 @@ namespace json {
 	using simdjson::ondemand::document;
 	using simdjson::ondemand::object;
 	using simdjson::ondemand::array;
+	using simdjson::error_code::SUCCESS;
 }
 
 namespace priv {
@@ -214,7 +215,7 @@ DDNS_NODISCARD int ddns_get_record(
 	json::parser parser;
 
 	json::document json;
-	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != simdjson::SUCCESS) {
+	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
 		return 1;
 	}
 
@@ -223,26 +224,26 @@ DDNS_NODISCARD int ddns_get_record(
 	json::object result;
 	{
 		json::array results;
-		if (json["result"].get(results) != simdjson::SUCCESS) {
+		if (json["result"].get(results) != json::SUCCESS) {
 			return 1;
 		}
-		if ((*results.begin()).get(result) != simdjson::SUCCESS) {
+		if ((*results.begin()).get(result) != json::SUCCESS) {
 			return 1;
 		}
 	}
 
 	std::string_view record_id_sv;
-	if (result["id"].get(record_id_sv) != simdjson::SUCCESS) {
+	if (result["id"].get(record_id_sv) != json::SUCCESS) {
 		return 1;
 	}
 
 	std::string_view type;
-	if (result["type"].get(type) != simdjson::SUCCESS) {
+	if (result["type"].get(type) != json::SUCCESS) {
 		return 1;
 	}
 
 	std::string_view record_ip_sv;
-	if (result["content"].get(record_ip_sv) != simdjson::SUCCESS) {
+	if (result["content"].get(record_ip_sv) != json::SUCCESS) {
 		return 1;
 	}
 
@@ -343,17 +344,17 @@ DDNS_NODISCARD int ddns_update_record(
 	json::parser parser;
 
 	json::document json;
-	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != simdjson::SUCCESS) {
+	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
 		return 1;
 	}
 
 	json::object result;
-	if (json["result"].get(result) != simdjson::SUCCESS) {
+	if (json["result"].get(result) != json::SUCCESS) {
 		return 1;
 	}
 
 	std::string_view record_ip_sv;
-	if (result["content"].get(record_ip_sv) != simdjson::SUCCESS) {
+	if (result["content"].get(record_ip_sv) != json::SUCCESS) {
 		return 1;
 	}
 
