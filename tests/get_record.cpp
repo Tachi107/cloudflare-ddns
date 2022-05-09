@@ -62,7 +62,7 @@ int main() {
 			record_ip.size(), record_ip.data(),
 			record_id.size(), record_id.data(),
 			&aaaa
-		), 0));
+		), DDNS_ERROR_OK));
 
 		expect(eq(
 			std::string_view{address.data()},
@@ -84,7 +84,7 @@ int main() {
 		//		record_ip.size(), record_ip.data(),
 		//		record_id.size(), record_id.data()
 		//	),
-		//	2
+		//	DDNS_ERROR_USAGE
 		//));
 
 		expect(eq(
@@ -96,7 +96,7 @@ int main() {
 				record_id.size(), record_id.data(),
 				&aaaa
 			),
-			2
+			DDNS_ERROR_USAGE
 		));
 
 		expect(eq(
@@ -112,7 +112,7 @@ int main() {
 				record_id.size(), record_id.data(),
 				&aaaa
 			),
-			2
+			DDNS_ERROR_USAGE
 		));
 	};
 }

@@ -111,7 +111,7 @@ int main(const int argc, const char* const argv[]) {
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
 
-	int error = ddns_get_record_raw(api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle);
+	ddns_error error = ddns_get_record_raw(api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle);
 	if (error) {
 		std::cerr << "Error getting DNS record info\n";
 		curl_cleanup(&curl_handle);
@@ -155,7 +155,7 @@ int main(const int argc, const char* const argv[]) {
 			id,
 			local_ip.data(),
 			&curl_handle
-		) != 0) {
+		) != DDNS_ERROR_OK) {
 			std::cerr << "Error updating the DNS record\n";
 			curl_cleanup(&curl_handle);
 			return EXIT_FAILURE;

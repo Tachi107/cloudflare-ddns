@@ -22,7 +22,7 @@ int main() {
 			record_ip.size(), record_ip.data(),
 			record_id.size(), record_id.data(),
 			&aaaa
-		), 0));
+		), DDNS_ERROR_OK));
 
 		expect(eq(ddns_update_record(
 			test_api_token.data(),
@@ -30,7 +30,7 @@ int main() {
 			record_id.data(),
 			local_ip.data(),
 			record_ip.size(), record_ip.data()
-		), 0));
+		), DDNS_ERROR_OK));
 
 		expect(eq(
 			std::string_view{local_ip.data()},
@@ -48,7 +48,7 @@ int main() {
 		//		"a string that is 32 chars looong",
 		//		"1.2.3.4",
 		//		record_ip.size(), record_ip.data()
-		//	), 2
+		//	), DDNS_ERROR_USAGE
 		//));
 
 		expect(eq(
@@ -58,7 +58,7 @@ int main() {
 				"a string that is 32 chars looong",
 				"1.2.3.4",
 				record_ip.size(), record_ip.data()
-			), 2
+			), DDNS_ERROR_USAGE
 		));
 
 		expect(eq(
@@ -68,7 +68,7 @@ int main() {
 				"a string that is not 32 characters long",
 				"1.2.3.4",
 				record_ip.size(), record_ip.data()
-			), 2
+			), DDNS_ERROR_USAGE
 		));
 
 		expect(eq(
@@ -78,7 +78,7 @@ int main() {
 				"a string that is 32 chars looong",
 				"Ciao a tutti ragazzi e bentornati in questo nuovo video io sono Tachi_107",
 				record_ip.size(), record_ip.data()
-			), 2
+			), DDNS_ERROR_USAGE
 		));
 	};
 }

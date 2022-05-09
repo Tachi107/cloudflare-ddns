@@ -139,7 +139,7 @@ static void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRIC
 
 } // namespace priv
 
-DDNS_NODISCARD int ddns_get_local_ip(
+DDNS_NODISCARD ddns_error ddns_get_local_ip(
 	size_t ip_size,
 	char* DDNS_RESTRICT ip,
 	bool ipv6
@@ -170,7 +170,7 @@ DDNS_NODISCARD int ddns_get_local_ip(
 
 	if (curl_error) {
 		// I can return as I've cleaned up everything
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	const std::string_view response_sv {response.buffer, response.size};
@@ -180,7 +180,7 @@ DDNS_NODISCARD int ddns_get_local_ip(
 	const std::size_t ip_length {ip_end - ip_begin};
 
 	if (ip_length >= ip_size) {
-		return 2;
+		return DDNS_ERROR_USAGE;
 	}
 
 	// Copying the ip in the caller's buffer
@@ -188,10 +188,10 @@ DDNS_NODISCARD int ddns_get_local_ip(
 	std::memcpy(ip, response.buffer + ip_begin, ip_length);
 	ip[ip_length] = '\0';
 
-	return 0;
+	return DDNS_ERROR_OK;
 }
 
-DDNS_NODISCARD int ddns_get_record(
+DDNS_NODISCARD ddns_error ddns_get_record(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_name,
@@ -204,7 +204,7 @@ DDNS_NODISCARD int ddns_get_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	const int error = ddns_get_record_raw(api_token, zone_id, record_name, &curl);
+	const ddns_error error = ddns_get_record_raw(api_token, zone_id, record_name, &curl);
 
 	curl_easy_cleanup(curl);
 
@@ -216,7 +216,7 @@ DDNS_NODISCARD int ddns_get_record(
 
 	json::document json;
 	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	// Cloudflare returns a json array of one element containing the
@@ -225,30 +225,30 @@ DDNS_NODISCARD int ddns_get_record(
 	{
 		json::array results;
 		if (json["result"].get(results) != json::SUCCESS) {
-			return 1;
+			return DDNS_ERROR_GENERIC;
 		}
 		if ((*results.begin()).get(result) != json::SUCCESS) {
-			return 1;
+			return DDNS_ERROR_GENERIC;
 		}
 	}
 
 	std::string_view record_id_sv;
 	if (result["id"].get(record_id_sv) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	std::string_view type;
 	if (result["type"].get(type) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	std::string_view record_ip_sv;
 	if (result["content"].get(record_ip_sv) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	if (record_ip_sv.length() >= record_ip_size || record_id_sv.length() >= record_id_size) {
-		return 2;
+		return DDNS_ERROR_USAGE;
 	}
 
 	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.length());
@@ -259,10 +259,10 @@ DDNS_NODISCARD int ddns_get_record(
 
 	*aaaa = (type == "AAAA");
 
-	return 0;
+	return DDNS_ERROR_OK;
 }
 
-DDNS_NODISCARD int ddns_get_record_raw(
+DDNS_NODISCARD ddns_error ddns_get_record_raw(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_name,
@@ -272,7 +272,7 @@ DDNS_NODISCARD int ddns_get_record_raw(
 
 	// The length of API IDs should always be 32
 	if (std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || record_name_length > DDNS_RECORD_NAME_MAX_LENGTH) {
-		return 2;
+		return DDNS_ERROR_USAGE;
 	}
 
 	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
@@ -315,13 +315,13 @@ DDNS_NODISCARD int ddns_get_record_raw(
 	curl_slist_free_all(free_me_doh);
 
 	if (curl_error) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
-	return 0;
+	return DDNS_ERROR_OK;
 }
 
-DDNS_NODISCARD int ddns_update_record(
+DDNS_NODISCARD ddns_error ddns_update_record(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_id,
@@ -333,7 +333,7 @@ DDNS_NODISCARD int ddns_update_record(
 
 	priv::curl_handle_setup(&curl, response);
 
-	const int error = ddns_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
+	const ddns_error error = ddns_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
 
 	curl_easy_cleanup(curl);
 
@@ -345,30 +345,30 @@ DDNS_NODISCARD int ddns_update_record(
 
 	json::document json;
 	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	json::object result;
 	if (json["result"].get(result) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	std::string_view record_ip_sv;
 	if (result["content"].get(record_ip_sv) != json::SUCCESS) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
 	if (record_ip_sv.length() >= record_ip_size) {
-		return 2;
+		return DDNS_ERROR_USAGE;
 	}
 
 	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.length());
 	record_ip[record_ip_sv.length()] = '\0';
 
-	return 0;
+	return DDNS_ERROR_OK;
 }
 
-DDNS_NODISCARD int ddns_update_record_raw(
+DDNS_NODISCARD ddns_error ddns_update_record_raw(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_id,
@@ -379,7 +379,7 @@ DDNS_NODISCARD int ddns_update_record_raw(
 
 	// The length of API IDs should always be 32
 	if (std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || std::strlen(record_id) != DDNS_RECORD_ID_LENGTH || new_ip_length > DDNS_IP_ADDRESS_MAX_LENGTH) {
-		return 2;
+		return DDNS_ERROR_USAGE;
 	}
 
 	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
@@ -443,10 +443,10 @@ DDNS_NODISCARD int ddns_update_record_raw(
 	curl_slist_free_all(free_me_doh);
 
 	if (curl_error) {
-		return 1;
+		return DDNS_ERROR_GENERIC;
 	}
 
-	return 0;
+	return DDNS_ERROR_OK;
 }
 
 } // extern "C"
