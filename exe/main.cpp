@@ -133,7 +133,7 @@ int main(const int argc, const char* const argv[]) {
 
 	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
 
-	error = ddns_get_local_ip(local_ip.size(), local_ip.data(), ipv6);
+	error = ddns_get_local_ip(ipv6, local_ip.size(), local_ip.data());
 	if (error) {
 		std::cerr << "Error getting the local IP address\n";
 		curl_cleanup(&curl_handle);

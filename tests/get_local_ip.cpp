@@ -34,7 +34,7 @@ int main() {
 
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
 
-		expect(eq(ddns_get_local_ip(local_ip.size(), local_ip.data(), false), DDNS_ERROR_OK));
+		expect(eq(ddns_get_local_ip(false, local_ip.size(), local_ip.data()), DDNS_ERROR_OK));
 
 		expect(eq(
 			std::string_view{local_ip.data()},

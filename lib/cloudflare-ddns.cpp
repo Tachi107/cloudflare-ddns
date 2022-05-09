@@ -140,9 +140,9 @@ static void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRIC
 } // namespace priv
 
 DDNS_NODISCARD ddns_error ddns_get_local_ip(
+	bool ipv6,
 	size_t ip_size,
-	char* DDNS_RESTRICT ip,
-	bool ipv6
+	char* DDNS_RESTRICT ip
 ) DDNS_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};

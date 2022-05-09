@@ -131,7 +131,8 @@ typedef enum ddns_error {
  * determining the kind of IP address returned.
  */
 DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_local_ip(
-	size_t ip_size, char* DDNS_RESTRICT ip, bool ipv6
+	bool ipv6,
+	size_t ip_size, char* DDNS_RESTRICT ip
 ) DDNS_NOEXCEPT;
 
 /**
