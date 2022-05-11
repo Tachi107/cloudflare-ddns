@@ -5,18 +5,21 @@
  */
 
 #include <curl/curl.h>
+// curl.h redefines fopen on Windows, causing issues.
+#ifdef _WIN32
+namespace std {
+	static const auto& curlx_win32_fopen = fopen;
+}
+#endif
 
 #include <array> /* std::array */
 #include <cstddef> /* std::size_t */
 #include <cstdio> /* std::printf, std::fprintf, std::puts, std::fputs */
 #include <cstring> /* std::memcpy */
+#include <fstream> /* std::ifstream, std::ofstream */
 #include <string> /* std::string */
 #include <string_view> /* std::string_view */
 
-// curl.h redefines fopen on Windows, causing issues.
-#if defined(_WIN32) and defined(fopen)
-	#undef fopen
-#endif
 #include <INIReader.h>
 #include <simdjson.h>
 #include <ddns/cloudflare-ddns.h>
@@ -110,14 +113,23 @@ int main(const int argc, const char* const argv[]) {
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
 
+	ddns_error error = DDNS_ERROR_OK;
 	// +1 because of '\0'
 	std::array<char, DDNS_ZONE_ID_LENGTH + 1> zone_id;
 
-	ddns_error error = ddns_search_zone_id(api_token.c_str(), record_name.c_str(), zone_id.size(), zone_id.data());
-	if (error) {
-		std::fputs("Error getting the Zone ID\n", stderr);
-		curl_cleanup(&curl_handle);
-		return EXIT_FAILURE;
+	// Here the cache file is opened twice, the first time read-only and
+	// the second time write-only. This is because if the filesystem is
+	// mounted read-only I'm still able to read the cache, if available.
+	bool fail_read = std::ifstream{cache_path.data(), std::ios::binary}.read(zone_id.data(), zone_id.size()).fail();
+
+	if (fail_read || std::strlen(zone_id.data()) != DDNS_ZONE_ID_LENGTH) {
+		error = ddns_search_zone_id(api_token.c_str(), record_name.c_str(), zone_id.size(), zone_id.data());
+		if (error) {
+			std::fputs("Error getting the Zone ID\n", stderr);
+			curl_cleanup(&curl_handle);
+			return EXIT_FAILURE;
+		}
+		std::ofstream{cache_path.data(), std::ios::binary}.write(zone_id.data(), zone_id.size());
 	}
 
 	error = ddns_get_record_raw(api_token.c_str(), zone_id.data(), record_name.c_str(), &curl_handle);

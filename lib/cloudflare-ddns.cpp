@@ -16,9 +16,9 @@
 
 #include <curl/curl.h>
 // curl.h redefines fopen on Windows, causing issues.
-#if fopen == curlx_win32_fopen
+#ifdef _WIN32
 namespace std {
-	const auto& curlx_win32_fopen = fopen;
+	static const auto& curlx_win32_fopen = fopen;
 }
 #endif
 
