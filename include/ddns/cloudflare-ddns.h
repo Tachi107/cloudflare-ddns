@@ -8,9 +8,7 @@
  * There are two kinds of functions; the one that is self contained, thread
  * safe, that creates and uses its own cURL handle, and the other one that
  * borrows mutably a cURL handle, a more efficient approach but that is not
- * thread safe. They require that the handle is already properly
- * initialized as they use curl_easy_setopt just to set up the request type
- * and URL.
+ * thread safe.
  *
  * The user of the library is responsable for calling curl_global_init.
  *
@@ -108,6 +106,18 @@ extern "C" {
 #	define DDNS_NODISCARD
 #endif
 
+typedef enum ddns_ip_version {
+	DDNS_IP_VERSION_4,
+	DDNS_IP_VERSION_6,
+	DDNS_IP_VERSION_BOTH
+} ddns_ip_version;
+
+typedef enum ddns_error {
+	DDNS_ERROR_OK,
+	DDNS_ERROR_GENERIC,
+	DDNS_ERROR_USAGE
+} ddns_error;
+
 /**
  * Get the public IP address of the machine
  *
@@ -116,16 +126,71 @@ extern "C" {
  *
  * It creates its own cURL handle under the hood and writes the IP address
  * in dot-decimal notation in the ip parameter. If ip_size is too small,
- * the function returns 2; if some other error occurs, it returns 1. It
- * uses Cloudflare to determine the public address, querying
- * https://one.one.one.one/cdn-cgi/trace
+ * the function returns DDNS_ERROR_USAGE; if some other error occurs, it
+ * returns DDNS_ERROR_GENERIC. It uses Cloudflare to determine the public
+ * address, querying https://one.one.one.one/cdn-cgi/trace
  *
  * Depending on the value of the ipv6 parameter, the function will either
  * force the HTTP request to use IPv4 (false) or IPv6 (true), also
  * determining the kind of IP address returned.
  */
-DDNS_NODISCARD DDNS_PUB int ddns_get_local_ip(
-	size_t ip_size, char* DDNS_RESTRICT ip, bool ipv6
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_local_ip(
+	bool ipv6,
+	size_t ip_size, char* DDNS_RESTRICT ip
+) DDNS_NOEXCEPT;
+
+/**
+ * Get the Zone ID of a DNS record
+ *
+ * This function queries Cloudflare's API to retrieve the Zone ID of a
+ * given DNS record. As the API endpoint does not support fuzzy/partial
+ * search this function needs to potentially query the API several times.
+ * In particular, the supplied record name gets repeatedly truncated once a
+ * "." is encountered, and the remaining string is sent to the API until it
+ *  matches the zone name. This means that, for example, a record named
+ * "ddns.andrea.pappacoda.it" will result in three different API queries,
+ * namely with "ddns.andrea.pappacoda.it", "andrea.pappacoda.it", and
+ * "pappacoda.it". The full domain name is tried as well as it is
+ * completely legal to use the root domain name as an A or AAAA record,
+ * while the "it" TLD is not tried as Cloudflare does not allow zones to be
+ * top level domains.
+ *
+ * Due to the slow nature of this lookup, it is recommended to cache the
+ * returned ID, as zone IDs are unlikely to change often.
+ *
+ * If you already know the zone name and simply want to figure out its id,
+ * simply pass it as the "record_name" parameter; the function will query
+ * Cloudflare to get the ID of that zone name.
+ *
+ * The function returns DDNS_ERROR_USAGE if the record name is too long or
+ * zone_id_size is too small, and DDNS_ERROR_GENERIC for other internal
+ * errors, including failure to find the zone ID of the provided record
+ * name. If the zone is found, it is written in the zone_id out parameter.
+ */
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT record_name,
+	size_t zone_id_size, char* DDNS_RESTRICT zone_id
+) DDNS_NOEXCEPT;
+
+/**
+ * Get the Zone ID from a given Zone name
+ *
+ * This function asks Cloudflare's API to return the Zone ID of the zone
+ * whose name is equal to the zone_name parameter.
+ *
+ * The raw JSON response is written in the curl response buffer, and you'll
+ * have to parse it yourself to figure out whether the ID was found or not.
+ *
+ * If the supplied zone name is longer than the maximum allowed by the API,
+ * DDNS_RECORD_NAME_MAX_LENGTH - 2, the function returns DDNS_ERROR_USAGE,
+ * while if something goes wrong with the HTTP request it returns
+ * DDNS_ERROR_GENERIC.
+ */
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_zone_id_raw(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT zone_name,
+	void**      DDNS_RESTRICT curl
 ) DDNS_NOEXCEPT;
 
 /**
@@ -136,21 +201,22 @@ DDNS_NODISCARD DDNS_PUB int ddns_get_local_ip(
  * can be used to refer to it in the API and a boolean indicating whether
  * it is an A or AAAA record. The three values are written in record_ip,
  * record_id, and aaaa respectively. If their _size is too small,
- * the function returns 2; if some other error occurs, it returns 1. Since
- * Cloudflare's API returns data in JSON form, the function uses simdjson
- * to parse that data as fast as possible. Since the function has to access
- * the response of the HTTP GET request it has to create and manage its own
- * cURL handle internally, and this hurts a bit in terms of performance. If
- * you prefer to control your own cURL handles to get better performance you
- * can use get_record_raw(), but you'll have to parse the result yourself.
+ * the function returns DDNS_ERROR_USAGE; if some other error occurs, it
+ * returns DDNS_ERROR_GENERIC. Since Cloudflare's API returns data in JSON
+ * form, the function uses simdjson to parse that data as fast as possible.
+ * Since the function has to access the response of the HTTP GET request it
+ * has to create and manage its own cURL handle internally, and this hurts
+ * a bit in terms of performance. If you prefer to control your own cURL
+ * handles to get better performance you can use get_record_raw(), but you
+ * will have to parse the result yourself.
  */
-DDNS_NODISCARD DDNS_PUB int ddns_get_record(
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_record(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_name,
 	size_t record_ip_size, char* DDNS_RESTRICT record_ip,
 	size_t record_id_size, char* DDNS_RESTRICT record_id,
-	bool* aaaa
+	bool* DDNS_RESTRICT aaaa
 ) DDNS_NOEXCEPT;
 
 /**
@@ -163,10 +229,11 @@ DDNS_NODISCARD DDNS_PUB int ddns_get_record(
  * get_record(), but you'll have to consult Cloudflare's API reference and
  * you'll also need to parse the result yourself. If the length of the zone
  * id is not DDNS_ZONE_ID_LENGTH, or if the length of the record name is
- * greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns 2; if
- * something goes wrong with the HTTP request, it returns 1.
+ * greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns
+ * DDNS_ERROR_USAGE; if something goes wrong with the HTTP request, it
+ * returns DDNS_ERROR_GENERIC.
  */
-DDNS_NODISCARD DDNS_PUB int ddns_get_record_raw(
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_record_raw(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_name,
@@ -184,12 +251,12 @@ DDNS_NODISCARD DDNS_PUB int ddns_get_record_raw(
  * smaller than the size of the IP set by Cloudflare, or if the length of
  * the zone id is not DDNS_ZONE_ID_LENGTH, or if the length of the record
  * name is greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns
- * 2; on any other error, it returns 1. This function is thread safe, but
- * it creates and destroys a cURL handle by  itself, which may be slow. If
- * you want faster performance by reusing the same handle you can look into
- * update_record_raw().
+ * DDNS_ERROR_USAGE; on any other error, it returns DDNS_ERROR_GENERIC.
+ * This function is thread safe, but it creates and destroys a cURL handle
+ * by itself, which may be slow. If you want faster performance by reusing
+ * the same handle you can look into update_record_raw().
  */
-DDNS_NODISCARD DDNS_PUB int ddns_update_record(
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_update_record(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_id,
@@ -205,12 +272,12 @@ DDNS_NODISCARD DDNS_PUB int ddns_update_record(
  * passed as new_ip. You must pass in your own cURL handle, which allows
  * for better performance but has greater complexity. If the length of the
  * zone id is not DDNS_ZONE_ID_LENGTH, or if the length of the record name
- * is greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns 2; if
- * something goes wrong with the HTTP request, it returns 1. If you don't
- * particularly care about performance you can use the simpler
- * update_record() function.
+ * is greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns
+ * DDNS_ERROR_USAGE; if something goes wrong with the HTTP request, it
+ * returns DDNS_ERROR_GENERIC. If you don't particularly care about
+ * performance you can use the simpler update_record() function.
  */
-DDNS_NODISCARD DDNS_PUB int ddns_update_record_raw(
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_update_record_raw(
 	const char* DDNS_RESTRICT api_token,
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_id,

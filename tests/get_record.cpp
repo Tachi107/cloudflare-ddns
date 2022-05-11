@@ -35,7 +35,7 @@ int main() {
 		addrinfo* dns_response {nullptr};
 
 		const int error {
-			getaddrinfo(test_record_name.data(), nullptr, nullptr, &dns_response)
+			getaddrinfo(test_record_name, nullptr, nullptr, &dns_response)
 		};
 		expect(eq(error, 0)) << "getaddrinfo: " << gai_strerror(error);
 
@@ -56,13 +56,13 @@ int main() {
 		bool aaaa;
 
 		expect(eq(ddns_get_record(
-			test_api_token.data(),
-			test_zone_id.data(),
-			test_record_name.data(),
+			test_api_token,
+			test_zone_id,
+			test_record_name,
 			record_ip.size(), record_ip.data(),
 			record_id.size(), record_id.data(),
 			&aaaa
-		), 0));
+		), DDNS_ERROR_OK));
 
 		expect(eq(
 			std::string_view{address.data()},
@@ -79,30 +79,30 @@ int main() {
 		//expect(eq(
 		//	ddns_get_record(
 		//		"invalid api token",
-		//		test_zone_id.data(),
-		//		test_record_name.data(),
+		//		test_zone_id,
+		//		test_record_name,
 		//		record_ip.size(), record_ip.data(),
 		//		record_id.size(), record_id.data()
 		//	),
-		//	2
+		//	DDNS_ERROR_USAGE
 		//));
 
 		expect(eq(
 			ddns_get_record(
-				test_api_token.data(),
+				test_api_token,
 				"invalid zone id",
-				test_record_name.data(),
+				test_record_name,
 				record_ip.size(), record_ip.data(),
 				record_id.size(), record_id.data(),
 				&aaaa
 			),
-			2
+			DDNS_ERROR_USAGE
 		));
 
 		expect(eq(
 			ddns_get_record(
-				test_api_token.data(),
-				test_zone_id.data(),
+				test_api_token,
+				test_zone_id,
 				"Ciao a tutti ragazzi e bentornati in questo nuovo video io sono Tachi_107"
 				"ed oggi siamo qui nell'aspettatissimo -egh- guerra verso il drago e il wither"
 				"una roba che penso che nessuno abbia mai fatto perché è una roba malsana che non riusciremo mai a fare."
@@ -112,7 +112,7 @@ int main() {
 				record_id.size(), record_id.data(),
 				&aaaa
 			),
-			2
+			DDNS_ERROR_USAGE
 		));
 	};
 }

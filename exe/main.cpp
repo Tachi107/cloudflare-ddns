@@ -5,22 +5,25 @@
  */
 
 #include <curl/curl.h>
+// curl.h redefines fopen on Windows, causing issues.
+#ifdef _WIN32
+namespace std {
+	static const auto& curlx_win32_fopen = fopen;
+}
+#endif
 
 #include <array> /* std::array */
 #include <cstddef> /* std::size_t */
+#include <cstdio> /* std::printf, std::fprintf, std::puts, std::fputs */
 #include <cstring> /* std::memcpy */
-#include <iostream> /* std::cout, std::cerr */
+#include <fstream> /* std::ifstream, std::ofstream */
 #include <string> /* std::string */
 #include <string_view> /* std::string_view */
 
-// curl.h redefines fopen on Windows, causing issues.
-#if defined(_WIN32) and defined(fopen)
-	#undef fopen
-#endif
 #include <INIReader.h>
 #include <simdjson.h>
 #include <ddns/cloudflare-ddns.h>
-#include "config_path.hpp"
+#include "paths.hpp"
 
 namespace json {
 	using simdjson::ondemand::parser;
@@ -30,7 +33,7 @@ namespace json {
 }
 
 struct static_buffer {
-	static constexpr std::size_t capacity {1024}; // Tipical size of largest response (GET to fetch the DNS IP) plus some padding
+	static constexpr std::size_t capacity {CURL_MAX_WRITE_SIZE / 2}; // typical requests are smaller than 2000 bytes
 	std::size_t size {0};
 	char buffer[capacity];
 };
@@ -61,40 +64,39 @@ void curl_cleanup(CURL** curl) {
 
 int main(const int argc, const char* const argv[]) {
 	std::string api_token;
-	std::string zone_id;
 	std::string record_name;
 
 	if (argc == 1 || argc == 3) {
-		const std::string_view config_file {argc == 1 ? config_path : std::string_view{argv[2]}};
-		const INIReader reader {std::string{config_file}};
-
-		if (reader.ParseError() == -1) {
-			std::cerr << "Unable to open " << config_file << '\n';
-			return EXIT_FAILURE;
+		if (argc == 3 && std::strcmp(argv[1], "--config") != 0) {
+			api_token = argv[1];
+			record_name = argv[2];
 		}
-		else if (int error = reader.ParseError(); error > 0) {
-			std::cerr << "Error parsing " << config_file << " on line " << error << '\n';
-			return EXIT_FAILURE;
-		}
+		else {
+			const std::string config_file {argc == 1 ? config_path : argv[2]};
+			const INIReader reader {config_file};
 
-		api_token   = reader.GetString("ddns", "api_token",   "n");
-		zone_id     = reader.GetString("ddns", "zone_id",     "n");
-		record_name = reader.GetString("ddns", "record_name", "n");
+			if (reader.ParseError() == -1) {
+				std::fprintf(stderr, "Unable to open %s\n", config_file.c_str());
+				return EXIT_FAILURE;
+			}
+			else if (int error = reader.ParseError(); error > 0) {
+				std::fprintf(stderr, "Error parsing %s on line %d\n", config_file.c_str(), error);
+				return EXIT_FAILURE;
+			}
 
-		if (api_token == "n" || zone_id == "n" || record_name == "n") {
-			std::cerr << "Error parsing " << config_file << '\n';
-			return EXIT_FAILURE;
+			api_token   = reader.GetString("ddns", "api_token",   "token");
+			record_name = reader.GetString("ddns", "record_name", "name");
+
+			if (api_token == "token" || record_name == "name") {
+				std::fprintf(stderr, "Error parsing %s\n", config_file.c_str());
+				return EXIT_FAILURE;
+			}
 		}
-	}
-	else if (argc == 4) {
-		api_token = argv[1];
-		zone_id = argv[2];
-		record_name = argv[3];
 	}
 	else {
-		std::cerr
-			<< "Bad usage! You can run the program without arguments and load the config in " << config_path
-			<< " or pass the API token, the Zone ID and the DNS record name as arguments\n";
+		std::fprintf(stderr,
+			"Bad usage! You can run the program without arguments and load the config in %s "
+			"or pass the API token and the DNS record name as arguments\n", config_path.data());
 		return EXIT_FAILURE;
 	}
 
@@ -111,9 +113,28 @@ int main(const int argc, const char* const argv[]) {
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
 	curl_easy_setopt(curl_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
 
-	int error = ddns_get_record_raw(api_token.c_str(), zone_id.c_str(), record_name.c_str(), &curl_handle);
+	ddns_error error = DDNS_ERROR_OK;
+	// +1 because of '\0'
+	std::array<char, DDNS_ZONE_ID_LENGTH + 1> zone_id;
+
+	// Here the cache file is opened twice, the first time read-only and
+	// the second time write-only. This is because if the filesystem is
+	// mounted read-only I'm still able to read the cache, if available.
+	bool fail_read = std::ifstream{cache_path.data(), std::ios::binary}.read(zone_id.data(), zone_id.size()).fail();
+
+	if (fail_read || std::strlen(zone_id.data()) != DDNS_ZONE_ID_LENGTH) {
+		error = ddns_search_zone_id(api_token.c_str(), record_name.c_str(), zone_id.size(), zone_id.data());
+		if (error) {
+			std::fputs("Error getting the Zone ID\n", stderr);
+			curl_cleanup(&curl_handle);
+			return EXIT_FAILURE;
+		}
+		std::ofstream{cache_path.data(), std::ios::binary}.write(zone_id.data(), zone_id.size());
+	}
+
+	error = ddns_get_record_raw(api_token.c_str(), zone_id.data(), record_name.c_str(), &curl_handle);
 	if (error) {
-		std::cerr << "Error getting DNS record info\n";
+		std::fputs("Error getting DNS record info\n", stderr);
 		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
 	}
@@ -122,7 +143,7 @@ int main(const int argc, const char* const argv[]) {
 	json::document json {parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity)};
 
 	json::array result_arr = json["result"];
-	json::object result = *result_arr.begin();
+	json::object result = result_arr.at(0);
 
 	// parse values in the expected order to improve performance
 	const std::string_view id_sv = result["id"];
@@ -133,9 +154,9 @@ int main(const int argc, const char* const argv[]) {
 
 	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
 
-	error = ddns_get_local_ip(local_ip.size(), local_ip.data(), ipv6);
+	error = ddns_get_local_ip(ipv6, local_ip.size(), local_ip.data());
 	if (error) {
-		std::cerr << "Error getting the local IP address\n";
+		std::fputs("Error getting the local IP address\n", stderr);
 		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
 	}
@@ -151,20 +172,21 @@ int main(const int argc, const char* const argv[]) {
 		dns_response.size = 0;
 		if (ddns_update_record_raw(
 			api_token.c_str(),
-			zone_id.c_str(),
+			zone_id.data(),
 			id,
 			local_ip.data(),
 			&curl_handle
-		) != 0) {
-			std::cerr << "Error updating the DNS record\n";
+		) != DDNS_ERROR_OK) {
+			std::fputs("Error updating the DNS record\n", stderr);
 			curl_cleanup(&curl_handle);
 			return EXIT_FAILURE;
 		}
 		json::document json = parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity);
-		std::cout << "New IP: " << json["result"]["content"] << '\n';
+		const std::string_view new_ip = json["result"]["content"];
+		std::printf("New IP: %.*s\n", static_cast<int>(new_ip.length()), new_ip.data());
 	}
 	else {
-		std::cout << "The DNS is up to date\n";
+		std::puts("The DNS is up to date");
 	}
 	curl_cleanup(&curl_handle);
 }
