@@ -8,9 +8,7 @@
  * There are two kinds of functions; the one that is self contained, thread
  * safe, that creates and uses its own cURL handle, and the other one that
  * borrows mutably a cURL handle, a more efficient approach but that is not
- * thread safe. They require that the handle is already properly
- * initialized as they use curl_easy_setopt just to set up the request type
- * and URL.
+ * thread safe.
  *
  * The user of the library is responsable for calling curl_global_init.
  *
@@ -108,6 +106,12 @@ extern "C" {
 #	define DDNS_NODISCARD
 #endif
 
+typedef enum ddns_ip_version {
+	DDNS_IP_VERSION_4,
+	DDNS_IP_VERSION_6,
+	DDNS_IP_VERSION_BOTH
+} ddns_ip_version;
+
 typedef enum ddns_error {
 	DDNS_ERROR_OK,
 	DDNS_ERROR_GENERIC,
@@ -136,6 +140,60 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_local_ip(
 ) DDNS_NOEXCEPT;
 
 /**
+ * Get the Zone ID of a DNS record
+ *
+ * This function queries Cloudflare's API to retrieve the Zone ID of a
+ * given DNS record. As the API endpoint does not support fuzzy/partial
+ * search this function needs to potentially query the API several times.
+ * In particular, the supplied record name gets repeatedly truncated once a
+ * "." is encountered, and the remaining string is sent to the API until it
+ *  matches the zone name. This means that, for example, a record named
+ * "ddns.andrea.pappacoda.it" will result in three different API queries,
+ * namely with "ddns.andrea.pappacoda.it", "andrea.pappacoda.it", and
+ * "pappacoda.it". The full domain name is tried as well as it is
+ * completely legal to use the root domain name as an A or AAAA record,
+ * while the "it" TLD is not tried as Cloudflare does not allow zones to be
+ * top level domains.
+ *
+ * Due to the slow nature of this lookup, it is recommended to cache the
+ * returned ID, as zone IDs are unlikely to change often.
+ *
+ * If you already know the zone name and simply want to figure out its id,
+ * simply pass it as the "record_name" parameter; the function will query
+ * Cloudflare to get the ID of that zone name.
+ *
+ * The function returns DDNS_ERROR_USAGE if the record name is too long or
+ * zone_id_size is too small, and DDNS_ERROR_GENERIC for other internal
+ * errors, including failure to find the zone ID of the provided record
+ * name. If the zone is found, it is written in the zone_id out parameter.
+ */
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT record_name,
+	size_t zone_id_size, char* DDNS_RESTRICT zone_id
+) DDNS_NOEXCEPT;
+
+/**
+ * Get the Zone ID from a given Zone name
+ *
+ * This function asks Cloudflare's API to return the Zone ID of the zone
+ * whose name is equal to the zone_name parameter.
+ *
+ * The raw JSON response is written in the curl response buffer, and you'll
+ * have to parse it yourself to figure out whether the ID was found or not.
+ *
+ * If the supplied zone name is longer than the maximum allowed by the API,
+ * DDNS_RECORD_NAME_MAX_LENGTH - 2, the function returns DDNS_ERROR_USAGE,
+ * while if something goes wrong with the HTTP request it returns
+ * DDNS_ERROR_GENERIC.
+ */
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_zone_id_raw(
+	const char* DDNS_RESTRICT api_token,
+	const char* DDNS_RESTRICT zone_name,
+	void**      DDNS_RESTRICT curl
+) DDNS_NOEXCEPT;
+
+/**
  * Get the current IP address of a given A/AAAA DNS record
  *
  * This function queries Cloudflare's API to retrieve the status of a given
@@ -158,7 +216,7 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_record(
 	const char* DDNS_RESTRICT record_name,
 	size_t record_ip_size, char* DDNS_RESTRICT record_ip,
 	size_t record_id_size, char* DDNS_RESTRICT record_id,
-	bool* aaaa
+	bool* DDNS_RESTRICT aaaa
 ) DDNS_NOEXCEPT;
 
 /**

@@ -9,7 +9,7 @@ cloudflare-ddns(1) -- dynamically update a DNS record
 
 ## SYNOPSIS
 
-`cloudflare-ddns` [<api_token> <zone_id> <record_name>] [--config <file>]
+`cloudflare-ddns` [<api_token> <record_name>] [--config <file>]
 
 ## DESCRIPTION
 
@@ -17,9 +17,9 @@ cloudflare-ddns(1) -- dynamically update a DNS record
 
 This tool is a oneshot program: you run it, it updates the DNS record, and it terminates. To make it run periodically you could use a systemd timer or a cron job.
 
-To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens) and the Zone ID of the DNS that you want to update; you can get the latter in the Overview panel of your zone.
+To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens).
 
-You can run `cloudflare-ddns` in two different ways: you can pass the API Token, the Zone ID and the record name as command line arguments, or you can use a ini configuration file, located in `/etc/cloudflare-ddns/config.ini`, by passing no arguments at all. If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
+You can run `cloudflare-ddns` in two different ways: you can pass the API Token and the record name as command line arguments, or you can use a ini configuration file, located in `@sysconfdir@/cloudflare-ddns/config.ini`, by passing no arguments at all. If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
 ## OPTIONS
 

@@ -24,7 +24,8 @@ Checks: '*,
   -llvmlibc-implementation-in-namespace,
   -altera-unroll-loops,
   -altera-struct-pack-align,
-  -bugprone-easily-swappable-parameters'
+  -bugprone-easily-swappable-parameters,
+  -altera-id-dependent-backward-branch'
 
 CheckOptions:
   - key: llvm-namespace-comment.ShortNamespaceLines

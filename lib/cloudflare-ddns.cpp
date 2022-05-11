@@ -140,9 +140,8 @@ static void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRIC
 } // namespace priv
 
 DDNS_NODISCARD ddns_error ddns_get_local_ip(
-	bool ipv6,
-	size_t ip_size,
-	char* DDNS_RESTRICT ip
+	const bool ipv6,
+	const size_t ip_size, char* DDNS_RESTRICT ip
 ) DDNS_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
@@ -191,12 +190,146 @@ DDNS_NODISCARD ddns_error ddns_get_local_ip(
 	return DDNS_ERROR_OK;
 }
 
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
+	const char* const DDNS_RESTRICT api_token,
+	const char* const DDNS_RESTRICT record_name,
+	const size_t zone_id_size, char* DDNS_RESTRICT zone_id
+) DDNS_NOEXCEPT {
+	// <= because I also have to write '\0'
+	if (zone_id_size <= DDNS_ZONE_ID_LENGTH) {
+		return DDNS_ERROR_USAGE;
+	}
+
+	std::string_view record_name_sv = record_name;
+
+	CURL* curl = curl_easy_init();
+	priv::static_buffer response;
+
+	priv::curl_handle_setup(&curl, response);
+
+	json::parser parser;
+
+	std::string_view zone_id_sv;
+
+	bool found = false;
+
+	for (auto pos = record_name_sv.find_first_of('.'); !found && pos != std::string_view::npos; pos = record_name_sv.find_first_of('.')) {
+		// before making a new request I have to reset the current buffer size
+		response.size = 0;
+
+		const ddns_error error = ddns_get_zone_id_raw(api_token, record_name_sv.data(), &curl);
+
+		// +1 because I also need to remove the leading dot
+		record_name_sv.remove_prefix(pos + 1);
+
+		if (error == DDNS_ERROR_USAGE) {
+			// a usage error will make the request fail over and over again
+			curl_easy_cleanup(curl);
+			return error;
+		}
+		else if (error) {
+			// here continue acts as "retry"
+			continue;
+		}
+
+		json::document json;
+		if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
+			continue;
+		}
+
+		// Cloudflare returns a json array of one element containing the
+		// actual result object
+		json::object result;
+		{
+			json::array results;
+			if (json["result"].get(results) != json::SUCCESS) {
+				continue;
+			}
+			if (results.at(0).get(result) != json::SUCCESS) {
+				continue;
+			}
+		}
+
+		if (result["id"].get(zone_id_sv) != json::SUCCESS) {
+			continue;
+		}
+
+		if (zone_id_sv.length() != DDNS_ZONE_ID_LENGTH) {
+			continue;
+		}
+
+		found = true;
+	}
+
+	curl_easy_cleanup(curl);
+
+	if (!found) {
+		return DDNS_ERROR_GENERIC;
+	}
+
+	std::memcpy(zone_id, zone_id_sv.data(), zone_id_sv.length());
+	zone_id[zone_id_sv.length()] = '\0';
+
+	return DDNS_ERROR_OK;
+}
+
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_zone_id_raw(
+	const char* const DDNS_RESTRICT api_token,
+	const char* const DDNS_RESTRICT zone_name,
+	void**            DDNS_RESTRICT curl
+) DDNS_NOEXCEPT {
+	const std::size_t zone_name_length = std::strlen(zone_name);
+
+	// -2 because this endpoint has a maximum record name length of 253
+	constexpr std::size_t zone_name_max_length = DDNS_RECORD_NAME_MAX_LENGTH - 2U;
+
+	if (zone_name_length > zone_name_max_length) {
+		return DDNS_ERROR_USAGE;
+	}
+
+	constexpr std::string_view zones_url = "?per_page=1&name=";
+
+	constexpr std::size_t request_url_capacity =
+		base_url.length() +
+		zones_url.length() +
+		zone_name_max_length
+	;
+
+	// +1 because of '\0'
+	char request_url[request_url_capacity + 1];
+
+	// create the request url
+	std::memcpy(request_url, base_url.data(), base_url.length());
+	std::memcpy(request_url + base_url.length(), zones_url.data(), zones_url.length());
+	std::memcpy(request_url + base_url.length() + zones_url.length(), zone_name, zone_name_length);
+	request_url[base_url.length() + zones_url.length() + zone_name_length] = '\0';
+
+	curl_slist* free_me_doh = priv::curl_doh_setup(curl);
+	curl_slist* free_me_headers = priv::curl_auth_setup(curl, api_token);
+
+	priv::curl_get_setup(curl, request_url);
+
+	const int curl_error = curl_easy_perform(*curl);
+
+	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, nullptr);
+	curl_slist_free_all(free_me_headers);
+
+	curl_easy_setopt(*curl, CURLOPT_RESOLVE, nullptr);
+	curl_slist_free_all(free_me_doh);
+
+	if (curl_error) {
+		return DDNS_ERROR_GENERIC;
+	}
+
+	return DDNS_ERROR_OK;
+}
+
 DDNS_NODISCARD ddns_error ddns_get_record(
-	const char* DDNS_RESTRICT api_token,
-	const char* DDNS_RESTRICT zone_id,
-	const char* DDNS_RESTRICT record_name,
-	size_t record_ip_size, char* DDNS_RESTRICT record_ip,
-	size_t record_id_size, char* DDNS_RESTRICT record_id,
+	const char* const DDNS_RESTRICT api_token,
+	const char* const DDNS_RESTRICT zone_id,
+	const char* const DDNS_RESTRICT record_name,
+	const size_t record_ip_size, char* DDNS_RESTRICT record_ip,
+	const size_t record_id_size, char* DDNS_RESTRICT record_id,
 	bool* aaaa
 ) DDNS_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
@@ -227,7 +360,7 @@ DDNS_NODISCARD ddns_error ddns_get_record(
 		if (json["result"].get(results) != json::SUCCESS) {
 			return DDNS_ERROR_GENERIC;
 		}
-		if ((*results.begin()).get(result) != json::SUCCESS) {
+		if (results.at(0).get(result) != json::SUCCESS) {
 			return DDNS_ERROR_GENERIC;
 		}
 	}
@@ -275,9 +408,6 @@ DDNS_NODISCARD ddns_error ddns_get_record_raw(
 		return DDNS_ERROR_USAGE;
 	}
 
-	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
-	curl_slist* free_me_headers {priv::curl_auth_setup(curl, api_token)};
-
 	constexpr std::string_view dns_records_url {"/dns_records?type=A,AAAA&name="};
 
 	constexpr std::size_t request_url_capacity {
@@ -304,6 +434,9 @@ DDNS_NODISCARD ddns_error ddns_get_record_raw(
 	std::memcpy(request_url + base_url.length() + DDNS_ZONE_ID_LENGTH + dns_records_url.length(), record_name, record_name_length);
 	request_url[request_url_length] = '\0';
 
+	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
+	curl_slist* free_me_headers {priv::curl_auth_setup(curl, api_token)};
+
 	priv::curl_get_setup(curl, request_url);
 
 	const int curl_error = curl_easy_perform(*curl);
@@ -326,7 +459,7 @@ DDNS_NODISCARD ddns_error ddns_update_record(
 	const char* DDNS_RESTRICT zone_id,
 	const char* DDNS_RESTRICT record_id,
 	const char* DDNS_RESTRICT new_ip,
-	size_t record_ip_size, char* DDNS_RESTRICT record_ip
+	const size_t record_ip_size, char* DDNS_RESTRICT record_ip
 ) DDNS_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
 	priv::static_buffer response;
