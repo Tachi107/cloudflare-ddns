@@ -40,6 +40,7 @@ endif
 tests = [
 	'get_local_ip',
 	'get_record',
+	'search_zone_id',
 	'update_record'
 ]
 
