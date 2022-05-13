@@ -76,16 +76,17 @@ int main() {
 		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
 		bool aaaa;
 
-		//expect(eq(
-		//	ddns_get_record(
-		//		"invalid api token",
-		//		test_zone_id,
-		//		test_record_name,
-		//		record_ip.size(), record_ip.data(),
-		//		record_id.size(), record_id.data()
-		//	),
-		//	DDNS_ERROR_USAGE
-		//));
+		expect(eq(
+			ddns_get_record(
+				"invalid api token",
+				test_zone_id,
+				test_record_name,
+				record_ip.size(), record_ip.data(),
+				record_id.size(), record_id.data(),
+				&aaaa
+			),
+			DDNS_ERROR_USAGE
+		));
 
 		expect(eq(
 			ddns_get_record(

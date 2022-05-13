@@ -26,6 +26,7 @@ extern "C" {
 #define DDNS_RECORD_ID_LENGTH       32U
 #define DDNS_RECORD_NAME_MAX_LENGTH 255U
 #define DDNS_IP_ADDRESS_MAX_LENGTH  46U
+#define DDNS_API_TOKEN_LENGTH       40U
 
 #include <stdbool.h> /* bool */
 #include <stddef.h> /* size_t */

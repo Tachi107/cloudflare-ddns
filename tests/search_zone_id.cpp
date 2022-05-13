@@ -36,6 +36,15 @@ int main() {
 
 		expect(eq(
 			ddns_search_zone_id(
+				"invalid api token",
+				test_record_name,
+				zone_id.size(), zone_id.data()
+			),
+			DDNS_ERROR_USAGE
+		));
+
+		expect(eq(
+			ddns_search_zone_id(
 				test_api_token,
 				"Ciao a tutti ragazzi e bentornati in questo nuovo video io sono Tachi_107"
 				"ed oggi siamo qui nell'aspettatissimo -egh- guerra verso il drago e il wither"

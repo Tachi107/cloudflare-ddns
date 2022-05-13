@@ -41,15 +41,15 @@ int main() {
 	// Still can't report an invalid token or IP address
 	"update_record_bad_usage"_test = [] {
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
-		//expect(eq(
-		//	ddns_update_record(
-		//		"an invalid token",
-		//		test_zone_id,
-		//		"a string that is 32 chars looong",
-		//		"1.2.3.4",
-		//		record_ip.size(), record_ip.data()
-		//	), DDNS_ERROR_USAGE
-		//));
+		expect(eq(
+			ddns_update_record(
+				"an invalid token",
+				test_zone_id,
+				"a string that is 32 chars looong",
+				"1.2.3.4",
+				record_ip.size(), record_ip.data()
+			), DDNS_ERROR_USAGE
+		));
 
 		expect(eq(
 			ddns_update_record(

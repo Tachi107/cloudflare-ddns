@@ -32,19 +32,6 @@ namespace std {
  * length of every parameter. With this knowledge, I can statically
  * figure out how much memory I need to make my requests, and I can
  * thus avoid dynamic memory allocations when creating the request URLs
- *
- * Ok, questo va bene per determinare la dimensione massima del buffer,
- * ma mi serve anche la dimensione effettiva, dato che devo inserire il
- * carattere terminatore e anche dire a memcpy il numero esatto di byte
- * che deve copiare. Per quanto riguarda la lunghezza di zone_id e
- * record_id non devo fare nulla di particolare, in quanto quella è sia
- * la lunghezza massima che la lunghezza effettiva (almeno, spero). Le
- * cose però cambiano quando si parla di record_name_length e
- * ip_address_length, perché la loro lunghezza effettiva è solitamente
- * minore rispetto a quella massima. Devo anche ricordarmi di fare dei
- * controlli per assicurarmi che la lunghezza del record_name e dell'ip
- * address inserito dall'utente siano minori di quelle massime, perché
- * altrimenti rischierei di incorrere in alcuni buffer overflow.
  */
 
 extern "C" {
@@ -119,9 +106,17 @@ DDNS_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** DDNS_RE
 // I should probably check that api_token is somewhat valid
 DDNS_NODISCARD static curl_slist* curl_auth_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const api_token) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
-	curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token);
+	//curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token); leaks, see https://github.com/curl/curl/issues/8841
+
+	// -1 because I have to overwrite the '\0'
+	constexpr std::size_t bearer_length = sizeof "Authorization: Bearer " - 1;
+	char bearer[bearer_length + DDNS_API_TOKEN_LENGTH + 1] = "Authorization: Bearer ";
+	std::memcpy(bearer + bearer_length, api_token, DDNS_API_TOKEN_LENGTH);
+	bearer[bearer_length + DDNS_API_TOKEN_LENGTH] = '\0';
+
 	struct curl_slist* headers {nullptr};
 	headers = curl_slist_append(headers, "Content-Type: application/json");
+	headers = curl_slist_append(headers, bearer);
 	curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, headers);
 	return headers;
 }
@@ -283,7 +278,7 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_zone_id_raw(
 	// -2 because this endpoint has a maximum record name length of 253
 	constexpr std::size_t zone_name_max_length = DDNS_RECORD_NAME_MAX_LENGTH - 2U;
 
-	if (zone_name_length > zone_name_max_length) {
+	if (std::strlen(api_token) != DDNS_API_TOKEN_LENGTH || zone_name_length > zone_name_max_length) {
 		return DDNS_ERROR_USAGE;
 	}
 
@@ -403,8 +398,7 @@ DDNS_NODISCARD ddns_error ddns_get_record_raw(
 ) DDNS_NOEXCEPT {
 	const std::size_t record_name_length {std::strlen(record_name)};
 
-	// The length of API IDs should always be 32
-	if (std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || record_name_length > DDNS_RECORD_NAME_MAX_LENGTH) {
+	if (std::strlen(api_token) != DDNS_API_TOKEN_LENGTH || std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || record_name_length > DDNS_RECORD_NAME_MAX_LENGTH) {
 		return DDNS_ERROR_USAGE;
 	}
 
@@ -510,8 +504,7 @@ DDNS_NODISCARD ddns_error ddns_update_record_raw(
 ) DDNS_NOEXCEPT {
 	const std::size_t new_ip_length {std::strlen(new_ip)};
 
-	// The length of API IDs should always be 32
-	if (std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || std::strlen(record_id) != DDNS_RECORD_ID_LENGTH || new_ip_length > DDNS_IP_ADDRESS_MAX_LENGTH) {
+	if (std::strlen(api_token) != DDNS_API_TOKEN_LENGTH || std::strlen(zone_id) != DDNS_ZONE_ID_LENGTH || std::strlen(record_id) != DDNS_RECORD_ID_LENGTH || new_ip_length > DDNS_IP_ADDRESS_MAX_LENGTH) {
 		return DDNS_ERROR_USAGE;
 	}
 
