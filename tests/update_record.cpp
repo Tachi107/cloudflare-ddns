@@ -38,7 +38,6 @@ int main() {
 		));
 	};
 
-	// Still can't report an invalid token or IP address
 	"update_record_bad_usage"_test = [] {
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
 		expect(eq(

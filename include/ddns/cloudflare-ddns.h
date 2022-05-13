@@ -108,9 +108,8 @@ extern "C" {
 #endif
 
 typedef enum ddns_ip_version {
-	DDNS_IP_VERSION_4,
-	DDNS_IP_VERSION_6,
-	DDNS_IP_VERSION_BOTH
+	DDNS_IP_VERSION_4 = 1U << 4U,
+	DDNS_IP_VERSION_6 = 1U << 6U,
 } ddns_ip_version;
 
 typedef enum ddns_error {

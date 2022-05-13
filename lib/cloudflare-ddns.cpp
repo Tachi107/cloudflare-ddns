@@ -103,7 +103,6 @@ DDNS_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** DDNS_RE
 #endif
 }
 
-// I should probably check that api_token is somewhat valid
 DDNS_NODISCARD static curl_slist* curl_auth_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const api_token) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	//curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token); leaks, see https://github.com/curl/curl/issues/8841

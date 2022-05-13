@@ -20,7 +20,7 @@ It's super fast and really lightweight, making it a valid choice for constrained
 
 This tool is a oneshot program: you run it, it updates the DNS record, and it terminates. To make it run periodically you could use a systemd timer or a cron job.
 
-To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens); cloudflare-ddns only needs the Zone.DNS write permission.
+To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/api-tokens); cloudflare-ddns only needs the Zone.DNS edit permission.
 
 Once you got the executable you can use it in two ways: you can pass the API Token and the record name as command line arguments or you can use a ini configuration file, tipically located in `/etc/cloudflare-ddns/config.ini`, by passing no arguments at all; [here's the template](exe/config.ini). On custom installations the default config path might be different, but you can always locate it by running the tool without arguments. If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
