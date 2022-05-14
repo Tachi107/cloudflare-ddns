@@ -120,9 +120,9 @@ int main(const int argc, const char* const argv[]) {
 	// Here the cache file is opened twice, the first time read-only and
 	// the second time write-only. This is because if the filesystem is
 	// mounted read-only I'm still able to read the cache, if available.
-	bool fail_read = std::ifstream{cache_path.data(), std::ios::binary}.read(zone_id.data(), zone_id.size()).fail();
+	const bool failed_read = std::ifstream{cache_path.data(), std::ios::binary}.read(zone_id.data(), zone_id.size()).fail();
 
-	if (fail_read || std::strlen(zone_id.data()) != DDNS_ZONE_ID_LENGTH) {
+	if (failed_read || std::strlen(zone_id.data()) != DDNS_ZONE_ID_LENGTH) {
 		error = ddns_search_zone_id(api_token.c_str(), record_name.c_str(), zone_id.size(), zone_id.data());
 		if (error) {
 			std::fputs("Error getting the Zone ID\n", stderr);
@@ -142,51 +142,75 @@ int main(const int argc, const char* const argv[]) {
 	json::parser parser;
 	json::document json {parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity)};
 
-	json::array result_arr = json["result"];
-	json::object result = result_arr.at(0);
-
-	// parse values in the expected order to improve performance
-	const std::string_view id_sv = result["id"];
-	const std::string_view type = result["type"];
-	const std::string_view content = result["content"];
-
-	const bool ipv6 = (type == "AAAA");
-
-	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ip;
-
-	error = ddns_get_local_ip(ipv6, local_ip.size(), local_ip.data());
-	if (error) {
-		std::fputs("Error getting the local IP address\n", stderr);
-		curl_cleanup(&curl_handle);
-		return EXIT_FAILURE;
+	json::array results = json["result"];
+	if (results.count_elements() > 2) {
+		fprintf(stderr, "%s points to more than two records, things might not work as expected\n", record_name.c_str());
 	}
 
-	if (local_ip.data() != content) {
-		// simdjson ondemand doesn't have get_c_str(), so I need to create
-		// a NULL-termiated C string manually. id_sv.length() and
-		// DDNS_RECORD_ID_LENGTH are the same.
-		char id[DDNS_RECORD_ID_LENGTH + 1];
-		std::memcpy(id, id_sv.data(), DDNS_RECORD_ID_LENGTH);
-		id[DDNS_RECORD_ID_LENGTH] = '\0';
+	// The first element contains the IPv4 address, while the second
+	// contains the IPv6 one.
+	constexpr const char* ipv_c_str[2] = {"IPv4", "IPv6"};
+	constexpr const char* type_c_str[2] = {"A", "AAAA"};
+	std::string_view record_ids[2];
+	std::string_view record_ips[2];
 
-		dns_response.size = 0;
-		if (ddns_update_record_raw(
-			api_token.c_str(),
-			zone_id.data(),
-			id,
-			local_ip.data(),
-			&curl_handle
-		) != DDNS_ERROR_OK) {
-			std::fputs("Error updating the DNS record\n", stderr);
+	for (json::object result : results) {
+		// parse values in the expected order to improve performance
+		const std::string_view id = result["id"];
+		const std::string_view type = result["type"];
+		const std::string_view dns_ip = result["content"];
+
+		if (type == "A") {
+			record_ids[0] = id;
+			record_ips[0] = dns_ip;
+		}
+		else if (type == "AAAA") {
+			record_ids[1] = id;
+			record_ips[1] = dns_ip;
+		}
+	}
+
+	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ips[2];
+
+	for (std::size_t i = 0; i < 2; i++) {
+		if (record_ips[i].empty()) {
+			continue;
+		}
+		error = ddns_get_local_ip(i, local_ips[i].size(), local_ips[i].data());
+		if (error) {
+			std::fprintf(stderr, "Error getting the local %s address\n", ipv_c_str[i]);
 			curl_cleanup(&curl_handle);
 			return EXIT_FAILURE;
 		}
-		json::document json = parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity);
-		const std::string_view new_ip = json["result"]["content"];
-		std::printf("New IP: %.*s\n", static_cast<int>(new_ip.length()), new_ip.data());
+
+		if (local_ips[i].data() != record_ips[i]) {
+			// simdjson ondemand doesn't have get_c_str(), so I need to create
+			// a NULL-termiated C string manually. id_sv.length() and
+			// DDNS_RECORD_ID_LENGTH are the same.
+			char id[DDNS_RECORD_ID_LENGTH + 1];
+			std::memcpy(id, record_ids[i].data(), DDNS_RECORD_ID_LENGTH);
+			id[DDNS_RECORD_ID_LENGTH] = '\0';
+
+			dns_response.size = 0;
+			if (ddns_update_record_raw(
+				api_token.c_str(),
+				zone_id.data(),
+				id,
+				local_ips[i].data(),
+				&curl_handle
+			) != DDNS_ERROR_OK) {
+				std::fprintf(stderr, "Error updating the %s record\n", type_c_str[i]);
+				curl_cleanup(&curl_handle);
+				return EXIT_FAILURE;
+			}
+			json::document json = parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity);
+			const std::string_view new_ip = json["result"]["content"];
+			std::printf("New %s: %.*s\n", ipv_c_str[i], static_cast<int>(new_ip.length()), new_ip.data());
+		}
+		else {
+			std::printf("The %s record is up to date\n", type_c_str[i]);
+		}
 	}
-	else {
-		std::puts("The DNS is up to date");
-	}
+
 	curl_cleanup(&curl_handle);
 }
