@@ -32,8 +32,6 @@ jobs:
         apt-get -y install ${{ matrix.compiler }} ninja-build libpkgconf-dev pkgconf libarchive-dev cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git ca-certificates --no-install-recommends
 
     - uses: actions/checkout@v3
-      with:
-        submodules: true
 
     - name: Install muon
       run: |
