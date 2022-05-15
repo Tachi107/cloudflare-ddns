@@ -24,7 +24,7 @@ To run the tool you'll need an [API token](https://dash.cloudflare.com/profile/a
 
 Once you got the executable you can use it in two ways: you can pass the API Token and the record name as command line arguments or you can use a ini configuration file, tipically located in `/etc/cloudflare-ddns/config.ini`, by passing no arguments at all; [here's the template](exe/config.ini). On custom installations the default config path might be different, but you can always locate it by running the tool without arguments. If you prefer, you can even use a configuration file in a custom location, using `--config file-path`.
 
-You can download the latest release from the GitHub Releases page, or, if you prefer, you can [build](#Build) the program yourself.
+If you're on Debian 12 or Ubuntu 22.10 the recommended install method is via the package manager; simply run `apt install cloudflare-ddns` and you'll automatically get the executable and a systemd timer. On other systems you can download the latest release from the GitHub Releases page, or, if you prefer, you can [build](#Build) the program yourself.
 
 ## Library
 
