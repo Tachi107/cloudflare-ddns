@@ -134,7 +134,9 @@ int main(const int argc, const char* const argv[]) {
 
 	error = ddns_get_record_raw(api_token.c_str(), zone_id.data(), record_name.c_str(), &curl_handle);
 	if (error) {
-		std::fputs("Error getting DNS record info\n", stderr);
+		std::fprintf(stderr,
+			"Error getting DNS record info\n"
+			"API response: %.*s\n", static_cast<int>(dns_response.size), dns_response.buffer);
 		curl_cleanup(&curl_handle);
 		return EXIT_FAILURE;
 	}
@@ -142,19 +144,15 @@ int main(const int argc, const char* const argv[]) {
 	json::parser parser;
 	json::document json {parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity)};
 
-	json::array results = json["result"];
-	if (results.count_elements() > 2) {
-		fprintf(stderr, "%s points to more than two records, things might not work as expected\n", record_name.c_str());
-	}
-
 	// The first element contains the IPv4 address, while the second
 	// contains the IPv6 one.
 	constexpr const char* ipv_c_str[2] = {"IPv4", "IPv6"};
 	constexpr const char* type_c_str[2] = {"A", "AAAA"};
 	std::string_view record_ids[2];
 	std::string_view record_ips[2];
+	std::size_t records_count = 0;
 
-	for (json::object result : results) {
+	for (json::object result : json["result"]) {
 		// parse values in the expected order to improve performance
 		const std::string_view id = result["id"];
 		const std::string_view type = result["type"];
@@ -163,11 +161,22 @@ int main(const int argc, const char* const argv[]) {
 		if (type == "A") {
 			record_ids[0] = id;
 			record_ips[0] = dns_ip;
+			records_count++;
 		}
 		else if (type == "AAAA") {
 			record_ids[1] = id;
 			record_ips[1] = dns_ip;
+			records_count++;
 		}
+	}
+
+	if (records_count == 0) {
+		std::fprintf(stderr, "%s doesn't point to any A or AAAA record\n", record_name.c_str());
+		curl_cleanup(&curl_handle);
+		return EXIT_FAILURE;
+	}
+	else if (records_count > 2) {
+		std::fprintf(stderr, "%s points to more than two records, things might not work as expected\n", record_name.c_str());
 	}
 
 	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ips[2];
@@ -185,7 +194,7 @@ int main(const int argc, const char* const argv[]) {
 
 		if (local_ips[i].data() != record_ips[i]) {
 			// simdjson ondemand doesn't have get_c_str(), so I need to create
-			// a NULL-termiated C string manually. id_sv.length() and
+			// a NULL-termiated C string manually. record_ids.length() and
 			// DDNS_RECORD_ID_LENGTH are the same.
 			char id[DDNS_RECORD_ID_LENGTH + 1];
 			std::memcpy(id, record_ids[i].data(), DDNS_RECORD_ID_LENGTH);
