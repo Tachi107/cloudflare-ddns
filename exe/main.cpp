@@ -181,16 +181,18 @@ int main(const int argc, const char* const argv[]) {
 
 	std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> local_ips[2];
 
-	for (std::size_t i = 0; i < 2; i++) {
+	unsigned int local_ips_count = 0;
+
+	for (unsigned int i = 0; i < 2; i++) {
 		if (record_ips[i].empty()) {
 			continue;
 		}
 		error = ddns_get_local_ip(i, local_ips[i].size(), local_ips[i].data());
 		if (error) {
 			std::fprintf(stderr, "Error getting the local %s address\n", ipv_c_str[i]);
-			curl_cleanup(&curl_handle);
-			return EXIT_FAILURE;
+			continue;
 		}
+		local_ips_count++;
 
 		if (local_ips[i].data() != record_ips[i]) {
 			// simdjson ondemand doesn't have get_c_str(), so I need to create
@@ -222,4 +224,8 @@ int main(const int argc, const char* const argv[]) {
 	}
 
 	curl_cleanup(&curl_handle);
+
+	if (local_ips_count == 0) {
+		return EXIT_FAILURE;
+	}
 }
