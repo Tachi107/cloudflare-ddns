@@ -43,7 +43,7 @@ jobs:
         build/muon -C build install
 
     - name: Configure muon
-      run: muon auto
+      run: muon setup -Dmuon=true build
       env:
         CC: ${{ matrix.compiler }}
 
