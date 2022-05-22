@@ -20,21 +20,20 @@ jobs:
       fail-fast: false
       # memsan is disabled because of https://github.com/openssl/openssl/issues/11013
       matrix:
-        os: [ 'debian:stable', 'debian:testing', 'redhat/ubi8:latest' ]
+        os: [ 'debian:stable', 'debian:testing', 'registry.access.redhat.com/ubi8/ubi-minimal', 'registry.access.redhat.com/ubi9/ubi-minimal' ]
         compiler: [ 'gcc', 'clang' ]
-        sanitizer: [ 'address', 'thread', 'undefined', 'memory', 'none' ]
+        sanitizer: [ 'address', 'thread', 'undefined', 'none' ]
         exclude:
-          - os: 'redhat/ubi8:latest'
+          - os: 'registry.access.redhat.com/ubi8/ubi-minimal'
             sanitizer: 'address'
-          - os: 'redhat/ubi8:latest'
+          - os: 'registry.access.redhat.com/ubi8/ubi-minimal'
             sanitizer: 'thread'
-          - os: 'redhat/ubi8:latest'
+          - os: 'registry.access.redhat.com/ubi8/ubi-minimal'
             sanitizer: 'undefined'
-          - os: 'redhat/ubi8:latest'
-            sanitizer: 'memory'
-          - compiler: 'gcc'
-            sanitizer: 'memory'
-          - sanitizer: 'memory'
+          - os: 'registry.access.redhat.com/ubi9/ubi-minimal'
+            sanitizer: 'address'
+          - os: 'registry.access.redhat.com/ubi9/ubi-minimal'
+            sanitizer: 'undefined'
 
     runs-on: ubuntu-latest
     container:
@@ -49,21 +48,20 @@ jobs:
         apt -y update
         apt -y install $compiler meson pkg-config cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev ronn git ca-certificates curl gpg gpgv gpg-agent lcov llvm-dev --no-install-recommends
 
+    # For some reason libasan and libubsan are unavaiable on RHEL 9
     - name: Install dependencies (Red Hat)
       if: contains(matrix.os, 'redhat')
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
-        yum install -y $compiler pkgconf cmake libcurl-devel git python3 gnupg
+        microdnf -y --refresh --disableplugin=subscription-manager install $compiler pkgconf cmake libcurl-devel libtsan git python3-pip gnupg
         pip3 install meson ninja
 
     - uses: actions/checkout@v3
-      with:
-        submodules: true
 
     # LTO disabled because of https://github.com/mesonbuild/meson/issues/8371
     - name: Configure Meson
       run: |
-        if expr ${{ matrix.os }} : ".*redhat" >/dev/null; then enable_tests=false; else enable_tests=true; fi
+        if expr ${{ matrix.os }} : ".*ubi8" >/dev/null; then enable_tests=false; else enable_tests=true; fi
         record_name=$(printf '${{ matrix.sanitizer }}.${{ matrix.compiler }}.${{ matrix.os }}.${{ github.workflow }}.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
         if [ ${{ matrix.compiler }} = gcc ]; then CXX=g++; else CXX=clang++; fi
         export CXX
@@ -75,7 +73,7 @@ jobs:
       run: ninja -C build
 
     - name: Test
-      if: ${{ !contains(matrix.os, 'redhat') }}
+      if: ${{ !contains(matrix.os, 'ubi8') }}
       run: meson test -C build --verbose
 
     - name: Coverage
