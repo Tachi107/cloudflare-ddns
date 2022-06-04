@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2022 Andrea Pappacoda
 #
-# SPDX-License-Identifier: CC0-1.0
+# SPDX-License-Identifier: FSFAP
 
 [wrap-file]
 source_url = https://github.com/curl/curl/releases/download/curl-7_83_1/curl-7.83.1.tar.gz
