@@ -7,5 +7,5 @@
 #pragma once
 #include <string_view>
 
-inline constexpr std::string_view cache_path {"@cache_dir@/cloudflare-ddns/cache.bin"};
+inline constexpr std::string_view cache_dir {"@cache_dir@/cloudflare-ddns/"};
 inline constexpr std::string_view config_path {"@sysconfdir@/cloudflare-ddns/config.ini"};
