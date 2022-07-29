@@ -10,6 +10,9 @@ defaults:
   run:
     shell: sh
 
+permissions:
+  contents: read
+
 jobs:
   reuse:
     runs-on: ubuntu-latest
