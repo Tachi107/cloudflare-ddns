@@ -10,8 +10,6 @@ on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main ]
-  schedule:
-    - cron: '45 10 * * 5'
 
 defaults:
   run:
@@ -23,6 +21,7 @@ concurrency:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   analyze:
