@@ -47,7 +47,7 @@ jobs:
     - name: Install dependencies (Debian)
       if: contains(matrix.os, 'debian')
       run: |
-        if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler=clang; fi
+        if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler="clang lld"; fi
         apt -y update
         apt -y install $compiler meson pkg-config cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev ronn git ca-certificates curl gpg gpgv gpg-agent lcov llvm-dev --no-install-recommends
 
@@ -55,7 +55,7 @@ jobs:
     - name: Install dependencies (Red Hat)
       if: contains(matrix.os, 'redhat')
       run: |
-        if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=clang; fi
+        if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=llvm-toolset; fi
         microdnf -y --refresh --disableplugin=subscription-manager install $compiler pkgconf cmake libcurl-devel libtsan git python3-pip gnupg
         pip3 install meson ninja
 
@@ -66,8 +66,8 @@ jobs:
       run: |
         if expr ${{ matrix.os }} : ".*ubi8" >/dev/null; then enable_tests=false; else enable_tests=true; fi
         record_name=$(printf '${{ matrix.sanitizer }}.${{ matrix.compiler }}.${{ matrix.os }}.${{ github.workflow }}.ci.${{ secrets.DOMAIN_NAME }}' | tr -dc '[:alnum:].')
-        if [ ${{ matrix.compiler }} = gcc ]; then CXX=g++; else CXX=clang++; fi
-        export CXX
+        if [ ${{ matrix.compiler }} = gcc ]; then CXX=g++; else CXX=clang++ CXX_LD=lld; fi
+        export CXX CXX_LD
         meson setup build -Dtests=$enable_tests -Dtest_api_token='${{ secrets.API_TOKEN }}' -Dtest_zone_id='${{ secrets.ZONE_ID }}' -Dtest_record_name="$record_name" --buildtype=debug -Db_coverage=true -Db_sanitize=${{ matrix.sanitizer }} -Db_lundef=false -Db_lto=false
       env:
         CC: ${{ matrix.compiler }}
