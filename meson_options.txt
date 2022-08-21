@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 option('executable',       type: 'boolean', value: true,  description: 'Build the cloudflare-ddns executable')
-option('man',              type: 'feature',               description: 'Build manpages with ronn-ng')
 option('tests',            type: 'boolean', value: false, description: 'Build tests')
 option('test_api_token',   type: 'string', description: 'API token to use for tests')
 option('test_zone_id',     type: 'string', description: 'Zone ID to use for tests')

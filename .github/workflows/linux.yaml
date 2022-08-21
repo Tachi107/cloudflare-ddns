@@ -49,7 +49,7 @@ jobs:
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler="clang lld"; fi
         apt -y update
-        apt -y install $compiler meson pkg-config cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev ronn git ca-certificates curl gpg gpgv gpg-agent lcov llvm-dev --no-install-recommends
+        apt -y install $compiler meson pkg-config cmake libcurl4-openssl-dev libsimdjson-dev libinih-dev git ca-certificates curl gpg gpgv gpg-agent lcov llvm-dev --no-install-recommends
 
     # For some reason libasan and libubsan are unavaiable on RHEL 9
     - name: Install dependencies (Red Hat)

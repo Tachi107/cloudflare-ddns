@@ -1,0 +1,53 @@
+.\" SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+.\" SPDX-License-Identifier: AGPL-3.0-or-later
+.Dd 2022-08-22
+.Dt CLOUDFLARE-DDNS 1
+.Os
+.
+.Sh NAME
+.Nm cloudflare-ddns
+.Nd dynamically update a DNS record
+.
+.Sh SYNOPSIS
+.Nm
+.Op Ar api_token record_name
+.Op Fl -config Ar file
+.
+.Sh DESCRIPTION
+.Nm
+is a tool that can be used to dynamically update a DNS record using
+Cloudflare's API.
+.Pp
+This tool is a oneshot program: you run it, it updates the DNS record, and it
+terminates. To make it run periodically you could use a systemd timer or a cron
+job.
+.Pp
+To run the tool you'll need an
+.Lk https://dash.cloudflare.com/profile/api-tokens "API token" ;
+.Nm
+only needs the Zone.DNS edit permission.
+.Pp
+You can run
+.Nm
+in two different ways: you can pass the API Token and the record name as
+command line arguments, or you can use the ini configuration file located in
+.Pa @sysconfdir@/cloudflare-ddns/config.ini
+by passing no arguments at all. If you prefer, you can even use a configuration
+file in a custom location, using
+.Fl -config Ar file .
+.
+.Sh EXIT STATUS
+.Ex -std
+.
+.Sh EXAMPLES
+.Bd -literal
+$ cloudflare-ddns
+New IP: 149.20.4.15
+.Ed
+.
+.Sh SEE ALSO
+.Xr cron 8
+.Xr systemd.timer 5
+.
+.Sh AUTHORS
+.An Andrea Pappacoda Aq Mt andrea@pappacoda.it
