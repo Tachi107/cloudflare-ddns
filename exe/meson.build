@@ -58,27 +58,25 @@ install_man(
 	)
 )
 
-if host_machine.system() == 'linux'
-	systemddir = 'lib'/'systemd'/'system'
+systemddir = 'lib'/'systemd'/'system'
 
-	configure_file(
-		input: 'systemd'/'cloudflare-ddns.service.in',
-		output: 'cloudflare-ddns.service',
-		configuration: {
-			'bindir': get_option('prefix')/get_option('bindir'),
-			'libdir': get_option('prefix')/get_option('libdir')
-		},
-		install: true,
-		install_dir: systemddir
-	)
+configure_file(
+	input: 'systemd'/'cloudflare-ddns.service.in',
+	output: 'cloudflare-ddns.service',
+	configuration: {
+		'bindir': get_option('prefix')/get_option('bindir'),
+		'libdir': get_option('prefix')/get_option('libdir')
+	},
+	install: true,
+	install_dir: systemddir
+)
 
-	install_data(
-		'systemd'/'cloudflare-ddns.timer',
-		install_dir: systemddir
-	)
+install_data(
+	'systemd'/'cloudflare-ddns.timer',
+	install_dir: systemddir
+)
 
-	install_data(
-		'sysusers.d'/'cloudflare-ddns.conf',
-		install_dir: 'lib'/'sysusers.d'
-	)
-endif
+install_data(
+	'sysusers.d'/'cloudflare-ddns.conf',
+	install_dir: 'lib'/'sysusers.d'
+)
