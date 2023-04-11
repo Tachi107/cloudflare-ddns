@@ -58,25 +58,29 @@ install_man(
 	)
 )
 
-systemddir = 'lib'/'systemd'/'system'
+systemd = dependency('systemd', required: false)
+if systemd.found()
+	systemd_system_unit_dir = systemd.get_variable(pkgconfig: 'systemd_system_unit_dir')
+	sysusers_dir = systemd.get_variable(pkgconfig: 'sysusers_dir')
 
-configure_file(
-	input: 'systemd'/'cloudflare-ddns.service.in',
-	output: 'cloudflare-ddns.service',
-	configuration: {
-		'bindir': get_option('prefix')/get_option('bindir'),
-		'libdir': get_option('prefix')/get_option('libdir')
-	},
-	install: true,
-	install_dir: systemddir
-)
+	configure_file(
+		input: 'systemd'/'cloudflare-ddns.service.in',
+		output: 'cloudflare-ddns.service',
+		configuration: {
+			'bindir': get_option('prefix')/get_option('bindir'),
+			'libdir': get_option('prefix')/get_option('libdir')
+		},
+		install: true,
+		install_dir: systemd_system_unit_dir
+	)
 
-install_data(
-	'systemd'/'cloudflare-ddns.timer',
-	install_dir: systemddir
-)
+	install_data(
+		'systemd'/'cloudflare-ddns.timer',
+		install_dir: systemd_system_unit_dir
+	)
 
-install_data(
-	'sysusers.d'/'cloudflare-ddns.conf',
-	install_dir: 'lib'/'sysusers.d'
-)
+	install_data(
+		'sysusers.d'/'cloudflare-ddns.conf',
+		install_dir: sysusers_dir
+	)
+endif
