@@ -32,7 +32,7 @@ int main() {
 			// Manually setting the version to 2.2 instead of using MAKEWORD
 			WSAStartup(0b00000010'00000010, &wsaData);
 		#endif
-		addrinfo* dns_response {nullptr};
+		struct addrinfo* dns_response {nullptr};
 
 		const int error {
 			getaddrinfo(test_record_name, nullptr, nullptr, &dns_response)
@@ -40,12 +40,11 @@ int main() {
 		expect(eq(error, 0)) << "getaddrinfo: " << gai_strerror(error);
 
 		std::array<char, INET6_ADDRSTRLEN> address;
-		inet_ntop(
-			dns_response->ai_addr->sa_family,
-			// I don't know why I have to add +2, I just know that
-			// the first two chars in sa_data are empty
-			dns_response->ai_addr->sa_data + 2,
-			address.data(), address.size()
+		getnameinfo(
+			dns_response->ai_addr, dns_response->ai_addrlen,
+			address.data(), address.size(),
+			nullptr, 0,
+			NI_NUMERICHOST
 		);
 
 		freeaddrinfo(dns_response);
