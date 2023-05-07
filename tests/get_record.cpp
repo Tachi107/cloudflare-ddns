@@ -7,10 +7,10 @@
 #include "common.hpp"
 #ifdef DDNS_HAS_GETADDRINFO
 	#if __has_include(<netdb.h>)
-		#include <netdb.h>
+		#include <netdb.h> /* getaddrinfo, getnameinfo, freeaddrinfo, addrinfo, NI_NUMERICHOST */
 	#endif
-	#if __has_include(<arpa/inet.h>)
-		#include <arpa/inet.h>
+	#if __has_include(<netinet/in.h>)
+		#include <netinet/in.h> /* INET6_ADDRSTRLEN */
 	#endif
 	#if __has_include(<ws2tcpip.h>)
 		#include <ws2tcpip.h>
@@ -26,7 +26,6 @@ int main() {
 	 * return value of ddns_get_record()
 	 */
 	"get_record"_test = [] {
-		#if DDNS_HAS_GETADDRINFO
 		#if __has_include(<ws2tcpip.h>)
 			WSADATA wsaData;
 			// Manually setting the version to 2.2 instead of using MAKEWORD
@@ -48,7 +47,6 @@ int main() {
 		);
 
 		freeaddrinfo(dns_response);
-		#endif
 
 		std::array<char, DDNS_IP_ADDRESS_MAX_LENGTH> record_ip;
 		std::array<char, DDNS_RECORD_ID_LENGTH + 1> record_id;
