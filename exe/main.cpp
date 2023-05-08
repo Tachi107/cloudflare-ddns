@@ -32,13 +32,15 @@ namespace json {
 	using simdjson::ondemand::array;
 }
 
+namespace {
+
 struct static_buffer {
 	static constexpr std::size_t capacity {CURL_MAX_WRITE_SIZE / 2}; // typical requests are smaller than 2000 bytes
 	std::size_t size {0};
 	char buffer[capacity];
 };
 
-static std::size_t write_data(
+std::size_t write_data(
 	char* DDNS_RESTRICT incoming_buffer,
 	const std::size_t /*size*/, // size will always be 1
 	const std::size_t count,
@@ -61,6 +63,8 @@ void curl_cleanup(CURL** curl) {
 	curl_easy_cleanup(*curl);
 	curl_global_cleanup();
 }
+} // namespace
+
 
 int main(const int argc, const char* const argv[]) {
 	std::string api_token;
@@ -146,8 +150,8 @@ int main(const int argc, const char* const argv[]) {
 
 	// The first element contains the IPv4 address, while the second
 	// contains the IPv6 one.
-	constexpr const char* ipv_c_str[2] = {"IPv4", "IPv6"};
-	constexpr const char* type_c_str[2] = {"A", "AAAA"};
+	static constexpr const char* ipv_c_str[2] = {"IPv4", "IPv6"};
+	static constexpr const char* type_c_str[2] = {"A", "AAAA"};
 	std::string_view record_ids[2];
 	std::string_view record_ips[2];
 	std::size_t records_count = 0;

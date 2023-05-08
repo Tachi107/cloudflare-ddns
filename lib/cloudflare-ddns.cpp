@@ -36,8 +36,6 @@ namespace std {
 
 extern "C" {
 
-static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
-
 namespace json {
 	using simdjson::ondemand::parser;
 	using simdjson::ondemand::document;
@@ -46,7 +44,9 @@ namespace json {
 	using simdjson::error_code::SUCCESS;
 }
 
-namespace priv {
+namespace {
+
+constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
 
 struct static_buffer {
 	static constexpr std::size_t capacity {CURL_MAX_WRITE_SIZE};
@@ -54,7 +54,7 @@ struct static_buffer {
 	char buffer[capacity];
 };
 
-static std::size_t write_data(
+std::size_t write_data(
 	char* DDNS_RESTRICT incoming_buffer,
 	const std::size_t /*size*/, // size will always be 1
 	const std::size_t count,
@@ -73,7 +73,7 @@ static std::size_t write_data(
 	return /*size **/ count;
 }
 
-static void curl_handle_setup(
+void curl_handle_setup(
 	CURL** DDNS_RESTRICT curl,
 	const static_buffer& response_buffer
 ) DDNS_NOEXCEPT {
@@ -91,7 +91,7 @@ static void curl_handle_setup(
 /*
  * Returns the curl_slist that must be freed with curl_slist_free_all()
  */
-DDNS_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** DDNS_RESTRICT curl) DDNS_NOEXCEPT {
+DDNS_NODISCARD curl_slist* curl_doh_setup([[maybe_unused]] CURL** DDNS_RESTRICT curl) DDNS_NOEXCEPT {
 #if LIBCURL_VERSION_NUM >= 0x073e00
 	struct curl_slist* manual_doh_address {nullptr};
 	manual_doh_address = curl_slist_append(manual_doh_address, "cloudflare-dns.com:443:104.16.248.249,104.16.249.249,2606:4700::6810:f8f9,2606:4700::6810:f9f9");
@@ -103,7 +103,7 @@ DDNS_NODISCARD static curl_slist* curl_doh_setup([[maybe_unused]] CURL** DDNS_RE
 #endif
 }
 
-DDNS_NODISCARD static curl_slist* curl_auth_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const api_token) DDNS_NOEXCEPT {
+DDNS_NODISCARD curl_slist* curl_auth_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const api_token) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 	//curl_easy_setopt(*curl, CURLOPT_XOAUTH2_BEARER, api_token); leaks, see https://github.com/curl/curl/issues/8841
 
@@ -120,30 +120,30 @@ DDNS_NODISCARD static curl_slist* curl_auth_setup(CURL** DDNS_RESTRICT curl, con
 	return headers;
 }
 
-static void curl_get_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const url) DDNS_NOEXCEPT {
+void curl_get_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const url) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_HTTPGET, 1L);
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 }
 
-static void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const url, const char* DDNS_RESTRICT const body) DDNS_NOEXCEPT {
+void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRICT const url, const char* DDNS_RESTRICT const body) DDNS_NOEXCEPT {
 	curl_easy_setopt(*curl, CURLOPT_CUSTOMREQUEST, "PATCH");
 	curl_easy_setopt(*curl, CURLOPT_URL, url);
 	curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, body);
 }
 
-} // namespace priv
+} // namespace
 
-DDNS_NODISCARD ddns_error ddns_get_local_ip(
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_local_ip(
 	const bool ipv6,
 	const size_t ip_size, char* DDNS_RESTRICT ip
 ) DDNS_NOEXCEPT {
 	// Creating the handle and the response buffer
 	CURL* curl {curl_easy_init()};
-	priv::static_buffer response;
+	static_buffer response;
 
-	priv::curl_handle_setup(&curl, response);
-	curl_slist* free_me {priv::curl_doh_setup(&curl)};
-	priv::curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
+	curl_handle_setup(&curl, response);
+	curl_slist* free_me {curl_doh_setup(&curl)};
+	curl_get_setup(&curl, "https://one.one.one.one/cdn-cgi/trace");
 
 	if (ipv6) {
 		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
@@ -197,9 +197,9 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
 	std::string_view record_name_sv = record_name;
 
 	CURL* curl = curl_easy_init();
-	priv::static_buffer response;
+	static_buffer response;
 
-	priv::curl_handle_setup(&curl, response);
+	curl_handle_setup(&curl, response);
 
 	json::parser parser;
 
@@ -298,10 +298,10 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_zone_id_raw(
 	std::memcpy(request_url + base_url.length() + zones_url.length(), zone_name, zone_name_length);
 	request_url[base_url.length() + zones_url.length() + zone_name_length] = '\0';
 
-	curl_slist* free_me_doh = priv::curl_doh_setup(curl);
-	curl_slist* free_me_headers = priv::curl_auth_setup(curl, api_token);
+	curl_slist* free_me_doh = curl_doh_setup(curl);
+	curl_slist* free_me_headers = curl_auth_setup(curl, api_token);
 
-	priv::curl_get_setup(curl, request_url);
+	curl_get_setup(curl, request_url);
 
 	const int curl_error = curl_easy_perform(*curl);
 
@@ -327,9 +327,9 @@ DDNS_NODISCARD ddns_error ddns_get_record(
 	bool* aaaa
 ) DDNS_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
-	priv::static_buffer response;
+	static_buffer response;
 
-	priv::curl_handle_setup(&curl, response);
+	curl_handle_setup(&curl, response);
 
 	const ddns_error error = ddns_get_record_raw(api_token, zone_id, record_name, &curl);
 
@@ -427,10 +427,10 @@ DDNS_NODISCARD ddns_error ddns_get_record_raw(
 	std::memcpy(request_url + base_url.length() + DDNS_ZONE_ID_LENGTH + dns_records_url.length(), record_name, record_name_length);
 	request_url[request_url_length] = '\0';
 
-	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
-	curl_slist* free_me_headers {priv::curl_auth_setup(curl, api_token)};
+	curl_slist* free_me_doh {curl_doh_setup(curl)};
+	curl_slist* free_me_headers {curl_auth_setup(curl, api_token)};
 
-	priv::curl_get_setup(curl, request_url);
+	curl_get_setup(curl, request_url);
 
 	const int curl_error = curl_easy_perform(*curl);
 
@@ -455,9 +455,9 @@ DDNS_NODISCARD ddns_error ddns_update_record(
 	const size_t record_ip_size, char* DDNS_RESTRICT record_ip
 ) DDNS_NOEXCEPT {
 	CURL* curl {curl_easy_init()};
-	priv::static_buffer response;
+	static_buffer response;
 
-	priv::curl_handle_setup(&curl, response);
+	curl_handle_setup(&curl, response);
 
 	const ddns_error error = ddns_update_record_raw(api_token, zone_id, record_id, new_ip, &curl);
 
@@ -507,8 +507,8 @@ DDNS_NODISCARD ddns_error ddns_update_record_raw(
 		return DDNS_ERROR_USAGE;
 	}
 
-	curl_slist* free_me_doh {priv::curl_doh_setup(curl)};
-	curl_slist* free_me_headers {priv::curl_auth_setup(curl, api_token)};
+	curl_slist* free_me_doh {curl_doh_setup(curl)};
+	curl_slist* free_me_headers {curl_auth_setup(curl, api_token)};
 
 	constexpr std::string_view dns_records_url {"/dns_records/"};
 
@@ -553,7 +553,7 @@ DDNS_NODISCARD ddns_error ddns_update_record_raw(
 	std::memcpy(request_body + request_body_start.length() + new_ip_length, request_body_end.data(), request_body_end.length());
 	request_body[request_body_length] = '\0';
 
-	priv::curl_patch_setup(
+	curl_patch_setup(
 		curl,
 		request_url,
 		request_body
