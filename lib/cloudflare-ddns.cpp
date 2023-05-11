@@ -133,7 +133,7 @@ static void curl_patch_setup(CURL** DDNS_RESTRICT curl, const char* DDNS_RESTRIC
 
 } // namespace priv
 
-DDNS_NODISCARD ddns_error ddns_get_local_ip(
+DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_local_ip(
 	const bool ipv6,
 	const size_t ip_size, char* DDNS_RESTRICT ip
 ) DDNS_NOEXCEPT {
