@@ -16,6 +16,7 @@ namespace std {
 #include <cstddef> /* std::size_t */
 #include <cstdio> /* std::printf, std::fprintf, std::puts, std::fputs */
 #include <cstring> /* std::memchr, std::memcpy */
+#include <filesystem> /* std::filesystem::path::preferred_separator */
 #include <fstream> /* std::ifstream, std::ofstream */
 #include <string> /* std::string */
 #include <string_view> /* std::string_view */
@@ -109,6 +110,13 @@ int main(const int argc, const char* const argv[]) {
 		std::fprintf(stderr,
 			"Bad usage! You can run the program without arguments and load the config in %s "
 			"or pass the API token and the DNS record name as arguments\n", config_path.data());
+		return EXIT_FAILURE;
+	}
+
+	/* Make sure to avoid path traversal vulnerabilities */
+	if (record_name.find('/') != std::string::npos
+		|| record_name.find(std::filesystem::path::preferred_separator) != std::string::npos) {
+		std::fputs("Record names cannot contain path separators!\n", stderr);
 		return EXIT_FAILURE;
 	}
 
