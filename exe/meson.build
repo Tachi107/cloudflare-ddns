@@ -60,8 +60,8 @@ install_man(
 
 systemd = dependency('systemd', required: false)
 if systemd.found()
-	systemd_system_unit_dir = systemd.get_variable(pkgconfig: 'systemd_system_unit_dir')
-	sysusers_dir = systemd.get_variable(pkgconfig: 'sysusers_dir')
+	systemd_system_unit_dir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir')
+	sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir')
 
 	configure_file(
 		input: 'systemd'/'cloudflare-ddns.service.in',
