@@ -15,7 +15,8 @@ namespace std {
 #include <array> /* std::array */
 #include <cstddef> /* std::size_t */
 #include <cstdio> /* std::printf, std::fprintf, std::puts, std::fputs */
-#include <cstring> /* std::memcpy */
+#include <cstring> /* std::memchr, std::memcpy */
+#include <filesystem> /* std::filesystem::path::preferred_separator */
 #include <fstream> /* std::ifstream, std::ofstream */
 #include <string> /* std::string */
 #include <string_view> /* std::string_view */
@@ -57,9 +58,21 @@ static std::size_t write_data(
 	return /*size **/ count;
 }
 
-void curl_cleanup(CURL** curl) {
+static void curl_cleanup(CURL** curl) {
 	curl_easy_cleanup(*curl);
 	curl_global_cleanup();
+}
+
+/*
+ * Same as the POSIX strnlen():
+ * https://pubs.opengroup.org/onlinepubs/9699919799/functions/strnlen.html
+ */
+static std::size_t ddns_strnlen(const char* const s, const size_t maxlen) {
+	const char* end = static_cast<const char*>(std::memchr(s, '\0', maxlen));
+	if (end == nullptr) {
+		return maxlen;
+	}
+	return end - s;
 }
 
 int main(const int argc, const char* const argv[]) {
@@ -100,6 +113,13 @@ int main(const int argc, const char* const argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	/* Make sure to avoid path traversal vulnerabilities */
+	if (record_name.find('/') != std::string::npos
+		|| record_name.find(std::filesystem::path::preferred_separator) != std::string::npos) {
+		std::fputs("Record names cannot contain path separators!\n", stderr);
+		return EXIT_FAILURE;
+	}
+
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	CURL* curl_handle {curl_easy_init()};
@@ -117,19 +137,25 @@ int main(const int argc, const char* const argv[]) {
 	// +1 because of '\0'
 	std::array<char, DDNS_ZONE_ID_LENGTH + 1> zone_id;
 
+	const std::string cache_path = std::string{cache_dir} + record_name;
+
 	// Here the cache file is opened twice, the first time read-only and
 	// the second time write-only. This is because if the filesystem is
 	// mounted read-only I'm still able to read the cache, if available.
-	const bool failed_read = std::ifstream{cache_path.data(), std::ios::binary}.read(zone_id.data(), zone_id.size()).fail();
+	const bool cache_miss = std::ifstream{cache_path, std::ios::binary}
+		.read(zone_id.data(), zone_id.size())
+		.fail();
 
-	if (failed_read || std::strlen(zone_id.data()) != DDNS_ZONE_ID_LENGTH) {
+	if (cache_miss || ddns_strnlen(zone_id.data(), zone_id.size()) != DDNS_ZONE_ID_LENGTH) {
 		error = ddns_search_zone_id(api_token.c_str(), record_name.c_str(), zone_id.size(), zone_id.data());
 		if (error) {
 			std::fputs("Error getting the Zone ID\n", stderr);
 			curl_cleanup(&curl_handle);
 			return EXIT_FAILURE;
 		}
-		std::ofstream{cache_path.data(), std::ios::binary}.write(zone_id.data(), zone_id.size());
+		// This also writes '\0'
+		std::ofstream{cache_path, std::ios::binary}
+			.write(zone_id.data(), zone_id.size());
 	}
 
 	error = ddns_get_record_raw(api_token.c_str(), zone_id.data(), record_name.c_str(), &curl_handle);
