@@ -13,7 +13,7 @@ project(
 		'b_ndebug=if-release',
 		'cpp_rtti=false'
 	],
-	version: '2.0.0',
+	version: '2.0.1',
 	license: 'AGPL-3.0-or-later OR LGPL-3.0-or-later',
 	meson_version: '>=0.53.0'
 )
