@@ -31,7 +31,7 @@ cloudflare-ddns is also a library! In fact, the command line tool is fully based
 
 ## Build
 
-libcloudflare-ddns relies on [libcurl](https://curl.se) and [simdjson](https://simdjson.org), while the executable also depends on [inih](https://github.com/benhoyt/inih).
+libcloudflare-ddns relies on [libcurl](https://curl.se) only, while the executable also depends on [inih](https://github.com/benhoyt/inih).
 
 To build the program, you'll need to install a C++ compiler, [Meson](https://mesonbuild.com) and [CMake](https://cmake.org); on Debian and derivatives you can do so with `apt install g++ meson cmake`.
 
