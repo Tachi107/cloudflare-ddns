@@ -24,7 +24,6 @@ executable(
 	dependencies: [
 		cloudflare_ddns_dep,
 		libcurl_dep,
-		simdjson_dep,
 		INIReader_dep,
 		extra_deps
 	],

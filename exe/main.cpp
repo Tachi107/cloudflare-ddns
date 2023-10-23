@@ -18,20 +18,13 @@ namespace std {
 #include <cstring> /* std::memchr, std::memcpy */
 #include <filesystem> /* std::filesystem::path::preferred_separator */
 #include <fstream> /* std::ifstream, std::ofstream */
+#include <optional> /* std::optional */
 #include <string> /* std::string */
 #include <string_view> /* std::string_view */
 
 #include <INIReader.h>
-#include <simdjson.h>
 #include <ddns/cloudflare-ddns.h>
 #include "paths.hpp"
-
-namespace json {
-	using simdjson::ondemand::parser;
-	using simdjson::ondemand::document;
-	using simdjson::ondemand::object;
-	using simdjson::ondemand::array;
-}
 
 struct static_buffer {
 	static constexpr std::size_t capacity {CURL_MAX_WRITE_SIZE / 2}; // typical requests are smaller than 2000 bytes
@@ -75,7 +68,34 @@ static std::size_t ddns_strnlen(const char* const s, const size_t maxlen) {
 	return end - s;
 }
 
-int main(const int argc, const char* const argv[]) {
+/*
+ * key must include quotes
+ */
+static std::optional<std::string_view> get_json_value(const std::string_view json, const std::string_view key) {
+	const size_t key_start = json.find(key);
+	if (key_start == std::string_view::npos) {
+		return {};
+	}
+
+	const size_t key_end = key_start + key.length();
+	if (key_end == std::string_view::npos) {
+		return {};
+	}
+
+	const size_t value_start = json.find('"', key_end + 1) + 1;
+	if (value_start == std::string_view::npos) {
+		return {};
+	}
+
+	const size_t value_end = json.find('"', value_start + 1);
+	if (value_end == std::string_view::npos) {
+		return {};
+	}
+
+	return std::string_view(json.data() + value_start, value_end - value_start);
+}
+
+int main(const int argc, char* argv[]) {
 	std::string api_token;
 	std::string record_name;
 
@@ -167,9 +187,6 @@ int main(const int argc, const char* const argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	json::parser parser;
-	json::document json {parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity)};
-
 	// The first element contains the IPv4 address, while the second
 	// contains the IPv6 one.
 	constexpr const char* ipv_c_str[2] = {"IPv4", "IPv6"};
@@ -178,20 +195,36 @@ int main(const int argc, const char* const argv[]) {
 	std::string_view record_ips[2];
 	std::size_t records_count = 0;
 
-	for (json::object result : json["result"]) {
-		// parse values in the expected order to improve performance
-		const std::string_view id = result["id"];
-		const std::string_view type = result["type"];
-		const std::string_view dns_ip = result["content"];
+	const char* id_pos = dns_response.buffer;
+	const char* type_pos = dns_response.buffer;
+	const char* dns_ip_pos = dns_response.buffer;
+	while (true) {
+		const std::optional id = get_json_value(std::string_view(id_pos, dns_response.size - (id_pos - dns_response.buffer)), "\"id\"");
+		if (!id.has_value()) {
+			break;
+		}
+		id_pos = id->data();
+
+		const std::optional type = get_json_value(std::string_view(type_pos, dns_response.size - (type_pos - dns_response.buffer)), "\"type\"");
+		if (!type.has_value()) {
+			break;
+		}
+		type_pos = type->data();
+
+		const std::optional dns_ip = get_json_value(std::string_view(dns_ip_pos, dns_response.size - (dns_ip_pos - dns_response.buffer)), "\"content\"");
+		if (!dns_ip.has_value()) {
+			break;
+		}
+		dns_ip_pos = dns_ip->data();
 
 		if (type == "A") {
-			record_ids[0] = id;
-			record_ips[0] = dns_ip;
+			record_ids[0] = *id;
+			record_ips[0] = *dns_ip;
 			records_count++;
 		}
 		else if (type == "AAAA") {
-			record_ids[1] = id;
-			record_ips[1] = dns_ip;
+			record_ids[1] = *id;
+			record_ips[1] = *dns_ip;
 			records_count++;
 		}
 	}
@@ -221,9 +254,10 @@ int main(const int argc, const char* const argv[]) {
 		local_ips_count++;
 
 		if (local_ips[i].data() != record_ips[i]) {
-			// simdjson ondemand doesn't have get_c_str(), so I need to create
-			// a NULL-termiated C string manually. record_ids.length() and
-			// DDNS_RECORD_ID_LENGTH are the same.
+			// record_ids isn't NULL-terminated since it's just a view of
+			// dns_response, so I need to create a NULL-termiated C string
+			// manually. record_ids.length() and DDNS_RECORD_ID_LENGTH are
+			// the same.
 			char id[DDNS_RECORD_ID_LENGTH + 1];
 			std::memcpy(id, record_ids[i].data(), DDNS_RECORD_ID_LENGTH);
 			id[DDNS_RECORD_ID_LENGTH] = '\0';
@@ -240,9 +274,14 @@ int main(const int argc, const char* const argv[]) {
 				curl_cleanup(&curl_handle);
 				return EXIT_FAILURE;
 			}
-			json::document json = parser.iterate(dns_response.buffer, dns_response.size, dns_response.capacity);
-			const std::string_view new_ip = json["result"]["content"];
-			std::printf("New %s: %.*s\n", ipv_c_str[i], static_cast<int>(new_ip.length()), new_ip.data());
+
+			const std::optional new_ip = get_json_value(std::string_view(dns_response.buffer, dns_response.size), "\"content\"");
+			if (!new_ip.has_value()) {
+				fputs("Something went very wrong\n", stderr);
+				return 1;
+			}
+
+			std::printf("New %s: %.*s\n", ipv_c_str[i], static_cast<int>(new_ip->length()), new_ip->data());
 		}
 		else {
 			std::printf("The %s record is up to date\n", type_c_str[i]);

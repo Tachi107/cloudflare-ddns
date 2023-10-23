@@ -23,9 +23,8 @@ namespace std {
 #endif
 
 #include <cstring> /* std::memcpy, std::size_t, std::strlen */
+#include <optional> /* std::optional */
 #include <string_view> /* std::string_view */
-
-#include <simdjson.h>
 
 /*
  * By reading Cloudflare's docs, I can see what is the maximum allowed
@@ -34,17 +33,39 @@ namespace std {
  * thus avoid dynamic memory allocations when creating the request URLs
  */
 
+namespace priv {
+/*
+ * key must include quotes
+ */
+static std::optional<std::string_view> get_json_value(const std::string_view json, const std::string_view key) {
+	const size_t key_start = json.find(key);
+	if (key_start == std::string_view::npos) {
+		return {};
+	}
+
+	const size_t key_end = key_start + key.length();
+	if (key_end == std::string_view::npos) {
+		return {};
+	}
+
+	const size_t value_start = json.find('"', key_end + 1) + 1;
+	if (value_start == std::string_view::npos) {
+		return {};
+	}
+
+	const size_t value_end = json.find('"', value_start + 1);
+	if (value_end == std::string_view::npos) {
+		return {};
+	}
+
+	return std::string_view(json.data() + value_start, value_end - value_start);
+}
+
+} // namespace priv
+
 extern "C" {
 
 static constexpr std::string_view base_url {"https://api.cloudflare.com/client/v4/zones/"};
-
-namespace json {
-	using simdjson::ondemand::parser;
-	using simdjson::ondemand::document;
-	using simdjson::ondemand::object;
-	using simdjson::ondemand::array;
-	using simdjson::error_code::SUCCESS;
-}
 
 namespace priv {
 
@@ -201,9 +222,7 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
 
 	priv::curl_handle_setup(&curl, response);
 
-	json::parser parser;
-
-	std::string_view zone_id_sv;
+	std::optional<std::string_view> zone_id_sv;
 
 	bool found = false;
 
@@ -226,29 +245,12 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
 			continue;
 		}
 
-		json::document json;
-		if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
+		zone_id_sv = priv::get_json_value(std::string_view(response.buffer, response.size), "\"id\"");
+		if (!zone_id_sv.has_value()) {
 			continue;
 		}
 
-		// Cloudflare returns a json array of one element containing the
-		// actual result object
-		json::object result;
-		{
-			json::array results;
-			if (json["result"].get(results) != json::SUCCESS) {
-				continue;
-			}
-			if (results.at(0).get(result) != json::SUCCESS) {
-				continue;
-			}
-		}
-
-		if (result["id"].get(zone_id_sv) != json::SUCCESS) {
-			continue;
-		}
-
-		if (zone_id_sv.length() != DDNS_ZONE_ID_LENGTH) {
+		if (zone_id_sv->length() != DDNS_ZONE_ID_LENGTH) {
 			continue;
 		}
 
@@ -261,8 +263,8 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_search_zone_id(
 		return DDNS_ERROR_GENERIC;
 	}
 
-	std::memcpy(zone_id, zone_id_sv.data(), zone_id_sv.length());
-	zone_id[zone_id_sv.length()] = '\0';
+	std::memcpy(zone_id, zone_id_sv->data(), zone_id_sv->length());
+	zone_id[zone_id_sv->length()] = '\0';
 
 	return DDNS_ERROR_OK;
 }
@@ -339,50 +341,32 @@ DDNS_NODISCARD ddns_error ddns_get_record(
 		return error;
 	}
 
-	json::parser parser;
+	const std::string_view response_sv {response.buffer, response.size};
 
-	json::document json;
-	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
+	const std::optional record_id_sv = priv::get_json_value(response_sv, "\"id\"");
+	if (!record_id_sv.has_value()) {
 		return DDNS_ERROR_GENERIC;
 	}
 
-	// Cloudflare returns a json array of one element containing the
-	// actual result object
-	json::object result;
-	{
-		json::array results;
-		if (json["result"].get(results) != json::SUCCESS) {
-			return DDNS_ERROR_GENERIC;
-		}
-		if (results.at(0).get(result) != json::SUCCESS) {
-			return DDNS_ERROR_GENERIC;
-		}
-	}
-
-	std::string_view record_id_sv;
-	if (result["id"].get(record_id_sv) != json::SUCCESS) {
+	const std::optional type = priv::get_json_value(response_sv, "\"type\"");
+	if (!type.has_value()) {
 		return DDNS_ERROR_GENERIC;
 	}
 
-	std::string_view type;
-	if (result["type"].get(type) != json::SUCCESS) {
+	const std::optional record_ip_sv = priv::get_json_value(response_sv, "\"content\"");
+	if (!record_ip_sv.has_value()) {
 		return DDNS_ERROR_GENERIC;
 	}
 
-	std::string_view record_ip_sv;
-	if (result["content"].get(record_ip_sv) != json::SUCCESS) {
-		return DDNS_ERROR_GENERIC;
-	}
-
-	if (record_ip_sv.length() >= record_ip_size || record_id_sv.length() >= record_id_size) {
+	if (record_ip_sv->length() >= record_ip_size || record_id_sv->length() >= record_id_size) {
 		return DDNS_ERROR_USAGE;
 	}
 
-	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.length());
-	record_ip[record_ip_sv.length()] = '\0';
+	std::memcpy(record_ip, record_ip_sv->data(), record_ip_sv->length());
+	record_ip[record_ip_sv->length()] = '\0';
 
-	std::memcpy(record_id, record_id_sv.data(), record_id_sv.length());
-	record_id[record_id_sv.length()] = '\0';
+	std::memcpy(record_id, record_id_sv->data(), record_id_sv->length());
+	record_id[record_id_sv->length()] = '\0';
 
 	*aaaa = (type == "AAAA");
 
@@ -467,29 +451,17 @@ DDNS_NODISCARD ddns_error ddns_update_record(
 		return error;
 	}
 
-	json::parser parser;
-
-	json::document json;
-	if (parser.iterate(response.buffer, response.size, response.capacity).get(json) != json::SUCCESS) {
+	const std::optional record_ip_sv = priv::get_json_value(std::string_view(response.buffer, response.size), "\"content\"");
+	if (!record_ip_sv.has_value()) {
 		return DDNS_ERROR_GENERIC;
 	}
 
-	json::object result;
-	if (json["result"].get(result) != json::SUCCESS) {
-		return DDNS_ERROR_GENERIC;
-	}
-
-	std::string_view record_ip_sv;
-	if (result["content"].get(record_ip_sv) != json::SUCCESS) {
-		return DDNS_ERROR_GENERIC;
-	}
-
-	if (record_ip_sv.length() >= record_ip_size) {
+	if (record_ip_sv->length() >= record_ip_size) {
 		return DDNS_ERROR_USAGE;
 	}
 
-	std::memcpy(record_ip, record_ip_sv.data(), record_ip_sv.length());
-	record_ip[record_ip_sv.length()] = '\0';
+	std::memcpy(record_ip, record_ip_sv->data(), record_ip_sv->length());
+	record_ip[record_ip_sv->length()] = '\0';
 
 	return DDNS_ERROR_OK;
 }

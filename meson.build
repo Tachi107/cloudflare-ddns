@@ -66,61 +66,6 @@ if not libcurl_dep.found()
 	endif
 endif
 
-simdjson_dep = dependency('simdjson', version: '>=0.9.0', required: false)
-
-# Old Meson versions are unable to extract the version from simdjson
-simdjson_dep_found = simdjson_dep.found()
-if simdjson_dep_found
-	simdjson_version = compiler.get_define(
-		'SIMDJSON_VERSION',
-		dependencies: simdjson_dep,
-		prefix: '#include <simdjson.h>'
-	)
-	simdjson_dep_found = simdjson_version.version_compare('>=0.9.0')
-endif
-
-if not simdjson_dep_found
-	if not get_option('muon')
-		if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
-			warning('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
-		endif
-		cmake = import('cmake')
-		if meson.version().version_compare('>=0.55.0')
-			simdjson_options = cmake.subproject_options()
-			simdjson_options.add_cmake_defines({
-				'CMAKE_BUILD_TYPE': get_option('buildtype'),
-				'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
-				'CMAKE_INTERPROCEDURAL_OPTIMIZATION': get_option('b_lto'),
-				'CMAKE_POLICY_DEFAULT_CMP0069': 'NEW',
-				'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
-				'BUILD_SHARED_LIBS': false,
-				'SIMDJSON_DEVELOPER_MODE': false,
-				'SIMDJSON_WINDOWS_DLL': false,
-				'SIMDJSON_USING_WINDOWS_DYNAMIC_LIBRARY': false,
-				'SIMDJSON_DISABLE_DEPRECATED_API': true,
-				'SIMDJSON_ENABLE_FUZZING': false
-			})
-			simdjson_options.set_install(false)
-			if compiler.get_argument_syntax() == 'msvc'
-				simdjson_options.append_compile_args('c',   '/MT')
-				simdjson_options.append_compile_args('cpp', '/MT')
-			endif
-			simdjson_dep = cmake.subproject('simdjson', options: simdjson_options).dependency('simdjson')
-		else
-			simdjson_dep = cmake.subproject('simdjson').dependency('simdjson')
-		endif
-	else
-		# muon can't find dependencies using CMake, yet
-		simdjson_dep = declare_dependency(
-			compile_args: '-DSIMDJSON_THREADS_ENABLED=1',
-			dependencies: [
-				compiler.find_library('simdjson'),
-				dependency('threads')
-			]
-		)
-	endif
-endif
-
 extra_args = []
 
 if host_machine.system() == 'windows'
@@ -147,7 +92,6 @@ libcloudflare_ddns = library(
 	cpp_args: extra_args,
 	dependencies: [
 		libcurl_dep,
-		simdjson_dep,
 		extra_deps
 	],
 	extra_files: 'include'/'ddns'/'cloudflare-ddns.h',

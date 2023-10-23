@@ -202,8 +202,8 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_zone_id_raw(
  * it is an A or AAAA record. The three values are written in record_ip,
  * record_id, and aaaa respectively. If their _size is too small,
  * the function returns DDNS_ERROR_USAGE; if some other error occurs, it
- * returns DDNS_ERROR_GENERIC. Since Cloudflare's API returns data in JSON
- * form, the function uses simdjson to parse that data as fast as possible.
+ * returns DDNS_ERROR_GENERIC.
+ *
  * Since the function has to access the response of the HTTP GET request it
  * has to create and manage its own cURL handle internally, and this hurts
  * a bit in terms of performance. If you prefer to control your own cURL
@@ -247,11 +247,12 @@ DDNS_NODISCARD DDNS_PUB ddns_error ddns_get_record_raw(
  * address of a given A/AAAA record, identified by record_id, to the one
  * passed as new_ip. It manages its own cURL handle under the hood, and
  * writes the IP that Cloudflare received and set in record_ip, if
- * successful, parsed using simdjson. If the size of the out parameter is
- * smaller than the size of the IP set by Cloudflare, or if the length of
- * the zone id is not DDNS_ZONE_ID_LENGTH, or if the length of the record
- * name is greater than DDNS_RECORD_NAME_MAX_LENGTH, the function returns
- * DDNS_ERROR_USAGE; on any other error, it returns DDNS_ERROR_GENERIC.
+ * successful. If the size of the out parameter is smaller than the size
+ * of the IP set by Cloudflare, or if the length of the zone id is not
+ * DDNS_ZONE_ID_LENGTH, or if the length of the record name is greater than
+ * DDNS_RECORD_NAME_MAX_LENGTH, the function returns DDNS_ERROR_USAGE; on
+ * any other error, it returns DDNS_ERROR_GENERIC.
+ *
  * This function is thread safe, but it creates and destroys a cURL handle
  * by itself, which may be slow. If you want faster performance by reusing
  * the same handle you can look into update_record_raw().
