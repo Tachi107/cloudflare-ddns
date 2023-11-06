@@ -24,8 +24,7 @@ executable(
 	dependencies: [
 		cloudflare_ddns_dep,
 		libcurl_dep,
-		INIReader_dep,
-		extra_deps
+		INIReader_dep
 	],
 	gnu_symbol_visibility: 'hidden',
 	install: true,

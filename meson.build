@@ -20,56 +20,95 @@ project(
 
 compiler = meson.get_compiler('cpp')
 
-extra_deps = []
+libcurl_partial_dep = dependency('libcurl', default_options: [
+	'default_library=static',
 
-libcurl_dep = dependency('libcurl', required: false)
-if not libcurl_dep.found()
-	if compiler.get_id() == 'clang' and compiler.get_linker_id() != 'ld.lld'
-		warning('When using Clang you must also use LLD. You can use it by setting the CXX_LD environment variable to lld')
-	endif
-	cmake = import('cmake')
-	if meson.version().version_compare('>=0.55.0')
-		libcurl_options = cmake.subproject_options()
-		libcurl_options.add_cmake_defines({
-			'CMAKE_BUILD_TYPE': get_option('buildtype'),
-			'CMAKE_POSITION_INDEPENDENT_CODE': get_option('b_staticpic'),
-			'CMAKE_INTERPROCEDURAL_OPTIMIZATION': get_option('b_lto'),
-			'CMAKE_POLICY_DEFAULT_CMP0069': 'NEW',
-			'MSVC_RUNTIME_LIBRARY': 'MultiThreaded',
-			'BUILD_SHARED_LIBS': false,
-			'BUILD_CURL_EXE': false,
-			'CURL_LTO': get_option('b_lto'),
-			'HTTP_ONLY': true,
-			'CURL_DISABLE_COOKIES': true,
-			'CURL_DISABLE_VERBOSE_STRINGS': true,
-			'ENABLE_UNIX_SOCKETS': false,
-			'OPENSSL_USE_STATIC_LIBS': true,
-			'OPENSSL_MSVC_STATIC_RT': true
-		})
-		if host_machine.system() == 'windows'
-			libcurl_options.add_cmake_defines({
-				'CURL_STATIC_CRT': true,
-				'CURL_USE_SCHANNEL': true,
-				'CURL_TARGET_WINDOWS_VERSION': '0x0A00' # Win 10
-			})
-			extra_deps += compiler.find_library('crypt32')
-			extra_deps += compiler.find_library('ws2_32')
-		else
-			# Required by static OpenSSL
-			extra_deps += compiler.find_library('dl', required: false)
-		endif
-		libcurl_options.set_install(false)
-		libcurl_options.append_compile_args('c', '-DOPENSSL_NO_SSL3_METHOD', '-DCURL_STATICLIB')
-		libcurl_dep = cmake.subproject('curl', options: libcurl_options).dependency('libcurl')
-	else
-		libcurl_dep = cmake.subproject('curl').dependency('libcurl')
-	endif
-endif
+	'tool=disabled',
+	'tests=disabled',
+	'unittests=disabled',
+
+	'bindlocal=disabled',
+	'brotli=disabled',
+	'cookies=disabled',
+	'doh=enabled',
+	'form-api=disabled',
+	'getoptions=disabled',
+	'gsasl=disabled',
+	'http2=auto',
+	'ipv6=auto',
+	'libcurl-option=enabled',
+	'libz=disabled',
+	'mime=disabled',
+	'netrc=disabled',
+	'parsedate=disabled',
+	'progress-meter=disabled',
+	'proxy=disabled',
+	'psl=disabled',
+	'shuffle-dns=disabled',
+	'socketpair=disabled',
+	'sspi=auto',
+	'unixsockets=disabled',
+	'verbose-strings=enabled',
+	'zstd=disabled',
+
+	'asynchdns=disabled',
+
+	'aws=disabled',
+	'basic-auth=disabled',
+	'bearer-auth=enabled',
+	'digest-auth=disabled',
+	'kerberos-auth=disabled',
+	'negotiate-auth=disabled',
+
+	'gss-api=disabled',
+
+	'idn=disabled',
+
+	'alt-svc=disabled',
+	'headers-api=enabled',
+	'hsts=disabled',
+	'http-auth=enabled',
+
+	'ntlm=disabled',
+	'ntlm-wb=disabled',
+
+	'ssh=disabled',
+
+	'ssl=enabled',
+	'tls-srp=disabled',
+	'ssl-default-backend=' + (host_machine.system() == 'windows' ? 'schannel' : 'implicit'),
+	'openssl=' + (host_machine.system() == 'windows' ? 'disabled' : 'auto'),
+	'schannel=' + (host_machine.system() == 'windows' ? 'enabled' : 'disabled'),
+
+	'dict=disabled',
+	'file=disabled',
+	'ftp=disabled',
+	'gopher=disabled',
+	'http=enabled',
+	'imap=disabled',
+	'ldap=disabled',
+	'ldaps=disabled',
+	'mqtt=disabled',
+	'pop3=disabled',
+	'rtmp=disabled',
+	'rtsp=disabled',
+	'smb=disabled',
+	'smtp=disabled',
+	'telnet=disabled',
+	'tftp=disabled'
+])
+
+default_library = get_option('default_library')
+
+# Workaround until https://github.com/mesonbuild/wrapdb/pull/1280 is merged
+libcurl_dep = declare_dependency(
+	dependencies: [libcurl_partial_dep],
+	compile_args: (libcurl_partial_dep.type_name() != 'pkgconfig' and default_library == 'static') ? ['-DCURL_STATICLIB'] : []
+)
 
 extra_args = []
 
 if host_machine.system() == 'windows'
-	default_library = get_option('default_library')
 	if default_library == 'both'
 		error('default_library=both is not supported on Windows')
 	elif default_library == 'shared'
@@ -90,10 +129,7 @@ libcloudflare_ddns = library(
 	'cloudflare-ddns',
 	'lib'/'cloudflare-ddns.cpp',
 	cpp_args: extra_args,
-	dependencies: [
-		libcurl_dep,
-		extra_deps
-	],
+	dependencies: [libcurl_dep],
 	extra_files: 'include'/'ddns'/'cloudflare-ddns.h',
 	gnu_symbol_visibility: 'hidden',
 	include_directories: 'include',

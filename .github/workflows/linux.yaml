@@ -50,14 +50,14 @@ jobs:
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=g++; else compiler="clang lld ?exact-name(libclang-rt-dev)"; fi
         apt -y update
-        apt -y install $compiler meson pkg-config cmake libcurl4-openssl-dev libinih-dev git ca-certificates curl gpg gpgv gpg-agent lcov llvm-dev --no-install-recommends
+        apt -y install $compiler meson pkg-config libcurl4-openssl-dev libinih-dev git ca-certificates curl gpg gpgv gpg-agent lcov llvm-dev --no-install-recommends
 
     # For some reason libasan and libubsan are unavaiable on RHEL 9
     - name: Install dependencies (Red Hat)
       if: contains(matrix.os, 'redhat')
       run: |
         if [ ${{ matrix.compiler }} = gcc ]; then compiler=gcc-c++; else compiler=llvm-toolset; fi
-        microdnf -y --refresh --disableplugin=subscription-manager install $compiler pkgconf cmake libcurl-devel libtsan git python3-pip gnupg unzip
+        microdnf -y --refresh --disableplugin=subscription-manager install $compiler pkgconf libcurl-devel libtsan git python3-pip gnupg unzip
         curl -LO https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip
         unzip ninja-linux.zip
         mv ninja /usr/local/bin
