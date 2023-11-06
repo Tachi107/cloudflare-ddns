@@ -15,6 +15,7 @@ sysconfdir = get_option('prefix')/get_option('sysconfdir')
 
 INIReader_dep = dependency(
 	'INIReader',
+        fallback: ['inih', 'INIReader_dep'],
 	default_options: ['default_library=static', 'distro_install=false']
 )
 
