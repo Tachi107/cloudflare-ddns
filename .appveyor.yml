@@ -31,8 +31,9 @@ install:
   - cmd: if %compiler%==msvc2019 ( call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %arch% )
 
 build_script:
-  - cmd: meson setup build --default-library=static -Db_vscrt=static_from_buildtype -Db_sanitize=address -Dtests=true -Dtest_api_token=%api_token% -Dtest_zone_id=%zone_id% -Dtest_record_name=%arch%.%record_name%
-  - cmd: meson compile -C build
+  - cmd: meson setup build --default-library=static --buildtype=debugoptimized -Db_vscrt=static_from_buildtype -Db_sanitize=address -Dtests=true -Dtest_api_token=%api_token% -Dtest_zone_id=%zone_id% -Dtest_record_name=%arch%.%record_name%
+  - cmd: type .\build\subprojects\curl-8.4.0\lib\curl_config.h
+  - cmd: meson compile -C build --verbose
 
 test_script:
   - cmd: meson test -C build --verbose
