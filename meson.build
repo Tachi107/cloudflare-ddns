@@ -20,7 +20,7 @@ project(
 
 compiler = meson.get_compiler('cpp')
 
-libcurl_partial_dep = dependency('libcurl', default_options: [
+libcurl_dep = dependency('libcurl', default_options: [
 	'default_library=static',
 
 	'tool=disabled',
@@ -98,17 +98,11 @@ libcurl_partial_dep = dependency('libcurl', default_options: [
 	'tftp=disabled'
 ])
 
-default_library = get_option('default_library')
-
-# Workaround until https://github.com/mesonbuild/wrapdb/pull/1280 is merged
-libcurl_dep = declare_dependency(
-	dependencies: [libcurl_partial_dep],
-	compile_args: (libcurl_partial_dep.type_name() != 'pkgconfig' and default_library == 'static') ? ['-DCURL_STATICLIB'] : []
-)
 
 extra_args = []
 
 if host_machine.system() == 'windows'
+	default_library = get_option('default_library')
 	if default_library == 'both'
 		error('default_library=both is not supported on Windows')
 	elif default_library == 'shared'
