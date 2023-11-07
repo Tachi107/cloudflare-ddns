@@ -107,6 +107,7 @@ static void curl_handle_setup(
 	curl_easy_setopt(*curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
 	curl_easy_setopt(*curl, CURLOPT_WRITEFUNCTION, write_data);
 	curl_easy_setopt(*curl, CURLOPT_WRITEDATA, &response_buffer);
+	curl_easy_setopt(*curl, CURLOPT_VERBOSE, 1L);
 }
 
 /*
