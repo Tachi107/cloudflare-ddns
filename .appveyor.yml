@@ -6,8 +6,8 @@ image: Visual Studio 2019
 
 environment:
   matrix:
-    - arch: x86
-      compiler: msvc2019
+    #    - arch: x86
+    #      compiler: msvc2019
     - arch: x64
       compiler: msvc2019
   api_token:
