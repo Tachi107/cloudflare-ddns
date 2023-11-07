@@ -4,5 +4,5 @@
 
 [wrap-git]
 url = https://github.com/curl/curl.git
-revision = 92179353e5cac4cfb294a1fdcbdbf5d682fc40a1
+revision = 8beff4355956e3d18ceb3afc21c1f3edec82543c
 depth = 1
