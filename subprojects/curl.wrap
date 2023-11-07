@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: FSFAP
 
 [wrap-file]
-source_url = https://github.com/curl/curl/releases/download/curl-7_83_1/curl-7.83.1.tar.gz
-source_filename = curl-7.83.1.tar.gz
-directory = curl-7.83.1
-source_hash = 93fb2cd4b880656b4e8589c912a9fd092750166d555166370247f09d18f5d0c0
+source_url = https://github.com/curl/curl/releases/download/curl-7_88_1/curl-7.88.1.tar.gz
+source_filename = curl-7.88.1.tar.gz
+directory = curl-7.88.1
+source_hash = cdb38b72e36bc5d33d5b8810f8018ece1baa29a8f215b4495e495ded82bbf3c7
