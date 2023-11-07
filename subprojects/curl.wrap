@@ -1,16 +1,9 @@
-# SPDX-FileCopyrightText: 2023 The Meson development team
-# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: 2022 Andrea Pappacoda
+#
+# SPDX-License-Identifier: FSFAP
 
 [wrap-file]
-directory = curl-8.4.0
-source_url = https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.xz
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/curl_8.4.0-2/curl-8.4.0.tar.xz
-source_filename = curl-8.4.0.tar.xz
-source_hash = 16c62a9c4af0f703d28bda6d7bbf37ba47055ad3414d70dec63e2e6336f2a82d
-patch_filename = curl_8.4.0-2_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/curl_8.4.0-2/get_patch
-patch_hash = bbb6ae75225c36ef9bb336cface729794c7c070c623a003fff40bd416042ff6e
-wrapdb_version = 8.4.0-2
-
-[provide]
-dependency_names = libcurl
+source_url = https://github.com/curl/curl/releases/download/curl-7_83_1/curl-7.83.1.tar.gz
+source_filename = curl-7.83.1.tar.gz
+directory = curl-7.83.1
+source_hash = 93fb2cd4b880656b4e8589c912a9fd092750166d555166370247f09d18f5d0c0
