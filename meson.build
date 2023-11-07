@@ -26,6 +26,76 @@ libcurl_dep = dependency('libcurl', default_options: [
 	'tool=disabled',
 	'tests=disabled',
 	'unittests=disabled',
+
+	'bindlocal=disabled',
+	'brotli=disabled',
+	'cookies=disabled',
+	'doh=enabled',
+	'form-api=disabled',
+	'getoptions=disabled',
+	'gsasl=disabled',
+	'http2=auto',
+	'ipv6=auto',
+	'libcurl-option=enabled',
+	'libz=disabled',
+	'mime=disabled',
+	'netrc=disabled',
+	'parsedate=disabled',
+	'progress-meter=disabled',
+	'proxy=disabled',
+	'psl=disabled',
+	'shuffle-dns=disabled',
+	'socketpair=disabled',
+	'sspi=auto',
+	'unixsockets=disabled',
+	'verbose-strings=enabled',
+	'zstd=disabled',
+
+	'asynchdns=disabled',
+
+	'aws=disabled',
+	'basic-auth=disabled',
+	'bearer-auth=enabled',
+	'digest-auth=disabled',
+	'kerberos-auth=disabled',
+	'negotiate-auth=disabled',
+
+	'gss-api=disabled',
+
+	'idn=disabled',
+
+	'alt-svc=disabled',
+	'headers-api=enabled',
+	'hsts=disabled',
+	'http-auth=enabled',
+
+	'ntlm=disabled',
+	'ntlm-wb=disabled',
+
+	'ssh=disabled',
+
+	'ssl=enabled',
+	'tls-srp=disabled',
+	'ssl-default-backend=' + (host_machine.system() == 'windows' ? 'schannel' : 'implicit'),
+	'openssl=' + (host_machine.system() == 'windows' ? 'disabled' : 'auto'),
+	'schannel=' + (host_machine.system() == 'windows' ? 'enabled' : 'disabled'),
+
+	'dict=disabled',
+	'file=disabled',
+	'ftp=disabled',
+	'gopher=disabled',
+	'http=enabled',
+	'imap=disabled',
+	'ldap=disabled',
+	'ldaps=disabled',
+	'mqtt=disabled',
+	'pop3=disabled',
+	'rtmp=disabled',
+	'rtsp=disabled',
+	'smb=disabled',
+	'smtp=disabled',
+	'telnet=disabled',
+	'tftp=disabled'
 ])
 
 
