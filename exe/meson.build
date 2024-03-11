@@ -61,6 +61,7 @@ systemd = dependency('systemd', required: false)
 if systemd.found()
 	systemd_system_unit_dir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir')
 	sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir')
+	tmpfiles_dir = systemd.get_variable(pkgconfig: 'tmpfilesdir')
 
 	configure_file(
 		input: 'systemd'/'cloudflare-ddns.service.in',
@@ -81,5 +82,15 @@ if systemd.found()
 	install_data(
 		'sysusers.d'/'cloudflare-ddns.conf',
 		install_dir: sysusers_dir
+	)
+
+	configure_file(
+		input: 'tmpfiles.d'/'cloudflare-ddns.conf.in',
+		output: 'cloudflare-ddns.conf',
+		configuration: {
+			'sysconfdir': sysconfdir
+		},
+		install: true,
+		install_dir: tmpfiles_dir
 	)
 endif

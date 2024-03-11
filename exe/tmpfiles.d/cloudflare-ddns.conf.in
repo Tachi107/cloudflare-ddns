@@ -1,0 +1,4 @@
+# Make sure config files have the correct owner and permissions, since the unit
+# file's ConfigurationDirectory= setting leaves the owner as root.
+d @sysconfdir@/cloudflare-ddns 0700 cloudflare-ddns cloudflare-ddns
+f @sysconfdir@/cloudflare-ddns/config.ini 0600 cloudflare-ddns cloudflare-ddns
