@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Andrea Pappacoda
+# SPDX-License-Identifier: FSFAP
+
 # Make sure config files have the correct owner and permissions, since the unit
 # file's ConfigurationDirectory= setting leaves the owner as root.
 d @sysconfdir@/cloudflare-ddns 0700 cloudflare-ddns cloudflare-ddns
