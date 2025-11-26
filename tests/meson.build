@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Andrea Pappacoda
+# SPDX-FileCopyrightText: 2025 Toni Melisma
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,9 +7,10 @@ credentials_hpp = configure_file(
 	input: 'credentials.hpp.in',
 	output: 'credentials.hpp',
 	configuration: {
-		'test_api_token':   get_option('test_api_token'),
-		'test_zone_id':     get_option('test_zone_id'),
-		'test_record_name': get_option('test_record_name')
+		'test_api_token':     get_option('test_api_token'),
+		'test_zone_id':       get_option('test_zone_id'),
+		'test_record_name':   get_option('test_record_name'),
+		'test_record_name_2': get_option('test_record_name_2')
 	}
 )
 
@@ -41,7 +43,9 @@ tests = [
 	'get_local_ip',
 	'get_record',
 	'search_zone_id',
-	'update_record'
+	'update_record',
+	'test_parsing',
+	'update_multiple_records'
 ]
 
 foreach test : tests

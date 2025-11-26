@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Andrea Pappacoda
+# SPDX-FileCopyrightText: 2025 Toni Melisma
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,5 +7,6 @@ option('executable',       type: 'boolean', value: true,  description: 'Build th
 option('tests',            type: 'boolean', value: false, description: 'Build tests')
 option('test_api_token',   type: 'string', description: 'API token to use for tests')
 option('test_zone_id',     type: 'string', description: 'Zone ID to use for tests')
-option('test_record_name', type: 'string', description: 'Record name to use for tests')
-option('muon',             type: 'boolean', value: false, description: 'Enable if building with muon')
+option('test_record_name',   type: 'string', description: 'Record name to use for tests')
+option('test_record_name_2', type: 'string', description: 'Second record name to use for multi-record tests')
+option('muon',               type: 'boolean', value: false, description: 'Enable if building with muon')
